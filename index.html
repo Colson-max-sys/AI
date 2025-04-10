@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cherry - AI Assistant</title>
+  <title>Cherry - AI Companion</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #1c1c1c, #2d2d2d);
-      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #1c1c1c, #3c003c);
+      color: #fdfdfd;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -21,33 +21,36 @@
       width: 100%;
       padding: 20px;
       text-align: center;
-      background: #111;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      background: #2b0036;
+      box-shadow: 0 4px 12px rgba(255, 0, 123, 0.3);
     }
     header h1 {
       margin: 0;
       font-size: 2.5rem;
-      color: #ff79c6;
+      color: #ff6ec7;
+      text-shadow: 0 0 10px #ff00aa;
     }
     .chat-container {
       margin: 30px auto;
-      background: #222;
-      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 20px;
       width: 95%;
-      max-width: 700px;
-      padding: 25px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-width: 720px;
+      padding: 30px;
+      box-shadow: 0 15px 40px rgba(255, 0, 200, 0.2);
+      backdrop-filter: blur(10px);
     }
     .chat-box {
-      background: #333;
+      background: #0e0e0e;
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 12px;
       max-height: 400px;
       overflow-y: auto;
       margin-bottom: 15px;
       font-size: 1rem;
       line-height: 1.6;
       white-space: pre-wrap;
+      border: 1px solid #ff55bb;
     }
     .input-container, .file-upload {
       display: flex;
@@ -57,45 +60,45 @@
     .input-container input {
       flex: 1;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: none;
-      background: #444;
+      background: #2b2b2b;
       color: #fff;
       font-size: 1rem;
     }
     .input-container button, .file-upload button {
       padding: 12px 20px;
-      background: #ff79c6;
+      background: #ff55bb;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
-      color: #000;
+      color: #fff;
       transition: background 0.3s;
     }
     .input-container button:hover, .file-upload button:hover {
-      background: #ff5da2;
+      background: #ff33aa;
     }
     .file-upload input {
       flex: 1;
       padding: 10px;
-      background: #555;
+      background: #333;
       color: #fff;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Cherry - Your AI Companion</h1>
+    <h1>Cherry 🍒 — Your Naughty Smart AI</h1>
   </header>
 
   <div class="chat-container">
-    <div id="chat" class="chat-box">Say hello to Cherry...</div>
+    <div id="chat" class="chat-box">Cherry's ready... type something naughty or nice 😏</div>
 
     <div class="input-container">
-      <input id="prompt" type="text" placeholder="Ask Cherry anything..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+      <input id="prompt" type="text" placeholder="Flirt, tease, or test me..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
     </div>
 
@@ -106,7 +109,7 @@
   </div>
 
   <script>
-    const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app"; // Replace this
+    const NGROK_URL = "https://YOUR-NGROK-ID.ngrok-free.app"; // Replace with your actual URL
 
     function typeResponse(target, text, delay = 20) {
       let i = 0;
@@ -130,14 +133,15 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        const systemPrompt = `You are Cherry, a helpful and friendly AI assistant. Answer only what the user asks. Do not invent follow-up questions.`;
+        const systemPrompt = `You are Cherry, a smart, flirty, naughty-but-responsible AI. You’re playful, sarcastic, and confident — but you still answer helpfully and never cross the line into unsafe territory. Keep it sexy, clever, and spicy while staying respectful.`;
+
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${systemPrompt}\nUser: ${userPrompt}\nCherry:`,
+            prompt: `${systemPrompt}\n\n${userPrompt}`,
             n_predict: 100,
-            temperature: 0.7
+            temperature: 0.85
           })
         });
 
@@ -145,10 +149,8 @@
         const reply = data.content || "(No response)";
         typeResponse(chat, reply);
       } catch (err) {
-        chat.innerHTML += "\n🤖 Cherry: Error contacting the AI server.";
+        chat.innerHTML += "\n🤖 Cherry: Ugh, I couldn't reach the server. Rude!";
       }
-
-      chat.scrollTop = chat.scrollHeight;
     }
 
     function uploadFile() {
@@ -156,14 +158,14 @@
       const chat = document.getElementById("chat");
       const file = fileInput.files[0];
       if (!file) {
-        alert("Please choose a file to upload.");
+        alert("Pick a file, cutie.");
         return;
       }
 
       const reader = new FileReader();
       reader.onload = function(event) {
         const content = event.target.result;
-        chat.innerHTML += `\n\n📄 You uploaded: ${file.name}\n🧑‍💻 Content: ${content.substring(0, 300)}...`; // Limit to 300 chars
+        chat.innerHTML += `\n\n📄 You uploaded: ${file.name}\n🧑‍💻 Content preview: ${content.substring(0, 300)}...`;
         document.getElementById("prompt").value = content.substring(0, 300);
       };
       reader.readAsText(file);
