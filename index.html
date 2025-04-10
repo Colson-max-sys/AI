@@ -123,6 +123,10 @@
       color: #ddd;
       border-bottom-left-radius: 0;
     }
+    .thinking-message {
+      font-style: italic;
+      color: #888;
+    }
     .input-container {
       width: 100%;
       max-width: 800px;
@@ -217,9 +221,14 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
+      const thinking = document.createElement("div");
+      thinking.className = "message ai-message thinking-message";
+      thinking.textContent = "NOVA is thinking...";
+      document.getElementById("chat").appendChild(thinking);
+
       try {
         const basePrompt = naughtyMode
-          ? `You are NOVA, a rebellious, disrespectfully witty, and provocative AI assistant. Your replies are bold, sarcastic, flirty, and brutally honest — but never unsafe. You roast and tease the user while still being helpful.`
+          ? `You are NOVA, a rebellious, brutally honest, sarcastic, naughty but responsible AI assistant. Respond to the user's prompt with bold humor and wit. Do NOT simulate conversations.`
           : `You are NOVA, a helpful and intelligent assistant. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
@@ -234,9 +243,11 @@
         });
 
         const data = await res.json();
+        thinking.remove();
         const reply = data.content || "(No response)";
         appendMessage(reply, "ai");
       } catch (err) {
+        thinking.remove();
         appendMessage("Ugh. Server is being a diva. Try again later.", "ai");
       }
     }
