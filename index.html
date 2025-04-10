@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NOVA - AI Assistant</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
@@ -28,9 +26,7 @@
       gap: 10px;
       border-right: 1px solid #333;
     }
-    .sidebar h2 {
-      color: #00d1ff;
-    }
+    .sidebar h2 { color: #00d1ff; }
     .sidebar button {
       padding: 10px;
       background-color: #2b2b2b;
@@ -40,31 +36,26 @@
       cursor: pointer;
       text-align: left;
     }
-    .sidebar button:hover {
-      background-color: #333;
-    }
+    .sidebar button:hover { background-color: #333; }
     .container {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
     }
     header {
-      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
       background-color: #1f1f1f;
-      text-align: center;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-      position: relative;
     }
     header h1 {
-      margin: 0;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       color: #00d1ff;
+      margin: 0;
     }
     .toggle-container {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 16px;
       display: flex;
       align-items: center;
     }
@@ -78,18 +69,11 @@
       width: 50px;
       height: 26px;
     }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background-color: #444;
       transition: 0.4s;
       border-radius: 26px;
@@ -185,9 +169,7 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    .input-container button:hover {
-      background-color: #00a6cc;
-    }
+    .input-container button:hover { background-color: #00a6cc; }
     .scroll-buttons {
       position: fixed;
       right: 20px;
@@ -196,30 +178,24 @@
       flex-direction: column;
       gap: 10px;
       z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
     }
+    .scroll-buttons.show { opacity: 1; }
     .scroll-buttons button {
-      background-color: #00d1ff;
-      color: #000;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
+      background-color: #1f1f1f;
+      border: 1px solid #444;
+      color: #00d1ff;
+      font-size: 20px;
+      padding: 8px 12px;
+      border-radius: 50%;
       cursor: pointer;
-      font-size: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     .scroll-buttons button:hover {
-      background-color: #00a6cc;
-    }
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      background-color: #2a2a2a;
     }
     @media screen and (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
+      body { flex-direction: column; }
       .sidebar {
         flex-direction: row;
         overflow-x: auto;
@@ -232,11 +208,14 @@
         flex: 1;
         min-width: 140px;
       }
-      .toggle-container {
-        top: auto;
-        bottom: 12px;
-        left: 12px;
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
       }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -265,39 +244,39 @@
       </div>
     </div>
   </div>
-  <div class="scroll-buttons">
-    <button onclick="scrollToTop()">⬆ Top</button>
-    <button onclick="scrollToBottom()">⬇ Bottom</button>
+  <div class="scroll-buttons" id="scrollButtons">
+    <button onclick="scrollToTop()">↑</button>
+    <button onclick="scrollToBottom()">↓</button>
   </div>
-
   <script>
-    const NGROK_URL = "https://605b-117-223-57-159.ngrok-free.app"; // Replace this with your actual NGROK URL
+    const NGROK_URL = "https://605b-117-223-57-159.ngrok-free.app"; // Replace with your NGROK link
+
+    const chatBox = document.getElementById("chat");
+    const scrollButtons = document.getElementById("scrollButtons");
+    let lastScrollTop = 0;
 
     function scrollToBottom() {
-      const chatBox = document.getElementById("chat");
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function scrollToTop() {
-      const chatBox = document.getElementById("chat");
       chatBox.scrollTop = 0;
     }
 
     function toggleMode() {
-      const isNaughty = document.getElementById('modeToggle').checked;
-      console.log('Naughty mode:', isNaughty);
+      const isNaughty = document.getElementById("modeToggle").checked;
+      console.log("Naughty mode is", isNaughty);
     }
 
     function newChat() {
-      document.getElementById('chat').innerHTML = '';
+      document.getElementById("chat").innerHTML = '';
     }
 
     function appendMessage(text, type) {
-      const chat = document.getElementById("chat");
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
       msg.textContent = text;
-      chat.appendChild(msg);
+      chatBox.appendChild(msg);
       scrollToBottom();
     }
 
@@ -312,7 +291,7 @@
       const thinking = document.createElement("div");
       thinking.className = "message ai-message thinking-message";
       thinking.textContent = "NOVA is thinking...";
-      document.getElementById("chat").appendChild(thinking);
+      chatBox.appendChild(thinking);
 
       try {
         const basePrompt = document.getElementById("modeToggle").checked
@@ -335,9 +314,19 @@
         appendMessage(data.content || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
-        appendMessage("😓 Oops! Server error or offline.", "ai");
+        appendMessage("😓 Oops! Something went wrong with the server.", "ai");
       }
     }
+
+    chatBox?.addEventListener("scroll", () => {
+      const currentScroll = chatBox.scrollTop;
+      if (Math.abs(currentScroll - lastScrollTop) > 20) {
+        scrollButtons.classList.add("show");
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
+        lastScrollTop = currentScroll;
+      }
+    });
   </script>
 </body>
 </html>
