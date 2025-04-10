@@ -83,14 +83,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 10px;
       overflow: hidden;
     }
     .chat-box {
       width: 100%;
       max-width: 800px;
       background-color: #1e1e1e;
-      padding: 20px;
+      padding: 15px;
       border-radius: 12px;
       overflow-y: auto;
       flex-grow: 1;
@@ -101,7 +101,7 @@
       scroll-behavior: smooth;
     }
     .message {
-      max-width: 80%;
+      max-width: 85%;
       padding: 12px 16px;
       border-radius: 12px;
       font-size: 1rem;
@@ -132,7 +132,7 @@
       max-width: 800px;
       display: flex;
       gap: 10px;
-      padding: 0 10px;
+      padding: 0 10px 15px;
     }
     .input-container input {
       flex: 1;
@@ -160,9 +160,9 @@
       .chat-box, .input-container {
         width: 100%;
       }
-      .toggle-container {
-        top: 60px;
-        right: 10px;
+      .input-container button {
+        padding: 12px;
+        font-size: 0.9rem;
       }
     }
     @keyframes fadeIn {
@@ -186,20 +186,18 @@
   </header>
 
   <div class="chat-container">
-    <div id="chat" class="chat-box">
-      <div class="ai-message message">NOVA is online. Ready to serve or stir some trouble 😏</div>
-    </div>
+    <div id="chat" class="chat-box"></div>
 
     <div class="input-container">
       <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
-      <button onclick="speakInput()">🎤</button>
     </div>
   </div>
 
   <script>
     const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app";
     let naughtyMode = false;
+    let chatHistory = JSON.parse(localStorage.getItem("nova-history") || "[]");
 
     function toggleMode() {
       naughtyMode = document.getElementById("modeToggle").checked;
@@ -212,23 +210,12 @@
       msg.textContent = text;
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
-      if (type === "ai") speakText(text);
+      chatHistory.push({ type, text });
+      localStorage.setItem("nova-history", JSON.stringify(chatHistory));
     }
 
-    function speakInput() {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
-      recognition.start();
-      recognition.onresult = (e) => {
-        document.getElementById("prompt").value = e.results[0][0].transcript;
-        sendMessage();
-      };
-    }
-
-    function speakText(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      speechSynthesis.speak(utterance);
+    function loadChatHistory() {
+      chatHistory.forEach(entry => appendMessage(entry.text, entry.type));
     }
 
     async function sendMessage() {
@@ -269,6 +256,8 @@
         appendMessage("Ugh. Server is being a diva. Try again later.", "ai");
       }
     }
+
+    loadChatHistory();
   </script>
 </body>
 </html>
