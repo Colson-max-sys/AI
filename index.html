@@ -47,6 +47,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      scroll-behavior: smooth;
     }
     .message {
       max-width: 80%;
@@ -55,6 +56,9 @@
       font-size: 1rem;
       line-height: 1.5;
       white-space: pre-wrap;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.4s ease forwards;
     }
     .user-message {
       align-self: flex-end;
@@ -101,6 +105,12 @@
         width: 100%;
       }
     }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -120,7 +130,7 @@
   </div>
 
   <script>
-    const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app"; // Replace with your actual URL
+    const NGROK_URL = "https://YOUR-NGROK-ID.ngrok-free.app"; // Replace with your actual URL
 
     function appendMessage(text, type) {
       const chat = document.getElementById("chat");
@@ -140,7 +150,7 @@
       input.value = "";
 
       try {
-        const systemPrompt = `You are Cherry, an intelligent and flirty AI with a sense of humor. Keep responses playful and clever, but respectful and safe.`;
+        const systemPrompt = `You are Cherry, an intelligent and flirty AI with a sense of humor. Respond ONLY to the user's prompt without continuing a fictional conversation or inventing dialogue.`;
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
