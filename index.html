@@ -103,7 +103,7 @@
       flex-direction: column;
       align-items: center;
       padding: 10px;
-      height: 100%;
+      min-height: 0;
     }
     .chat-box {
       width: 100%;
@@ -118,8 +118,7 @@
       flex-direction: column;
       gap: 16px;
       scroll-behavior: smooth;
-      min-height: 200px;
-      max-height: calc(100vh - 180px);
+      min-height: 150px;
     }
     .message {
       max-width: 85%;
@@ -257,7 +256,7 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     let lastScrollTop = 0;
-    const NGROK_URL = "https://3e96-117-223-57-159.ngrok-free.app"; // 🔁 Replace this with your actual link
+    const NGROK_URL = "https://3e96-117-223-57-159.ngrok-free.app"; // Replace this with your actual Ngrok URL
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -300,8 +299,8 @@
       try {
         const isNaughty = document.getElementById("modeToggle").checked;
         const basePrompt = isNaughty
-          ? `You are NOVA, a naughty, witty, brutally honest AI created by Aurin Desai.`
-          : `You are NOVA, a helpful and respectful assistant created by Aurin Desai.`;
+          ? `You are NOVA, a naughty, flirty, sarcastic AI with a wicked sense of humor. Don't hold back — tease and joke, but be clever and witty.`
+          : `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
@@ -310,7 +309,7 @@
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
             stop: ["USER:"],
             n_predict: 150,
-            temperature: 0.85
+            temperature: 0.9
           })
         });
 
