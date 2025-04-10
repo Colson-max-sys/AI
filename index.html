@@ -89,17 +89,16 @@
   <div class="chat-container">
     <div id="chat" class="chat-box">Say hello to Cherry...</div>
     <div class="input-container">
-      <input id="prompt" type="text" placeholder="Type your message here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+      <input id="prompt" type="text" placeholder="Type your message here..." onkeydown="if(event.key === 'Enter'){event.preventDefault();sendMessage();}">
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
-    const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app"; // replace with your actual Ngrok URL
+    const NGROK_URL = "https://YOUR-NGROK-ID.ngrok-free.app"; // Replace with your actual Ngrok URL
 
     function typeResponse(target, text, delay = 20) {
       let i = 0;
-      target.innerHTML += "\n🤖 Cherry: ";
       const typing = setInterval(() => {
         target.innerHTML += text.charAt(i);
         i++;
@@ -119,20 +118,21 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        const systemPrompt = `You are Cherry, a helpful and friendly AI assistant. Reply clearly and concisely.`;
-        const res = await fetch(`${NGROK_URL}/completion`, {
+        const systemPrompt = `You are Cherry, a helpful and friendly AI assistant. Respond directly and clearly to the user's message.`;
+        const response = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${systemPrompt}\nUser: ${userPrompt}\nCherry:`,
+            prompt: `${systemPrompt}\n\n${userPrompt}\n`,
             n_predict: 100,
             temperature: 0.7
           })
         });
 
-        const data = await res.json();
-        const response = data.content || "(No response)";
-        typeResponse(chat, response);
+        const data = await response.json();
+        const reply = data.content || "(No response)";
+        chat.innerHTML += `\n🤖 Cherry: `;
+        typeResponse(chat, reply);
       } catch (err) {
         chat.innerHTML += "\n🤖 Cherry: Error contacting the AI server.";
       }
