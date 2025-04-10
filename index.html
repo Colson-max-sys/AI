@@ -269,22 +269,74 @@
     <button onclick="scrollToTop()">⬆ Top</button>
     <button onclick="scrollToBottom()">⬇ Bottom</button>
   </div>
+
   <script>
+    const NGROK_URL = "https://605b-117-223-57-159.ngrok-free.app"; // Replace this with your actual NGROK URL
+
     function scrollToBottom() {
       const chatBox = document.getElementById("chat");
       chatBox.scrollTop = chatBox.scrollHeight;
     }
+
     function scrollToTop() {
       const chatBox = document.getElementById("chat");
       chatBox.scrollTop = 0;
     }
+
     function toggleMode() {
       const isNaughty = document.getElementById('modeToggle').checked;
       console.log('Naughty mode:', isNaughty);
     }
+
     function newChat() {
       document.getElementById('chat').innerHTML = '';
-      console.log('Started new chat');
+    }
+
+    function appendMessage(text, type) {
+      const chat = document.getElementById("chat");
+      const msg = document.createElement("div");
+      msg.className = `message ${type}-message`;
+      msg.textContent = text;
+      chat.appendChild(msg);
+      scrollToBottom();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("prompt");
+      const userPrompt = input.value.trim();
+      if (!userPrompt) return;
+
+      appendMessage(userPrompt, "user");
+      input.value = "";
+
+      const thinking = document.createElement("div");
+      thinking.className = "message ai-message thinking-message";
+      thinking.textContent = "NOVA is thinking...";
+      document.getElementById("chat").appendChild(thinking);
+
+      try {
+        const basePrompt = document.getElementById("modeToggle").checked
+          ? `You are NOVA, a naughty, witty, brutally honest, but responsible AI created by Aurin Desai.`
+          : `You are NOVA, a helpful and intelligent assistant created by Aurin Desai.`;
+
+        const res = await fetch(`${NGROK_URL}/completion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
+            stop: ["USER:"],
+            n_predict: 150,
+            temperature: 0.85
+          })
+        });
+
+        const data = await res.json();
+        thinking.remove();
+        appendMessage(data.content || "(No response)", "ai");
+      } catch (err) {
+        thinking.remove();
+        appendMessage("😓 Oops! Server error or offline.", "ai");
+      }
     }
   </script>
 </body>
