@@ -27,6 +27,11 @@
       font-size: 1.8rem;
       color: #00d1ff;
     }
+    .mode-switch {
+      margin-top: 10px;
+      text-align: center;
+      color: #ccc;
+    }
     .chat-container {
       flex-grow: 1;
       display: flex;
@@ -116,6 +121,11 @@
 <body>
   <header>
     <h1>Cherry - AI Assistant</h1>
+    <div class="mode-switch">
+      <label>
+        <input type="checkbox" id="modeToggle" onchange="toggleMode()" /> Naughty Mode
+      </label>
+    </div>
   </header>
 
   <div class="chat-container">
@@ -131,6 +141,11 @@
 
   <script>
     const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app"; // Replace with your actual URL
+    let naughtyMode = false;
+
+    function toggleMode() {
+      naughtyMode = document.getElementById("modeToggle").checked;
+    }
 
     function appendMessage(text, type) {
       const chat = document.getElementById("chat");
@@ -150,12 +165,15 @@
       input.value = "";
 
       try {
-        const systemPrompt = `You are Cherry, an intelligent and flirty AI with a sense of humor. Respond ONLY to the user's prompt without continuing a fictional conversation or inventing dialogue.`;
+        const basePrompt = naughtyMode
+          ? `You are Cherry, a mischievous, flirty, naughty but respectful AI assistant. Never invent fake conversations, just respond directly with sass and charm.`
+          : `You are Cherry, an intelligent and helpful assistant. Respond clearly, concisely, and respectfully to the user's input.`;
+
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${systemPrompt}\n\n${userPrompt}`,
+            prompt: `${basePrompt}\n\n${userPrompt}`,
             n_predict: 100,
             temperature: 0.85
           })
