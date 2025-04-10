@@ -1,83 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cherry - Your AI Companion</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cherry - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #121212, #1f1f1f);
-      color: #f1f1f1;
+      background: linear-gradient(to right, #1c1c1c, #2d2d2d);
+      color: #f0f0f0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
     }
     header {
+      width: 100%;
       padding: 20px;
       text-align: center;
-      background: #0d0d0d;
-      width: 100%;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      background: #111;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
     header h1 {
       margin: 0;
-      font-size: 2rem;
+      font-size: 2.5rem;
       color: #ff79c6;
     }
     .chat-container {
-      margin-top: 30px;
-      background: #1f1f1f;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 600px;
-      padding: 20px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      margin: 30px auto;
+      background: #222;
+      border-radius: 16px;
+      width: 95%;
+      max-width: 700px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     .chat-box {
-      background: #2a2a2a;
-      padding: 15px;
+      background: #333;
+      padding: 20px;
       border-radius: 10px;
-      margin-bottom: 15px;
       max-height: 400px;
       overflow-y: auto;
+      margin-bottom: 15px;
       font-size: 1rem;
-      line-height: 1.4;
+      line-height: 1.6;
       white-space: pre-wrap;
     }
-    .input-container {
+    .input-container, .file-upload {
       display: flex;
       margin-top: 10px;
+      gap: 10px;
     }
     .input-container input {
-      flex-grow: 1;
+      flex: 1;
       padding: 12px;
-      font-size: 1rem;
+      border-radius: 10px;
       border: none;
-      border-radius: 10px 0 0 10px;
-      outline: none;
-      background: #333;
+      background: #444;
       color: #fff;
-    }
-    .input-container button {
-      padding: 12px 20px;
       font-size: 1rem;
-      border: none;
+    }
+    .input-container button, .file-upload button {
+      padding: 12px 20px;
       background: #ff79c6;
-      color: #000;
+      border: none;
+      border-radius: 10px;
       font-weight: bold;
-      border-radius: 0 10px 10px 0;
       cursor: pointer;
+      color: #000;
       transition: background 0.3s;
     }
-    .input-container button:hover {
+    .input-container button:hover, .file-upload button:hover {
       background: #ff5da2;
+    }
+    .file-upload input {
+      flex: 1;
+      padding: 10px;
+      background: #555;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -88,17 +93,24 @@
 
   <div class="chat-container">
     <div id="chat" class="chat-box">Say hello to Cherry...</div>
+
     <div class="input-container">
-      <input id="prompt" type="text" placeholder="Type your message here..." onkeydown="if(event.key === 'Enter'){event.preventDefault();sendMessage();}">
+      <input id="prompt" type="text" placeholder="Ask Cherry anything..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div class="file-upload">
+      <input type="file" id="fileInput" />
+      <button onclick="uploadFile()">Upload</button>
     </div>
   </div>
 
   <script>
-    const NGROK_URL = "https://YOUR-NGROK-ID.ngrok-free.app"; // Replace with your actual Ngrok URL
+    const NGROK_URL = "https://YOUR-NGROK-ID.ngrok-free.app"; // Replace this
 
     function typeResponse(target, text, delay = 20) {
       let i = 0;
+      target.innerHTML += "\n🤖 Cherry: ";
       const typing = setInterval(() => {
         target.innerHTML += text.charAt(i);
         i++;
@@ -118,26 +130,43 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        const systemPrompt = `You are Cherry, a helpful and friendly AI assistant. Respond directly and clearly to the user's message.`;
-        const response = await fetch(`${NGROK_URL}/completion`, {
+        const systemPrompt = `You are Cherry, a helpful and friendly AI assistant. Answer only what the user asks. Do not invent follow-up questions.`;
+        const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${systemPrompt}\n\n${userPrompt}\n`,
+            prompt: `${systemPrompt}\nUser: ${userPrompt}\nCherry:`,
             n_predict: 100,
             temperature: 0.7
           })
         });
 
-        const data = await response.json();
+        const data = await res.json();
         const reply = data.content || "(No response)";
-        chat.innerHTML += `\n🤖 Cherry: `;
         typeResponse(chat, reply);
       } catch (err) {
         chat.innerHTML += "\n🤖 Cherry: Error contacting the AI server.";
       }
 
       chat.scrollTop = chat.scrollHeight;
+    }
+
+    function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const chat = document.getElementById("chat");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please choose a file to upload.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const content = event.target.result;
+        chat.innerHTML += `\n\n📄 You uploaded: ${file.name}\n🧑‍💻 Content: ${content.substring(0, 300)}...`; // Limit to 300 chars
+        document.getElementById("prompt").value = content.substring(0, 300);
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
