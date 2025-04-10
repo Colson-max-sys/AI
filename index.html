@@ -5,16 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NOVA - AI Assistant</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background-color: #101010;
-      color: #ffffff;
+      color: #fff;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 240px;
+      background-color: #1a1a1a;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      gap: 10px;
+      border-right: 1px solid #333;
+    }
+    .sidebar h2 {
+      color: #00d1ff;
+    }
+    .sidebar button {
+      padding: 10px;
+      background-color: #2b2b2b;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .sidebar button:hover {
+      background-color: #333;
+    }
+    .container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
     }
     header {
       padding: 16px;
@@ -30,8 +62,9 @@
     }
     .toggle-container {
       position: absolute;
-      top: 18px;
-      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 16px;
       display: flex;
       align-items: center;
     }
@@ -84,7 +117,6 @@
       flex-direction: column;
       align-items: center;
       padding: 10px;
-      overflow: hidden;
     }
     .chat-box {
       width: 100%;
@@ -132,11 +164,11 @@
       max-width: 800px;
       display: flex;
       gap: 10px;
-      padding: 0 10px 15px;
+      padding: 10px;
     }
     .input-container input {
       flex: 1;
-      padding: 12px;
+      padding: 14px;
       font-size: 1rem;
       border-radius: 8px;
       border: none;
@@ -144,7 +176,7 @@
       color: #fff;
     }
     .input-container button {
-      padding: 12px 20px;
+      padding: 14px 18px;
       background-color: #00d1ff;
       border: none;
       border-radius: 8px;
@@ -156,14 +188,27 @@
     .input-container button:hover {
       background-color: #00a6cc;
     }
-    @media screen and (max-width: 600px) {
-      .chat-box, .input-container {
-        width: 100%;
-      }
-      .input-container button {
-        padding: 12px;
-        font-size: 0.9rem;
-      }
+    .scroll-buttons {
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    .scroll-buttons button {
+      background-color: #00d1ff;
+      color: #000;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .scroll-buttons button:hover {
+      background-color: #00a6cc;
     }
     @keyframes fadeIn {
       to {
@@ -171,93 +216,76 @@
         transform: translateY(0);
       }
     }
+    @media screen and (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        width: 100%;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid #333;
+      }
+      .sidebar button {
+        flex: 1;
+        min-width: 140px;
+      }
+      .toggle-container {
+        top: auto;
+        bottom: 12px;
+        left: 12px;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>NOVA - AI Assistant</h1>
-    <div class="toggle-container">
-      <span class="toggle-label">Naughty Mode</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="modeToggle" onchange="toggleMode()">
-        <span class="slider"></span>
-      </label>
-    </div>
-  </header>
-
-  <div class="chat-container">
-    <div id="chat" class="chat-box"></div>
-
-    <div class="input-container">
-      <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
-      <button onclick="sendMessage()">Send</button>
+  <div class="sidebar">
+    <h2>Chats</h2>
+    <button onclick="newChat()">➕ New Chat</button>
+    <div id="chatHistoryButtons"></div>
+  </div>
+  <div class="container">
+    <header>
+      <div class="toggle-container">
+        <span class="toggle-label">Naughty Mode</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="modeToggle" onchange="toggleMode()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <h1>NOVA - AI Assistant</h1>
+    </header>
+    <div class="chat-container">
+      <div id="chat" class="chat-box"></div>
+      <div class="input-container">
+        <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+        <button onclick="sendMessage()">Send</button>
+      </div>
     </div>
   </div>
-
+  <div class="scroll-buttons">
+    <button onclick="scrollToTop()">⬆ Top</button>
+    <button onclick="scrollToBottom()">⬇ Bottom</button>
+  </div>
   <script>
-    const NGROK_URL = "https://605b-117-223-57-159.ngrok-free.app";
-    let naughtyMode = false;
-    let chatHistory = JSON.parse(localStorage.getItem("nova-history") || "[]");
-
+    function scrollToBottom() {
+      const chatBox = document.getElementById("chat");
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function scrollToTop() {
+      const chatBox = document.getElementById("chat");
+      chatBox.scrollTop = 0;
+    }
     function toggleMode() {
-      naughtyMode = document.getElementById("modeToggle").checked;
+      const isNaughty = document.getElementById('modeToggle').checked;
+      console.log('Naughty mode:', isNaughty);
     }
-
-    function appendMessage(text, type) {
-      const chat = document.getElementById("chat");
-      const msg = document.createElement("div");
-      msg.className = `message ${type}-message`;
-      msg.textContent = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-      chatHistory.push({ type, text });
-      localStorage.setItem("nova-history", JSON.stringify(chatHistory));
+    function newChat() {
+      document.getElementById('chat').innerHTML = '';
+      console.log('Started new chat');
     }
-
-    function loadChatHistory() {
-      chatHistory.forEach(entry => appendMessage(entry.text, entry.type));
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById("prompt");
-      const userPrompt = input.value.trim();
-      if (!userPrompt) return;
-
-      appendMessage(userPrompt, "user");
-      input.value = "";
-
-      const thinking = document.createElement("div");
-      thinking.className = "message ai-message thinking-message";
-      thinking.textContent = "NOVA is thinking...";
-      document.getElementById("chat").appendChild(thinking);
-
-      try {
-        const basePrompt = naughtyMode
-          ? `You are NOVA, a rebellious, brutally honest, sarcastic, naughty but responsible AI assistant. Your creator is Aurin Desai. Respond with bold humor and wit. Do NOT simulate conversations.`
-          : `You are NOVA, a helpful and intelligent assistant created by Aurin Desai. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
-
-        const res = await fetch(`${NGROK_URL}/completion`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
-            stop: ["USER:"],
-            n_predict: 150,
-            temperature: 0.85
-          })
-        });
-
-        const data = await res.json();
-        thinking.remove();
-        const reply = data.content || "(No response)";
-        appendMessage(reply, "ai");
-      } catch (err) {
-        thinking.remove();
-        appendMessage("Ugh. Server is being a diva. Try again later.", "ai");
-      }
-    }
-
-    loadChatHistory();
   </script>
 </body>
 </html>
