@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cherry - AI Assistant</title>
+  <title>NOVA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -21,16 +21,62 @@
       background-color: #1f1f1f;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      position: relative;
     }
     header h1 {
       margin: 0;
       font-size: 1.8rem;
       color: #00d1ff;
     }
-    .mode-switch {
-      margin-top: 10px;
-      text-align: center;
-      color: #ccc;
+    .toggle-container {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+    }
+    .toggle-label {
+      margin-right: 8px;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #444;
+      transition: 0.4s;
+      border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #00d1ff;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
     }
     .chat-container {
       flex-grow: 1;
@@ -120,21 +166,23 @@
 </head>
 <body>
   <header>
-    <h1>Cherry - AI Assistant</h1>
-    <div class="mode-switch">
-      <label>
-        <input type="checkbox" id="modeToggle" onchange="toggleMode()" /> Naughty Mode
+    <h1>NOVA - AI Assistant</h1>
+    <div class="toggle-container">
+      <span class="toggle-label">Naughty Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="modeToggle" onchange="toggleMode()">
+        <span class="slider"></span>
       </label>
     </div>
   </header>
 
   <div class="chat-container">
     <div id="chat" class="chat-box">
-      <div class="ai-message message">Cherry is here. Ask away...</div>
+      <div class="ai-message message">NOVA is here. Ask anything...</div>
     </div>
 
     <div class="input-container">
-      <input id="prompt" type="text" placeholder="Ask Cherry something smart or spicy..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+      <input id="prompt" type="text" placeholder="Ask Nova something..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -166,14 +214,14 @@
 
       try {
         const basePrompt = naughtyMode
-          ? `You are Cherry, a mischievous, flirty, naughty but respectful AI assistant. Never invent fake conversations, just respond directly with sass and charm.`
-          : `You are Cherry, an intelligent and helpful assistant. Respond clearly, concisely, and respectfully to the user's input.`;
+          ? `You are NOVA, a flirty, naughty (but safe) AI assistant. Respond only to what the user says. Do not invent dialogue or extra conversation turns. Keep it clever and confident.`
+          : `You are NOVA, a smart and helpful AI assistant. Respond clearly and respectfully to the user's input. Do NOT continue conversations beyond the prompt.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\n${userPrompt}`,
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
             n_predict: 100,
             temperature: 0.85
           })
