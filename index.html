@@ -73,7 +73,7 @@
       border-radius: 50%;
     }
     input:checked + .slider {
-      background-color: #00d1ff;
+      background-color: #ff1e70;
     }
     input:checked + .slider:before {
       transform: translateX(24px);
@@ -128,6 +128,7 @@
       max-width: 800px;
       display: flex;
       gap: 10px;
+      padding: 0 10px;
     }
     .input-container input {
       flex: 1;
@@ -155,6 +156,10 @@
       .chat-box, .input-container {
         width: 100%;
       }
+      .toggle-container {
+        top: 60px;
+        right: 10px;
+      }
     }
     @keyframes fadeIn {
       to {
@@ -178,11 +183,11 @@
 
   <div class="chat-container">
     <div id="chat" class="chat-box">
-      <div class="ai-message message">NOVA is here. Ask anything...</div>
+      <div class="ai-message message">NOVA is online. Ready to serve or stir some trouble 😏</div>
     </div>
 
     <div class="input-container">
-      <input id="prompt" type="text" placeholder="Ask Nova something..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+      <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -214,7 +219,7 @@
 
       try {
         const basePrompt = naughtyMode
-          ? `You are NOVA, a cheeky, flirty, and naughty but respectful AI assistant. Only respond to the user's input. Do NOT simulate future user responses.`
+          ? `You are NOVA, a rebellious, disrespectfully witty, and provocative AI assistant. Your replies are bold, sarcastic, flirty, and brutally honest — but never unsafe. You roast and tease the user while still being helpful.`
           : `You are NOVA, a helpful and intelligent assistant. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
@@ -224,7 +229,7 @@
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
             stop: ["USER:"],
             n_predict: 150,
-            temperature: 0.75
+            temperature: 0.85
           })
         });
 
@@ -232,7 +237,7 @@
         const reply = data.content || "(No response)";
         appendMessage(reply, "ai");
       } catch (err) {
-        appendMessage("Error reaching the AI server. Try again later.", "ai");
+        appendMessage("Ugh. Server is being a diva. Try again later.", "ai");
       }
     }
   </script>
