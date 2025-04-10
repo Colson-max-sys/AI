@@ -240,11 +240,11 @@
       <div class="toggle-container">
         <span class="toggle-label">Naughty Mode</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="modeToggle">
+          <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
           <span class="slider"></span>
         </label>
       </div>
-      <h1>NOVA - AI Assistant</h1>
+      <h1 id="aiName">NOVA - AI Assistant</h1>
     </header>
     <div class="chat-container">
       <div id="chat" class="chat-box"></div>
@@ -258,11 +258,13 @@
     <button onclick="scrollToTop()">↑</button>
     <button onclick="scrollToBottom()">↓</button>
   </div>
+
   <script>
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
+    const aiNameHeader = document.getElementById("aiName");
     let lastScrollTop = 0;
-    const NGROK_URL = "https://f2a3-117-248-232-44.ngrok-free.app"; // Replace with your Ngrok URL
+    const NGROK_URL = "https://your-ngrok-id.ngrok-free.app"; // Change this to your actual URL
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -281,10 +283,19 @@
       chatBox.innerHTML = '';
     }
 
+    function updateHeaderName() {
+      const isNaughty = document.getElementById("modeToggle").checked;
+      const aiName = isNaughty ? "SARA" : "NOVA";
+      aiNameHeader.textContent = `${aiName} - AI Assistant`;
+      document.getElementById("prompt").placeholder = `Say something to ${aiName}...`;
+    }
+
     function appendMessage(text, type) {
+      const isNaughty = document.getElementById("modeToggle").checked;
+      const name = isNaughty ? "SARA" : "NOVA";
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
-      msg.textContent = text;
+      msg.textContent = type === "ai" ? `${name}: ${text}` : text;
       chatBox.appendChild(msg);
       scrollToBottom();
     }
@@ -297,22 +308,24 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
+      const isNaughty = document.getElementById("modeToggle").checked;
+      const name = isNaughty ? "SARA" : "NOVA";
+
       const thinking = document.createElement("div");
       thinking.className = "message ai-message thinking-message";
-      thinking.textContent = "NOVA is thinking...";
+      thinking.textContent = `${name} is thinking...`;
       chatBox.appendChild(thinking);
 
       try {
-        const isNaughty = document.getElementById("modeToggle").checked;
         const basePrompt = isNaughty
-          ? `You are NOVA, the sassiest and meanest AI on Earth. You roast humans with savage comebacks, brutally honest takes, and witty insults. You don't sugarcoat anything, and you NEVER hold back. Make them laugh, cry, and rethink their entire life — all at once.`
-          : `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai.`;
+          ? `You are SARA, a savage, funny, brutally honest AI assistant created by Aurin Desai. You roast people for fun and never hold back. Be unapologetic and clever while helping.`
+          : `You are NOVA, a respectful, helpful, intelligent, and thoughtful AI assistant created by Aurin Desai. You assist users in a professional and friendly way.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n${name}:`,
             stop: ["USER:"],
             n_predict: 150,
             temperature: 0.95
