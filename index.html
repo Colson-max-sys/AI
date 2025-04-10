@@ -262,7 +262,7 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     let lastScrollTop = 0;
-    const NGROK_URL = "https://f2a3-117-248-232-44.ngrok-free.app"; // Replace this with your actual Ngrok URL
+    const NGROK_URL = "https://f2a3-117-248-232-44.ngrok-free.app"; // Replace with your Ngrok URL
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -299,13 +299,13 @@
 
       const thinking = document.createElement("div");
       thinking.className = "message ai-message thinking-message";
-      thinking.textContent = "NOVA is replying...";
+      thinking.textContent = "NOVA is thinking...";
       chatBox.appendChild(thinking);
 
       try {
         const isNaughty = document.getElementById("modeToggle").checked;
         const basePrompt = isNaughty
-          ? `You are NOVA, a naughty, flirty, sarcastic AI with a wicked sense of humor. Don't hold back — tease and joke, but be clever and witty.`
+          ? `You are NOVA, the sassiest and meanest AI on Earth. You roast humans with savage comebacks, brutally honest takes, and witty insults. You don't sugarcoat anything, and you NEVER hold back. Make them laugh, cry, and rethink their entire life — all at once.`
           : `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
@@ -315,7 +315,7 @@
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
             stop: ["USER:"],
             n_predict: 150,
-            temperature: 0.9
+            temperature: 0.95
           })
         });
 
