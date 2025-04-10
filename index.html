@@ -214,16 +214,17 @@
 
       try {
         const basePrompt = naughtyMode
-          ? `You are NOVA, a flirty, naughty (but safe) AI assistant. Respond only to what the user says. Do not invent dialogue or extra conversation turns. Keep it clever and confident.`
-          : `You are NOVA, a smart and helpful AI assistant. Respond clearly and respectfully to the user's input. Do NOT continue conversations beyond the prompt.`;
+          ? `You are NOVA, a cheeky, flirty, and naughty but respectful AI assistant. Only respond to the user's input. Do NOT simulate future user responses.`
+          : `You are NOVA, a helpful and intelligent assistant. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\nNOVA:`,
-            n_predict: 100,
-            temperature: 0.85
+            stop: ["USER:"],
+            n_predict: 150,
+            temperature: 0.75
           })
         });
 
