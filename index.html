@@ -235,7 +235,7 @@
       <div class="toggle-container">
         <span class="toggle-label">Naughty Mode</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="modeToggle" onchange="toggleMode()">
+          <input type="checkbox" id="modeToggle">
           <span class="slider"></span>
         </label>
       </div>
@@ -257,16 +257,23 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     let lastScrollTop = 0;
+    const NGROK_URL = "https://3e96-117-223-57-159.ngrok-free.app"; // 🔁 Replace this with your actual link
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
 
+    chatBox?.addEventListener("scroll", () => {
+      const currentScroll = chatBox.scrollTop;
+      if (Math.abs(currentScroll - lastScrollTop) > 20) {
+        scrollButtons.classList.add("show");
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
+        lastScrollTop = currentScroll;
+      }
+    });
+
     function newChat() {
       chatBox.innerHTML = '';
-    }
-
-    function toggleMode() {
-      console.log("Naughty mode:", document.getElementById("modeToggle").checked);
     }
 
     function appendMessage(text, type) {
@@ -291,11 +298,10 @@
       chatBox.appendChild(thinking);
 
       try {
-        const NGROK_URL = "https://605b-117-223-57-159.ngrok-free.app"; // Replace this!
         const isNaughty = document.getElementById("modeToggle").checked;
         const basePrompt = isNaughty
           ? `You are NOVA, a naughty, witty, brutally honest AI created by Aurin Desai.`
-          : `You are NOVA, a helpful, respectful assistant created by Aurin Desai.`;
+          : `You are NOVA, a helpful and respectful assistant created by Aurin Desai.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
@@ -316,16 +322,6 @@
         appendMessage("😓 Server error or offline.", "ai");
       }
     }
-
-    chatBox?.addEventListener("scroll", () => {
-      const currentScroll = chatBox.scrollTop;
-      if (Math.abs(currentScroll - lastScrollTop) > 20) {
-        scrollButtons.classList.add("show");
-        clearTimeout(window.scrollTimeout);
-        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
-        lastScrollTop = currentScroll;
-      }
-    });
   </script>
 </body>
 </html>
