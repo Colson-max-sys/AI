@@ -193,11 +193,12 @@
     <div class="input-container">
       <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
       <button onclick="sendMessage()">Send</button>
+      <button onclick="speakInput()">🎤</button>
     </div>
   </div>
 
   <script>
-    const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app"; // Replace with your actual URL
+    const NGROK_URL = "https://be67-117-223-57-159.ngrok-free.app";
     let naughtyMode = false;
 
     function toggleMode() {
@@ -211,6 +212,23 @@
       msg.textContent = text;
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
+      if (type === "ai") speakText(text);
+    }
+
+    function speakInput() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+      recognition.onresult = (e) => {
+        document.getElementById("prompt").value = e.results[0][0].transcript;
+        sendMessage();
+      };
+    }
+
+    function speakText(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
     }
 
     async function sendMessage() {
@@ -228,8 +246,8 @@
 
       try {
         const basePrompt = naughtyMode
-          ? `You are NOVA, a rebellious, brutally honest, sarcastic, naughty but responsible AI assistant. Respond to the user's prompt with bold humor and wit. Do NOT simulate conversations.`
-          : `You are NOVA, a helpful and intelligent assistant. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
+          ? `You are NOVA, a rebellious, brutally honest, sarcastic, naughty but responsible AI assistant. Your creator is Aurin Desai. Respond with bold humor and wit. Do NOT simulate conversations.`
+          : `You are NOVA, a helpful and intelligent assistant created by Aurin Desai. Only answer what the user asks. Do NOT continue or simulate dialogue.`;
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
