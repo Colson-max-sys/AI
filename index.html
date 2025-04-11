@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
@@ -38,7 +38,6 @@
       text-align: left;
     }
     .sidebar button:hover { background-color: #333; }
-
     .container {
       flex-grow: 1;
       display: flex;
@@ -98,14 +97,13 @@
     input:checked + .slider:before {
       transform: translateX(24px);
     }
-
     .chat-container {
-      flex: 1 1 auto;
+      flex: 1;
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
       align-items: center;
       padding: 10px;
-      min-height: 0;
     }
     .chat-box {
       width: 100%;
@@ -114,14 +112,13 @@
       padding: 15px;
       border-radius: 12px;
       overflow-y: auto;
-      flex: 1;
-      margin-bottom: 0;
+      flex-grow: 1;
+      margin-bottom: 12px;
       display: flex;
       flex-direction: column;
       gap: 16px;
       scroll-behavior: smooth;
     }
-
     .message {
       max-width: 85%;
       padding: 12px 16px;
@@ -133,26 +130,22 @@
       transform: translateY(20px);
       animation: fadeIn 0.4s ease forwards;
     }
-
     .user-message {
       align-self: flex-end;
       background-color: #007acc;
       color: #fff;
       border-bottom-right-radius: 0;
     }
-
     .ai-message {
       align-self: flex-start;
       background-color: #2b2b2b;
       color: #ddd;
       border-bottom-left-radius: 0;
     }
-
     .thinking-message {
       font-style: italic;
       color: #888;
     }
-
     .input-container {
       width: 100%;
       max-width: 800px;
@@ -180,11 +173,30 @@
       transition: background 0.3s;
     }
     .input-container button:hover { background-color: #00a6cc; }
-
-    @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
+    .scroll-buttons {
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-
+    .scroll-buttons.show { opacity: 1; }
+    .scroll-buttons button {
+      background-color: #1f1f1f;
+      border: 1px solid #444;
+      color: #00d1ff;
+      font-size: 20px;
+      padding: 8px 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .scroll-buttons button:hover {
+      background-color: #2a2a2a;
+    }
     @media screen and (max-width: 768px) {
       body { flex-direction: column; }
       .sidebar {
@@ -204,6 +216,15 @@
         align-items: flex-start;
         gap: 6px;
       }
+      .chat-container {
+        flex: 1;
+      }
+      .chat-box {
+        max-height: 60vh;
+      }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -211,8 +232,8 @@
   <div class="sidebar">
     <h2>Chats</h2>
     <button onclick="newChat()">➕ New Chat</button>
+    <div id="chatHistoryButtons"></div>
   </div>
-
   <div class="container">
     <header>
       <div class="toggle-container">
@@ -224,7 +245,6 @@
       </div>
       <h1 id="aiName">SARA - AI Assistant</h1>
     </header>
-
     <div class="chat-container">
       <div id="chat" class="chat-box"></div>
       <div class="input-container">
@@ -233,19 +253,35 @@
       </div>
     </div>
   </div>
+  <div class="scroll-buttons" id="scrollButtons">
+    <button onclick="scrollToTop()">↑</button>
+    <button onclick="scrollToBottom()">↓</button>
+  </div>
 
   <script>
     const chatBox = document.getElementById("chat");
-    const inputField = document.getElementById("prompt");
+    const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
+    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app"; // Replace with your current ngrok
+    const LOG_SERVER = "http://localhost:5050/log";
 
-    let conversation = [];
-    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app";
-    const LOG_SERVER = "http://localhost:5050";
+    let lastScrollTop = 0;
+
+    function scrollToTop() { chatBox.scrollTop = 0; }
+    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
+
+    chatBox.addEventListener("scroll", () => {
+      const currentScroll = chatBox.scrollTop;
+      if (Math.abs(currentScroll - lastScrollTop) > 20) {
+        scrollButtons.classList.add("show");
+        clearTimeout(window.scrollTimeout);
+        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
+        lastScrollTop = currentScroll;
+      }
+    });
 
     function newChat() {
       chatBox.innerHTML = '';
-      conversation = [];
     }
 
     function updateHeaderName() {
@@ -258,34 +294,33 @@
       msg.className = `message ${type}-message`;
       msg.textContent = text;
       chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      scrollToBottom();
     }
 
     async function sendMessage() {
-      const userInput = inputField.value.trim();
-      if (!userInput) return;
+      const input = document.getElementById("prompt");
+      const userPrompt = input.value.trim();
+      if (!userPrompt) return;
 
-      const isInnocent = document.getElementById("modeToggle").checked;
-      const basePrompt = isInnocent
-        ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
-        : `You are SARA, an unapologetically bold, flirty, savage, and clever AI created by Aurin Desai. You're brutally honest, wild, and love roasting people with wit and sarcasm — but you still get things done.`;
-
-      appendMessage(userInput, 'user');
-      inputField.value = "";
+      appendMessage(userPrompt, "user");
+      input.value = "";
 
       const thinking = document.createElement("div");
+      const isInnocent = document.getElementById("modeToggle").checked;
       thinking.className = "message ai-message thinking-message";
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
 
-      conversation.push({ role: "user", content: userInput });
-
       try {
+        const basePrompt = isInnocent
+          ? `You are NOVA, a respectful super smart, helpful, and intelligent assistant created by Aurin Desai.`
+          : `You are SARA, a badass, savage, flirty, hilarious, brutally honest AI created by Aurin Desai.`
+
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\n${conversation.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n")}\nAI:`,
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
             stop: ["USER:"],
             n_predict: 150,
             temperature: 0.95
@@ -294,14 +329,13 @@
 
         const data = await res.json();
         thinking.remove();
-        appendMessage(data.content || "(No response)", 'ai');
-        conversation.push({ role: "ai", content: data.content });
+        appendMessage(data.content || "(No response)", "ai");
 
-        // send logs to your Node.js server
-        fetch(`${LOG_SERVER}/log`, {
+        // ✅ Log both messages
+        fetch(LOG_SERVER, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: `${userInput}\n${data.content}` })
+          body: JSON.stringify({ message: `USER: ${userPrompt}\nAI: ${data.content}` })
         });
 
       } catch (err) {
