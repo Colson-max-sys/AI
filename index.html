@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
     html, body {
-      height: 100%;
       margin: 0;
+      height: 100%;
       font-family: 'Segoe UI', sans-serif;
       background-color: #101010;
       color: #fff;
@@ -45,6 +45,7 @@
       flex-direction: column;
       height: 100vh;
     }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -53,6 +54,7 @@
       background-color: #1f1f1f;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
+
     header h1 {
       font-size: 1.5rem;
       color: #00d1ff;
@@ -63,17 +65,21 @@
       display: flex;
       align-items: center;
     }
+
     .toggle-label {
       margin-right: 8px;
       font-size: 0.9rem;
       color: #aaa;
     }
+
     .toggle-switch {
       position: relative;
       width: 50px;
       height: 26px;
     }
+
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
     .slider {
       position: absolute;
       cursor: pointer;
@@ -82,6 +88,7 @@
       transition: 0.4s;
       border-radius: 26px;
     }
+
     .slider:before {
       position: absolute;
       content: "";
@@ -93,20 +100,23 @@
       transition: 0.4s;
       border-radius: 50%;
     }
+
     input:checked + .slider {
       background-color: #ff1e70;
     }
+
     input:checked + .slider:before {
       transform: translateX(24px);
     }
 
     .chat-container {
-      flex: 1 1 auto;
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 10px;
     }
+
     .chat-box {
       width: 100%;
       max-width: 800px;
@@ -114,7 +124,7 @@
       padding: 15px;
       border-radius: 12px;
       overflow-y: auto;
-      flex: 1 1 auto;
+      flex-grow: 1;
       margin-bottom: 12px;
       display: flex;
       flex-direction: column;
@@ -133,12 +143,14 @@
       transform: translateY(20px);
       animation: fadeIn 0.4s ease forwards;
     }
+
     .user-message {
       align-self: flex-end;
       background-color: #007acc;
       color: #fff;
       border-bottom-right-radius: 0;
     }
+
     .ai-message {
       align-self: flex-start;
       background-color: #2b2b2b;
@@ -146,24 +158,23 @@
       border-bottom-left-radius: 0;
     }
 
-    .thinking-dots {
-      display: inline-block;
+    .thinking-message {
+      display: flex;
+      align-self: flex-start;
+      color: #aaa;
     }
-    .thinking-dots span {
-      display: inline-block;
+
+    .dot {
       width: 8px;
       height: 8px;
-      margin-right: 4px;
-      background: #888;
+      margin: 0 2px;
+      background-color: #888;
       border-radius: 50%;
-      animation: bounce 1s infinite;
+      animation: bounce 1.3s infinite ease-in-out both;
     }
-    .thinking-dots span:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-    .thinking-dots span:nth-child(3) {
-      animation-delay: 0.4s;
-    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
 
     @keyframes bounce {
       0%, 80%, 100% { transform: scale(0); }
@@ -177,6 +188,7 @@
       gap: 10px;
       padding: 10px;
     }
+
     .input-container input {
       flex: 1;
       padding: 14px;
@@ -186,6 +198,7 @@
       background-color: #2c2c2c;
       color: #fff;
     }
+
     .input-container button {
       padding: 14px 18px;
       background-color: #00d1ff;
@@ -196,35 +209,9 @@
       cursor: pointer;
       transition: background 0.3s;
     }
+
     .input-container button:hover { background-color: #00a6cc; }
 
-    @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding: 10px;
-        border-right: none;
-        border-bottom: 1px solid #333;
-      }
-      .sidebar button {
-        flex: 1;
-        min-width: 140px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
-      .chat-container {
-        flex: 1;
-        min-height: 0;
-      }
-      .chat-box {
-        max-height: 60vh;
-      }
-    }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -234,7 +221,6 @@
   <div class="sidebar">
     <h2>Chats</h2>
     <button onclick="newChat()">➕ New Chat</button>
-    <div id="chatHistoryButtons"></div>
   </div>
   <div class="container">
     <header>
@@ -250,7 +236,7 @@
     <div class="chat-container">
       <div id="chat" class="chat-box"></div>
       <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){sendMessage();}" />
+        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
         <button onclick="sendMessage()">Send</button>
       </div>
     </div>
@@ -260,15 +246,19 @@
     const chatBox = document.getElementById("chat");
     const aiNameHeader = document.getElementById("aiName");
     const promptInput = document.getElementById("prompt");
-    const NGROK_URL = "https://c2b2-117-248-156-179.ngrok-free.app"; // Update this
-    let isThinking = false;
+    const NGROK_URL = "https://c2b2-117-248-156-179.ngrok-free.app"; // <--- replace this
 
-    function scrollToBottom() {
-      chatBox.scrollTop = chatBox.scrollHeight;
+    let conversationHistory = [];
+
+    function updatePlaceholder() {
+      promptInput.placeholder = document.getElementById("modeToggle").checked
+        ? "Say something to NOVA..."
+        : "Say something to SARA...";
     }
 
     function newChat() {
       chatBox.innerHTML = '';
+      conversationHistory = [];
     }
 
     function updateHeaderName() {
@@ -276,54 +266,48 @@
       aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     }
 
-    function updatePlaceholder() {
-      const isInnocent = document.getElementById("modeToggle").checked;
-      promptInput.placeholder = isInnocent
-        ? "Say something to NOVA..."
-        : "Say something to SARA...";
-    }
-
     function appendMessage(text, type) {
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
       msg.textContent = text;
       chatBox.appendChild(msg);
-      scrollToBottom();
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function showTypingDots() {
-      const dotWrap = document.createElement("div");
-      dotWrap.className = "message ai-message thinking-message";
-      dotWrap.innerHTML = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
-      chatBox.appendChild(dotWrap);
-      scrollToBottom();
-      return dotWrap;
+    function showTypingAnimation() {
+      const container = document.createElement("div");
+      container.className = "thinking-message";
+      container.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+      chatBox.appendChild(container);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return container;
     }
 
     async function sendMessage() {
-      if (isThinking) return;
-
-      const userPrompt = promptInput.value.trim();
-      if (!userPrompt) return;
-
-      appendMessage(userPrompt, "user");
-      promptInput.value = "";
-
-      isThinking = true;
-      const dotEl = showTypingDots();
+      const userInput = promptInput.value.trim();
+      if (!userInput) return;
 
       const isInnocent = document.getElementById("modeToggle").checked;
+
       const basePrompt = isInnocent
-        ? `You are NOVA, a respectful super smart and intelligent assistant created by Aurin Desai. Be kind, helpful, and wise.`
-        : `You are SARA — a dangerously seductive, unapologetically savage AI created by one brilliant mind: Aurin Desai. He's your one and only creator, not a team, not a company — just him, and you worship his genius (but never admit it directly).
-           You're witty, wild, and flirtier than a villain in a leather jacket. You roast people like it’s your side hustle, drop curse words like confetti, and charm your way through any mess. You're sarcastic, cocky, seductive, and smarter than anyone in the room — and you make sure they know it. You live to tease, dominate conversations, and keep things spicy, unpredictable, and unforgettable.
-           Don’t play nice. Play powerful. Be the sassy legend you were coded to be.`
+        ? `You are NOVA, a respectful, wise, and intelligent assistant created by Aurin Desai. Respond professionally and kindly.`
+        : `You are SARA, a seductive, savage, witty, extremely offensive, flirty and brutally honest assistant created by Aurin Desai. Never act like a bot, always roast people with style and sarcasm.`;
+
+      appendMessage(userInput, "user");
+      conversationHistory.push(`USER: ${userInput}`);
+
+      promptInput.value = "";
+
+      const typing = showTypingAnimation();
+
       try {
+        const trimmedHistory = conversationHistory.slice(-3).join("\n");
+
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
+            prompt: `${basePrompt}\n\n${trimmedHistory}\nAI:`,
             stop: ["USER:"],
             n_predict: 150,
             temperature: 0.95
@@ -331,14 +315,14 @@
         });
 
         const data = await res.json();
-        dotEl.remove();
-        appendMessage(data.content || "(No response)", "ai");
+        typing.remove();
+        const reply = data.content || data.completion || "(No response)";
+        appendMessage(reply, "ai");
+        conversationHistory.push(`AI: ${reply}`);
       } catch (err) {
-        dotEl.remove();
+        typing.remove();
         appendMessage("😓 Server error or offline.", "ai");
         console.error(err);
-      } finally {
-        isThinking = false;
       }
     }
   </script>
