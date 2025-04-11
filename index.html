@@ -262,7 +262,7 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
-    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app"; // Replace with your current ngrok
+    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app/v1/chat/completions"; // Replace with your current ngrok
     const LOG_SERVER = "http://localhost:5050/log";
 
     let lastScrollTop = 0;
@@ -316,7 +316,7 @@
           ? `You are NOVA, a respectful super smart, helpful, and intelligent assistant created by Aurin Desai.`
           : `You are SARA, a badass, savage, flirty, hilarious, brutally honest AI created by Aurin Desai.`
 
-        const res = await fetch(`${NGROK_URL}/completion`, {
+        const res = await fetch(NGROK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
