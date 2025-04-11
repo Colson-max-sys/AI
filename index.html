@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
@@ -263,9 +263,8 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
+    const NGROK_URL = "https://c24d-117-248-156-179.ngrok-free.app"; // CHANGE TO YOUR NGROK URL
     let lastScrollTop = 0;
-
-    const NGROK_URL = "https://c24d-117-248-156-179.ngrok-free.app"; // 👈 update if needed
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -289,6 +288,14 @@
       aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     }
 
+    function appendMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = `message ${type}-message`;
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      scrollToBottom();
+    }
+
     async function sendMessage() {
       const input = document.getElementById("prompt");
       const userPrompt = input.value.trim();
@@ -297,40 +304,36 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
-      const isInnocent = document.getElementById("modeToggle").checked;
       const thinking = document.createElement("div");
+      const isInnocent = document.getElementById("modeToggle").checked;
       thinking.className = "message ai-message thinking-message";
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
-      scrollToBottom();
+
+      const basePrompt = isInnocent
+        ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
+        : `You are SARA, a bold, naughty, sarcastic, and clever assistant created by Aurin Desai. Roast people playfully but still help them.`
 
       try {
-        const res = await fetch(`${NGROK_URL}/completion`, {
+        const res = await fetch(`${NGROK_URL}/v1/completions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: userPrompt,
-            stop: ["USER:"],
-            n_predict: 150,
-            temperature: 0.95
+            model: "nous-hermes-2-mistral-7b-dpo.Q4_K_S.gguf",
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
+            max_tokens: 200,
+            temperature: 0.95,
+            stop: ["USER:"]
           })
         });
 
         const data = await res.json();
         thinking.remove();
-        appendMessage(data.content || "(No response)", "ai");
+        appendMessage(data.choices?.[0]?.text.trim() || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
       }
-    }
-
-    function appendMessage(text, type) {
-      const msg = document.createElement("div");
-      msg.className = `message ${type}-message`;
-      msg.textContent = text;
-      chatBox.appendChild(msg);
-      scrollToBottom();
     }
   </script>
 </body>
