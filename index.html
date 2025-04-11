@@ -3,69 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SARA / NOVA - AI Assistant</title>
+  <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
-    body, html {
+    html, body {
       height: 100%;
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
+      background-color: #101010;
       color: #fff;
-    }
-    body {
       display: flex;
       flex-direction: column;
     }
-    header {
-      background-color: #1e1e1e;
-      padding: 10px 20px;
+    header, .sidebar, .input-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .sidebar {
+      padding: 10px;
+      background: #1a1a1a;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #333;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      color: #00d1ff;
-    }
-    .toggle-container {
+    header {
+      background: #1f1f1f;
+      padding: 12px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
     }
-    .toggle-label {
-      margin-right: 10px;
-      font-size: 0.95rem;
-    }
-    .toggle-switch {
-      position: relative;
-      width: 50px;
-      height: 26px;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    .toggle-switch { position: relative; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #555;
-      border-radius: 26px;
-      transition: 0.4s;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #444; border-radius: 26px; transition: 0.4s;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 20px;
-      width: 20px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
+      content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background-color: white; transition: 0.4s; border-radius: 50%;
     }
     input:checked + .slider {
       background-color: #ff1e70;
@@ -73,108 +50,67 @@
     input:checked + .slider:before {
       transform: translateX(24px);
     }
-
-    .chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 10px;
-      overflow: hidden;
-    }
-
     .chat-box {
-      width: 100%;
-      max-width: 800px;
-      height: 100%;
+      flex-grow: 1;
       overflow-y: auto;
-      background: #1a1a1a;
       padding: 20px;
-      border-radius: 10px;
+      background: #1e1e1e;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      scroll-behavior: smooth;
+      gap: 16px;
     }
-
-    .message {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 1rem;
-      max-width: 80%;
-      white-space: pre-wrap;
-      animation: fadeIn 0.3s ease-in;
-    }
-
-    .user-message {
-      background-color: #007acc;
-      align-self: flex-end;
-      color: white;
-    }
-
-    .ai-message {
-      background-color: #2c2c2c;
-      align-self: flex-start;
-      color: #ccc;
-    }
-
-    .thinking-message {
-      font-style: italic;
-      color: #aaa;
-    }
-
     .input-container {
-      width: 100%;
-      max-width: 800px;
       display: flex;
-      padding: 12px;
+      padding: 10px;
       gap: 10px;
-      background-color: #101010;
     }
-
     .input-container input {
       flex: 1;
       padding: 14px;
       border-radius: 8px;
-      background-color: #2c2c2c;
+      background: #2c2c2c;
+      color: #fff;
       border: none;
-      color: white;
-      font-size: 1rem;
     }
-
     .input-container button {
-      padding: 14px 18px;
-      background-color: #00d1ff;
+      padding: 14px;
+      background: #00d1ff;
+      color: #000;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      color: black;
     }
-
+    .message {
+      padding: 12px 16px;
+      border-radius: 12px;
+      line-height: 1.5;
+      max-width: 85%;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .user-message {
+      align-self: flex-end;
+      background-color: #007acc;
+      color: #fff;
+    }
+    .ai-message {
+      align-self: flex-start;
+      background-color: #333;
+      color: #ddd;
+    }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 600px) {
-      .chat-box, .input-container {
-        max-width: 100%;
-        padding: 10px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
     }
   </style>
 </head>
 <body>
+  <div class="sidebar">
+    <h2>SARA Chat</h2>
+    <button onclick="newChat()">➕ New Chat</button>
+  </div>
   <header>
-    <div class="toggle-container">
-      <span class="toggle-label">Innocent Mode</span>
+    <div>
+      <span style="color: #aaa;">Innocent Mode</span>
       <label class="toggle-switch">
         <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
         <span class="slider"></span>
@@ -182,24 +118,24 @@
     </div>
     <h1 id="aiName">SARA - AI Assistant</h1>
   </header>
-
-  <div class="chat-container">
-    <div id="chat" class="chat-box"></div>
-    <div class="input-container">
-      <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter'){sendMessage();}" />
-      <button onclick="sendMessage()">Send</button>
-    </div>
+  <div id="chat" class="chat-box"></div>
+  <div class="input-container">
+    <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter')sendMessage();" />
+    <button onclick="sendMessage()">Send</button>
   </div>
 
   <script>
+    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app/completion"; // Set this when script prints it
     const chatBox = document.getElementById("chat");
     const aiNameHeader = document.getElementById("aiName");
-    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app";  // Update this
+
+    function newChat() {
+      chatBox.innerHTML = '';
+    }
 
     function updateHeaderName() {
-      aiNameHeader.textContent = document.getElementById("modeToggle").checked
-        ? "NOVA - AI Assistant"
-        : "SARA - AI Assistant";
+      const isInnocent = document.getElementById("modeToggle").checked;
+      aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     }
 
     function appendMessage(text, type) {
@@ -208,10 +144,6 @@
       msg.textContent = text;
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function newChat() {
-      chatBox.innerHTML = '';
     }
 
     async function sendMessage() {
@@ -224,35 +156,33 @@
 
       const isInnocent = document.getElementById("modeToggle").checked;
       const thinking = document.createElement("div");
-      thinking.className = "message ai-message thinking-message";
+      thinking.className = "message ai-message";
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const basePrompt = isInnocent
-        ? "You are NOVA, a respectful and helpful AI assistant created by Aurin Desai."
-        : "You are SARA, a bold, witty, savage and confident assistant created by Aurin Desai.";
 
       try {
-        const res = await fetch(NGROK_URL, {
+        const basePrompt = isInnocent
+          ? `You are NOVA, a respectful, smart AI created by Aurin Desai. Be concise and clear.`
+          : `You are SARA, a bold, flirty, savage AI made by Aurin Desai. You roast with wit but always get things done.`
+
+        const response = await fetch(NGROK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
             stop: ["USER:"],
-            temperature: 0.95,
-            n_predict: 150
+            n_predict: 150,
+            temperature: 0.95
           })
         });
 
-        const data = await res.json();
+        const data = await response.json();
         thinking.remove();
-        console.log("🟡 Raw response from server:", JSON.stringify(data, null, 2));
         appendMessage(data.content || data.completion || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
-        console.error(err);
+        console.error("Error:", err);
       }
     }
   </script>
