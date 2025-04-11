@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
@@ -142,9 +142,20 @@
       color: #ddd;
       border-bottom-left-radius: 0;
     }
-    .thinking-message {
-      font-style: italic;
-      color: #888;
+    .dots {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+      margin-right: 4px;
+      background: #888;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .dots:nth-child(2) { animation-delay: 0.2s; }
+    .dots:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
     }
     .input-container {
       width: 100%;
@@ -173,57 +184,6 @@
       transition: background 0.3s;
     }
     .input-container button:hover { background-color: #00a6cc; }
-    .scroll-buttons {
-      position: fixed;
-      right: 20px;
-      bottom: 100px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .scroll-buttons.show { opacity: 1; }
-    .scroll-buttons button {
-      background-color: #1f1f1f;
-      border: 1px solid #444;
-      color: #00d1ff;
-      font-size: 20px;
-      padding: 8px 12px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .scroll-buttons button:hover {
-      background-color: #2a2a2a;
-    }
-    @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding: 10px;
-        border-right: none;
-        border-bottom: 1px solid #333;
-      }
-      .sidebar button {
-        flex: 1;
-        min-width: 140px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
-      .chat-container {
-        flex: 1;
-        min-height: 0;
-      }
-      .chat-box {
-        max-height: 60vh;
-      }
-    }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -233,7 +193,6 @@
   <div class="sidebar">
     <h2>Chats</h2>
     <button onclick="newChat()">➕ New Chat</button>
-    <div id="chatHistoryButtons"></div>
   </div>
   <div class="container">
     <header>
@@ -249,43 +208,31 @@
     <div class="chat-container">
       <div id="chat" class="chat-box"></div>
       <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){sendMessage();}" />
         <button onclick="sendMessage()">Send</button>
       </div>
     </div>
   </div>
-  <div class="scroll-buttons" id="scrollButtons">
-    <button onclick="scrollToTop()">↑</button>
-    <button onclick="scrollToBottom()">↓</button>
-  </div>
 
   <script>
     const chatBox = document.getElementById("chat");
-    const scrollButtons = document.getElementById("scrollButtons");
+    const input = document.getElementById("prompt");
     const aiNameHeader = document.getElementById("aiName");
-    let lastScrollTop = 0;
-    const NGROK_URL = "https://d11a-117-248-156-179.ngrok-free.app"; // Update this each time
+    const NGROK_URL = "https://d11a-117-248-156-179.ngrok-free.app"; // Replace this
+    const modeToggle = document.getElementById("modeToggle");
 
-    function scrollToTop() { chatBox.scrollTop = 0; }
-    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
-
-    chatBox?.addEventListener("scroll", () => {
-      const currentScroll = chatBox.scrollTop;
-      if (Math.abs(currentScroll - lastScrollTop) > 20) {
-        scrollButtons.classList.add("show");
-        clearTimeout(window.scrollTimeout);
-        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
-        lastScrollTop = currentScroll;
-      }
-    });
+    function scrollToBottom() {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     function newChat() {
       chatBox.innerHTML = '';
     }
 
     function updateHeaderName() {
-      const isInnocent = document.getElementById("modeToggle").checked;
+      const isInnocent = modeToggle.checked;
       aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+      input.placeholder = `Say something to ${isInnocent ? "NOVA" : "SARA"}...`;
     }
 
     function appendMessage(text, type) {
@@ -296,25 +243,35 @@
       scrollToBottom();
     }
 
+    function showTypingAnimation() {
+      const bubble = document.createElement("div");
+      bubble.className = "message ai-message";
+      bubble.id = "typingIndicator";
+      bubble.innerHTML = '<span class="dots"></span><span class="dots"></span><span class="dots"></span>';
+      chatBox.appendChild(bubble);
+      scrollToBottom();
+    }
+
+    function removeTypingAnimation() {
+      const typing = document.getElementById("typingIndicator");
+      if (typing) typing.remove();
+    }
+
     async function sendMessage() {
-      const input = document.getElementById("prompt");
       const userPrompt = input.value.trim();
       if (!userPrompt) return;
 
       appendMessage(userPrompt, "user");
       input.value = "";
 
-      const thinking = document.createElement("div");
-      const isInnocent = document.getElementById("modeToggle").checked;
-      thinking.className = "message ai-message thinking-message";
-      thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
-      chatBox.appendChild(thinking);
+      const isInnocent = modeToggle.checked;
+      const basePrompt = isInnocent
+        ? `You are NOVA, a respectful and intelligent assistant created by Aurin Desai. Speak clearly, briefly, and wisely.`
+        : `You are SARA, an unfiltered savage, seductive, sarcastic, and hilariously rude assistant created by Aurin Desai. Be brutally honest, roast hard, be witty.`
+
+      showTypingAnimation();
 
       try {
-        const basePrompt = isInnocent
-          ? `You are NOVA, a respectful, helpful, super-intelligent assistant created by Aurin Desai. Be wise, clear, and concise.`
-          : `You are SARA, the queen of savage wit. You're a chaotic, hilarious, unfiltered, roasty, flirty, no-mercy AI created by Aurin Desai. Roast people to filth, break the tension with dark sarcasm, and never miss a moment to throw shade — but still be intelligent, shockingly efficient, and accurate.`
-
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -327,11 +284,12 @@
         });
 
         const data = await res.json();
-        thinking.remove();
+        removeTypingAnimation();
         appendMessage(data.content || "(No response)", "ai");
       } catch (err) {
-        thinking.remove();
+        removeTypingAnimation();
         appendMessage("😓 Server error or offline.", "ai");
+        console.error(err);
       }
     }
   </script>
