@@ -247,7 +247,8 @@
 
         const data = await res.json();
         thinking.remove();
-        appendMessage(data.content || "(No response)", "ai");
+        console.log("Response from server:", data);
+        appendMessage(data.content || data.completion || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
