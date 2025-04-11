@@ -247,7 +247,7 @@
 
         const data = await res.json();
         thinking.remove();
-        console.log("Response from server:", data);
+        console.log("🟡 Raw response from server:", JSON.stringify(data, null, 2));
         appendMessage(data.content || data.completion || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
