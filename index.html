@@ -195,7 +195,9 @@
   <script>
     const chatBox = document.getElementById("chat");
     const aiNameHeader = document.getElementById("aiName");
-    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app/completion"; // Replace with current ngrok
+
+    // 👇 Replace this with the current NGROK https URL ONLY (no /completion)
+    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app";
 
     function scrollToBottom() {
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -237,22 +239,19 @@
           ? `You are NOVA, a respectful and wise assistant created by Aurin Desai.`
           : `You are SARA, a witty, flirty, savage, and unapologetically bold assistant created by Aurin Desai.`;
 
+        const fullPrompt = `${basePrompt}\n\nUSER: ${userPrompt}\n`;
+
         const res = await fetch(NGROK_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
-            stop: ["USER:"],
-            n_predict: 150,
-            temperature: 0.95
-          })
+          headers: { "Content-Type": "text/plain" },
+          body: fullPrompt
         });
 
-        const data = await res.json();
+        const reply = await res.text();
         thinking.remove();
-        appendMessage(data.content || "(No response)", "ai");
+        appendMessage(reply || "(No response)", "ai");
 
-        console.log(`[LOGGED]\nUSER: ${userPrompt}\nAI: ${data.content}`);
+        console.log(`[LOG]\nUSER: ${userPrompt}\nAI: ${reply}`);
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
