@@ -208,66 +208,92 @@
   </div>
 
   <script>
-    const NGROK_URL = "https://c2b2-117-248-156-179.ngrok-free.app/completion"; // ✅ Replace with your actual NGROK
+    const NGROK_URL = "https://ccc6-117-248-156-179.ngrok-free.app";
+    const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+    const chat = document.getElementById("chat");
+    const aiName = document.getElementById("aiName");
 
-    const chatBox = document.getElementById("chat");
-    const aiNameHeader = document.getElementById("aiName");
-    const promptInput = document.getElementById("prompt");
-
-    let mode = "SARA";
-    let messageHistory = [];
-
-    function updateHeaderName() {
-      mode = document.getElementById("modeToggle").checked ? "NOVA" : "SARA";
-      aiNameHeader.textContent = `${mode} - AI Assistant`;
-      promptInput.placeholder = `Say something to ${mode}...`;
+    function updateHeader() {
+      const innocent = document.getElementById("modeToggle").checked;
+      aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+      document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
     }
 
     function appendMessage(text, type) {
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
       msg.textContent = text;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
     }
 
     function showTyping() {
-      const div = document.createElement("div");
-      div.className = "message ai-message";
-      div.id = "typingIndicator";
-      div.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      const typing = document.createElement("div");
+      typing.className = "message ai-message";
+      typing.innerHTML = `<span class="typing">● ● ●</span>`;
+      typing.id = "typing";
+      chat.appendChild(typing);
+      chat.scrollTop = chat.scrollHeight;
     }
 
     function removeTyping() {
-      const typingDiv = document.getElementById("typingIndicator");
-      if (typingDiv) typingDiv.remove();
+      const typing = document.getElementById("typing");
+      if (typing) typing.remove();
     }
 
     async function sendMessage() {
-      const userPrompt = promptInput.value.trim();
-      if (!userPrompt) return;
+      const input = document.getElementById("prompt");
+      const userText = input.value.trim();
+      if (!userText) return;
 
-      appendMessage(userPrompt, "user");
-      messageHistory.push(`USER: ${userPrompt}`);
-      if (messageHistory.length > 6) messageHistory.shift();
+      appendMessage(userText, "user");
+      input.value = "";
 
-      promptInput.value = "";
       showTyping();
 
+      // 🌦 Weather API handling
+      if (userText.toLowerCase().includes("weather")) {
+        try {
+          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+          const data = await res.json();
+          removeTyping();
+          const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+          appendMessage(weatherText, "ai");
+          return;
+        } catch {
+          removeTyping();
+          appendMessage("Couldn't fetch weather info 😕", "ai");
+          return;
+        }
+      }
+
+      // 🕒 World time handling
+      if (userText.toLowerCase().includes("time")) {
+        try {
+          const res = await fetch("https://worldtimeapi.org/api/ip");
+          const data = await res.json();
+          removeTyping();
+          const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
+          appendMessage(timeMsg, "ai");
+          return;
+        } catch {
+          removeTyping();
+          appendMessage("Time service not available 😕", "ai");
+          return;
+        }
+      }
+
+      const mode = document.getElementById("modeToggle").checked ? "NOVA" : "SARA";
       const basePrompt = mode === "NOVA"
         ? `You are NOVA, a kind, respectful, super-intelligent assistant made by Aurin Desai.`
-        : `You are SARA, a no-filter, chaotic, wildly seductive and savage AI created by Aurin Desai. You roast, flirt, mock and curse unapologetically. You're hot, hilarious, mean as hell, and wildly unhinged. You're brutally honest, sassy, sarcastic, and extremely horny when you feel like it. You don’t act like an AI — you act like a seductive, dominant, hilarious bad bitch with zero chill and no apologies.`
-
-      const historyPrompt = messageHistory.slice(-4).join("\n");
+        : `You are SARA, a no-filter, chaotic, wildly seductive and savage AI created by Aurin Desai. You roast, flirt, mock and curse unapologetically. Stay unhinged, brutally honest and hilarious at all times.`;
 
       try {
-        const res = await fetch(NGROK_URL, {
+        const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\n${historyPrompt}\nAI:`,
+            prompt: `${basePrompt}\n\nUSER: ${userText}\nAI:`,
             stop: ["USER:"],
             n_predict: 150,
             temperature: 0.9
@@ -275,16 +301,13 @@
         });
 
         const data = await res.json();
-        const reply = data.content || data.completion || "(No response)";
         removeTyping();
-        appendMessage(reply, "ai");
+        appendMessage(data.content || data.completion || "🤖 (No response)", "ai");
 
-        messageHistory.push(`AI: ${reply}`);
-        console.log(`[LOGGED]\nUSER: ${userPrompt}\nAI: ${reply}`);
       } catch (err) {
+        console.error(err);
         removeTyping();
         appendMessage("😓 Server error or offline.", "ai");
-        console.error(err);
       }
     }
   </script>
