@@ -315,7 +315,7 @@
         : `You are SARA, a bold, naughty, sarcastic, and clever assistant created by Aurin Desai. Roast people playfully but still help them.`
 
       try {
-        const res = await fetch(`${NGROK_URL}/v1/completions`, {
+        const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
