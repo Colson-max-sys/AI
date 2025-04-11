@@ -264,7 +264,7 @@
     const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
     let lastScrollTop = 0;
-    const NGROK_URL = "https://32ec-117-248-156-179.ngrok-free.app";
+    const NGROK_URL = "https://32ec-117-248-156-179.ngrok-free.app"; // replace this with what script prints in terminal
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -294,6 +294,10 @@
       msg.textContent = text;
       chatBox.appendChild(msg);
       scrollToBottom();
+
+      // ✅ Log message to console for now
+      const sender = type === 'user' ? 'USER' : 'AI';
+      console.log(`[${sender}]: ${text}`);
     }
 
     async function sendMessage() {
