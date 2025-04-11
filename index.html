@@ -2,84 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
     html, body {
-      height: 100%;
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background-color: #101010;
       color: #fff;
+      height: 100%;
     }
-    body {
-      display: flex;
-      flex-direction: row;
-      overflow: hidden;
-    }
-    .sidebar {
-      width: 240px;
-      background-color: #1a1a1a;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-right: 1px solid #333;
-    }
-    .sidebar h2 { color: #00d1ff; }
-    .sidebar button {
-      padding: 10px;
-      background-color: #2b2b2b;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: left;
-    }
-    .sidebar button:hover { background-color: #333; }
+
     .container {
-      flex-grow: 1;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      padding: 10px;
+      max-width: 800px;
+      margin: auto;
     }
+
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 20px;
-      background-color: #1f1f1f;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      padding-bottom: 10px;
     }
-    header h1 {
-      font-size: 1.5rem;
-      color: #00d1ff;
+
+    h1 {
+      font-size: 1.4rem;
       margin: 0;
+      color: #00d1ff;
     }
+
     .toggle-container {
       display: flex;
       align-items: center;
     }
+
     .toggle-label {
-      margin-right: 8px;
       font-size: 0.9rem;
-      color: #aaa;
+      margin-right: 8px;
+      color: #ccc;
     }
+
     .toggle-switch {
       position: relative;
       width: 50px;
       height: 26px;
     }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background-color: #444;
-      transition: 0.4s;
+      transition: .4s;
       border-radius: 26px;
     }
+
     .slider:before {
       position: absolute;
       content: "";
@@ -88,71 +79,63 @@
       left: 3px;
       bottom: 3px;
       background-color: white;
-      transition: 0.4s;
+      transition: .4s;
       border-radius: 50%;
     }
+
     input:checked + .slider {
       background-color: #ff1e70;
     }
+
     input:checked + .slider:before {
       transform: translateX(24px);
     }
-    .chat-container {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px;
-      min-height: 0;
-    }
-    .chat-box {
-      width: 100%;
-      max-width: 800px;
-      background-color: #1e1e1e;
-      padding: 15px;
-      border-radius: 12px;
+
+    #chat {
+      flex: 1;
       overflow-y: auto;
-      flex: 1 1 auto;
-      margin-bottom: 12px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      scroll-behavior: smooth;
+      gap: 10px;
+      background-color: #181818;
+      border-radius: 10px;
     }
+
     .message {
-      max-width: 85%;
       padding: 12px 16px;
       border-radius: 12px;
       font-size: 1rem;
       line-height: 1.5;
       white-space: pre-wrap;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeIn 0.4s ease forwards;
+      animation: fadeIn 0.3s ease;
     }
+
     .user-message {
-      align-self: flex-end;
       background-color: #007acc;
+      align-self: flex-end;
       color: #fff;
       border-bottom-right-radius: 0;
     }
+
     .ai-message {
-      align-self: flex-start;
       background-color: #2b2b2b;
-      color: #ddd;
+      align-self: flex-start;
+      color: #eee;
       border-bottom-left-radius: 0;
     }
+
     .thinking-message {
       font-style: italic;
       color: #888;
     }
+
     .input-container {
-      width: 100%;
-      max-width: 800px;
       display: flex;
+      margin-top: 10px;
       gap: 10px;
-      padding: 10px;
     }
+
     .input-container input {
       flex: 1;
       padding: 14px;
@@ -160,144 +143,90 @@
       border-radius: 8px;
       border: none;
       background-color: #2c2c2c;
-      color: #fff;
+      color: white;
     }
+
     .input-container button {
       padding: 14px 18px;
       background-color: #00d1ff;
       border: none;
       border-radius: 8px;
       font-weight: bold;
-      color: #000;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .input-container button:hover { background-color: #00a6cc; }
-    .scroll-buttons {
-      position: fixed;
-      right: 20px;
-      bottom: 100px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .scroll-buttons.show { opacity: 1; }
-    .scroll-buttons button {
-      background-color: #1f1f1f;
-      border: 1px solid #444;
-      color: #00d1ff;
-      font-size: 20px;
-      padding: 8px 12px;
-      border-radius: 50%;
+      color: black;
       cursor: pointer;
     }
-    .scroll-buttons button:hover {
-      background-color: #2a2a2a;
+
+    .input-container button:hover {
+      background-color: #00aacc;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding: 10px;
-        border-right: none;
-        border-bottom: 1px solid #333;
+      .input-container input, .input-container button {
+        font-size: 1rem;
       }
-      .sidebar button {
-        flex: 1;
-        min-width: 140px;
-      }
+
       header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
+        gap: 5px;
       }
-      .chat-container {
-        flex: 1;
-        min-height: 0;
+
+      .container {
+        padding: 10px;
       }
-      .chat-box {
-        max-height: 60vh;
-      }
-    }
-    @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>Chats</h2>
-    <button onclick="newChat()">➕ New Chat</button>
-    <div id="chatHistoryButtons"></div>
-  </div>
   <div class="container">
     <header>
+      <h1 id="aiName">SARA - AI Assistant</h1>
       <div class="toggle-container">
         <span class="toggle-label">Innocent Mode</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
+          <input type="checkbox" id="modeToggle" onchange="toggleMode()">
           <span class="slider"></span>
         </label>
       </div>
-      <h1 id="aiName">SARA - AI Assistant</h1>
     </header>
-    <div class="chat-container">
-      <div id="chat" class="chat-box"></div>
-      <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
-        <button onclick="sendMessage()">Send</button>
-      </div>
+
+    <div id="chat"></div>
+
+    <div class="input-container">
+      <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+      <button onclick="sendMessage()">Send</button>
     </div>
-  </div>
-  <div class="scroll-buttons" id="scrollButtons">
-    <button onclick="scrollToTop()">↑</button>
-    <button onclick="scrollToBottom()">↓</button>
   </div>
 
   <script>
+    const NGROK_URL = "https://32ec-117-248-156-179.ngrok-free.app";  // change this
+    const LOG_SERVER = "http://localhost:5050/log";            // Flask server for logging
     const chatBox = document.getElementById("chat");
-    const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
-    let lastScrollTop = 0;
-    const NGROK_URL = "https://32ec-117-248-156-179.ngrok-free.app"; // replace this with what script prints in terminal
+    let userIP = "unknown";
 
-    function scrollToTop() { chatBox.scrollTop = 0; }
-    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
-
-    chatBox?.addEventListener("scroll", () => {
-      const currentScroll = chatBox.scrollTop;
-      if (Math.abs(currentScroll - lastScrollTop) > 20) {
-        scrollButtons.classList.add("show");
-        clearTimeout(window.scrollTimeout);
-        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
-        lastScrollTop = currentScroll;
-      }
-    });
-
-    function newChat() {
-      chatBox.innerHTML = '';
-    }
-
-    function updateHeaderName() {
-      const isInnocent = document.getElementById("modeToggle").checked;
-      aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
-    }
+    // Get IP
+    fetch("https://api.ipify.org?format=json")
+      .then(res => res.json())
+      .then(data => userIP = data.ip)
+      .catch(() => console.warn("Could not fetch IP"));
 
     function appendMessage(text, type) {
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
       msg.textContent = text;
       chatBox.appendChild(msg);
-      scrollToBottom();
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-      // ✅ Log message to console for now
-      const sender = type === 'user' ? 'USER' : 'AI';
-      console.log(`[${sender}]: ${text}`);
+    function toggleMode() {
+      const isInnocent = document.getElementById("modeToggle").checked;
+      aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     }
 
     async function sendMessage() {
@@ -308,17 +237,18 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
-      const thinking = document.createElement("div");
       const isInnocent = document.getElementById("modeToggle").checked;
+      const thinking = document.createElement("div");
       thinking.className = "message ai-message thinking-message";
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const basePrompt = isInnocent
+        ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
+        : `You are SARA, an unapologetically bold, flirty, savage, and clever AI created by Aurin Desai. You're brutally honest, wild, and love roasting people with wit and sarcasm — but you still get things done.`
 
       try {
-        const basePrompt = isInnocent
-          ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
-          : `You are SARA, an unapologetically bold, flirty, savage, and clever AI created by Aurin Desai. You're brutally honest, wild, and love roasting people with wit and sarcasm — but you still get things done.`
-
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -332,7 +262,20 @@
 
         const data = await res.json();
         thinking.remove();
-        appendMessage(data.content || "(No response)", "ai");
+        const reply = data.content || "(No response)";
+        appendMessage(reply, "ai");
+
+        // Send to logging server
+        await fetch(LOG_SERVER, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user: userIP,
+            message: userPrompt,
+            response: reply
+          })
+        });
+
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
