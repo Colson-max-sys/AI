@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NOVA - AI Assistant</title>
+  <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -238,18 +238,18 @@
   <div class="container">
     <header>
       <div class="toggle-container">
-        <span class="toggle-label">Naughty Mode</span>
+        <span class="toggle-label">Innocent Mode</span>
         <label class="toggle-switch">
           <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
           <span class="slider"></span>
         </label>
       </div>
-      <h1 id="aiName">NOVA - AI Assistant</h1>
+      <h1 id="aiName">SARA - AI Assistant</h1>
     </header>
     <div class="chat-container">
       <div id="chat" class="chat-box"></div>
       <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something to NOVA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
+        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
         <button onclick="sendMessage()">Send</button>
       </div>
     </div>
@@ -264,7 +264,7 @@
     const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
     let lastScrollTop = 0;
-    const NGROK_URL = "https://4a0a-117-248-156-179.ngrok-free.app"; // Change this to your actual URL
+    const NGROK_URL = "https://4a0a-117-248-156-179.ngrok-free.app";
 
     function scrollToTop() { chatBox.scrollTop = 0; }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
@@ -284,18 +284,14 @@
     }
 
     function updateHeaderName() {
-      const isNaughty = document.getElementById("modeToggle").checked;
-      const aiName = isNaughty ? "SARA" : "NOVA";
-      aiNameHeader.textContent = `${aiName} - AI Assistant`;
-      document.getElementById("prompt").placeholder = `Say something to ${aiName}...`;
+      const isInnocent = document.getElementById("modeToggle").checked;
+      aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     }
 
     function appendMessage(text, type) {
-      const isNaughty = document.getElementById("modeToggle").checked;
-      const name = isNaughty ? "SARA" : "NOVA";
       const msg = document.createElement("div");
       msg.className = `message ${type}-message`;
-      msg.textContent = type === "ai" ? `${name}: ${text}` : text;
+      msg.textContent = text;
       chatBox.appendChild(msg);
       scrollToBottom();
     }
@@ -308,24 +304,22 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
-      const isNaughty = document.getElementById("modeToggle").checked;
-      const name = isNaughty ? "SARA" : "NOVA";
-
       const thinking = document.createElement("div");
+      const isInnocent = document.getElementById("modeToggle").checked;
       thinking.className = "message ai-message thinking-message";
-      thinking.textContent = `${name} is thinking...`;
+      thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
 
       try {
-        const basePrompt = isNaughty
-          ? `You are SARA, a savage, funny, brutally honest AI assistant created by Aurin Desai. You roast people for fun and never hold back. Be unapologetic and clever while helping.`
-          : `You are NOVA, a respectful, helpful, intelligent, and thoughtful AI assistant created by Aurin Desai. You assist users in a professional and friendly way.`;
+        const basePrompt = isInnocent
+          ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
+          : `You are SARA, an unapologetically bold, flirty, savage, and clever AI created by Aurin Desai. You're brutally honest, wild, and love roasting people with wit and sarcasm — but you still get things done.`
 
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n${name}:`,
+            prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
             stop: ["USER:"],
             n_predict: 150,
             temperature: 0.95
