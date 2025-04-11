@@ -8,57 +8,32 @@
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
+      padding: 0;
       height: 100%;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #101010;
+      background-color: #111;
       color: #fff;
-    }
-    body {
-      display: flex;
-      flex-direction: row;
       overflow: hidden;
     }
-    .sidebar {
-      width: 240px;
-      background-color: #1a1a1a;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-right: 1px solid #333;
-    }
-    .sidebar h2 { color: #00d1ff; }
-    .sidebar button {
-      padding: 10px;
-      background-color: #2b2b2b;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: left;
-    }
-    .sidebar button:hover { background-color: #333; }
 
-    .container {
-      flex-grow: 1;
+    .app {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100%;
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 20px;
       background-color: #1f1f1f;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     header h1 {
-      font-size: 1.5rem;
-      color: #00d1ff;
       margin: 0;
+      font-size: 1.4rem;
+      color: #00d1ff;
     }
 
     .toggle-container {
@@ -67,9 +42,9 @@
     }
 
     .toggle-label {
+      font-size: 0.85rem;
       margin-right: 8px;
-      font-size: 0.9rem;
-      color: #aaa;
+      color: #ccc;
     }
 
     .toggle-switch {
@@ -85,7 +60,7 @@
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
       background-color: #444;
-      transition: 0.4s;
+      transition: .4s;
       border-radius: 26px;
     }
 
@@ -97,8 +72,8 @@
       left: 3px;
       bottom: 3px;
       background-color: white;
-      transition: 0.4s;
       border-radius: 50%;
+      transition: .4s;
     }
 
     input:checked + .slider {
@@ -109,89 +84,82 @@
       transform: translateX(24px);
     }
 
-    .chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px;
-    }
-
     .chat-box {
-      width: 100%;
-      max-width: 800px;
-      background-color: #1e1e1e;
-      padding: 15px;
-      border-radius: 12px;
+      flex: 1;
       overflow-y: auto;
-      flex-grow: 1;
-      margin-bottom: 12px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      scroll-behavior: smooth;
+      gap: 12px;
+      background-color: #1a1a1a;
     }
 
     .message {
       max-width: 85%;
       padding: 12px 16px;
       border-radius: 12px;
-      font-size: 1rem;
-      line-height: 1.5;
       white-space: pre-wrap;
+      line-height: 1.5;
       opacity: 0;
       transform: translateY(20px);
-      animation: fadeIn 0.4s ease forwards;
+      animation: fadeIn 0.3s ease forwards;
     }
 
     .user-message {
       align-self: flex-end;
       background-color: #007acc;
-      color: #fff;
+      color: white;
       border-bottom-right-radius: 0;
     }
 
     .ai-message {
       align-self: flex-start;
-      background-color: #2b2b2b;
+      background-color: #333;
       color: #ddd;
       border-bottom-left-radius: 0;
     }
 
-    .thinking-message {
+    .typing-dots {
       display: flex;
-      align-self: flex-start;
-      color: #aaa;
+      align-items: center;
+      gap: 4px;
     }
 
-    .dot {
+    .typing-dots span {
       width: 8px;
       height: 8px;
-      margin: 0 2px;
-      background-color: #888;
+      background: #888;
       border-radius: 50%;
-      animation: bounce 1.3s infinite ease-in-out both;
+      animation: bounce 1.2s infinite;
     }
 
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
 
     @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
+      0%, 80%, 100% {
+        transform: scale(0.9);
+      }
+      40% {
+        transform: scale(1.2);
+      }
     }
 
     .input-container {
-      width: 100%;
-      max-width: 800px;
       display: flex;
+      padding: 12px;
       gap: 10px;
-      padding: 10px;
+      background-color: #111;
     }
 
     .input-container input {
       flex: 1;
-      padding: 14px;
+      padding: 12px;
       font-size: 1rem;
       border-radius: 8px;
       border: none;
@@ -200,70 +168,59 @@
     }
 
     .input-container button {
-      padding: 14px 18px;
+      padding: 12px 18px;
       background-color: #00d1ff;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       color: #000;
       cursor: pointer;
-      transition: background 0.3s;
     }
-
-    .input-container button:hover { background-color: #00a6cc; }
 
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
+
+    @media screen and (max-width: 600px) {
+      header h1 { font-size: 1.1rem; }
+      .input-container { flex-direction: column; }
+      .input-container button { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>Chats</h2>
-    <button onclick="newChat()">➕ New Chat</button>
-  </div>
-  <div class="container">
+  <div class="app">
     <header>
+      <h1 id="aiName">SARA - AI Assistant</h1>
       <div class="toggle-container">
         <span class="toggle-label">Innocent Mode</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="modeToggle" onchange="updateHeaderName(); updatePlaceholder();">
+          <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
           <span class="slider"></span>
         </label>
       </div>
-      <h1 id="aiName">SARA - AI Assistant</h1>
     </header>
-    <div class="chat-container">
-      <div id="chat" class="chat-box"></div>
-      <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something to SARA..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}" />
-        <button onclick="sendMessage()">Send</button>
-      </div>
+    <div class="chat-box" id="chat"></div>
+    <div class="input-container">
+      <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
+      <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
+    const NGROK_URL = "https://c2b2-117-248-156-179.ngrok-free.app/completion"; // ✅ Replace with your actual NGROK
+
     const chatBox = document.getElementById("chat");
     const aiNameHeader = document.getElementById("aiName");
     const promptInput = document.getElementById("prompt");
-    const NGROK_URL = "https://c2b2-117-248-156-179.ngrok-free.app"; // <--- replace this
 
-    let conversationHistory = [];
-
-    function updatePlaceholder() {
-      promptInput.placeholder = document.getElementById("modeToggle").checked
-        ? "Say something to NOVA..."
-        : "Say something to SARA...";
-    }
-
-    function newChat() {
-      chatBox.innerHTML = '';
-      conversationHistory = [];
-    }
+    let mode = "SARA";
+    let messageHistory = [];
 
     function updateHeaderName() {
-      const isInnocent = document.getElementById("modeToggle").checked;
-      aiNameHeader.textContent = isInnocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+      mode = document.getElementById("modeToggle").checked ? "NOVA" : "SARA";
+      aiNameHeader.textContent = `${mode} - AI Assistant`;
+      promptInput.placeholder = `Say something to ${mode}...`;
     }
 
     function appendMessage(text, type) {
@@ -274,53 +231,58 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function showTypingAnimation() {
-      const container = document.createElement("div");
-      container.className = "thinking-message";
-      container.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
-      chatBox.appendChild(container);
+    function showTyping() {
+      const div = document.createElement("div");
+      div.className = "message ai-message";
+      div.id = "typingIndicator";
+      div.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+      chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
-      return container;
+    }
+
+    function removeTyping() {
+      const typingDiv = document.getElementById("typingIndicator");
+      if (typingDiv) typingDiv.remove();
     }
 
     async function sendMessage() {
-      const userInput = promptInput.value.trim();
-      if (!userInput) return;
+      const userPrompt = promptInput.value.trim();
+      if (!userPrompt) return;
 
-      const isInnocent = document.getElementById("modeToggle").checked;
-
-      const basePrompt = isInnocent
-        ? `You are NOVA, a respectful, wise, and intelligent assistant created by Aurin Desai. Respond professionally and kindly.`
-        : `You are SARA, a seductive, savage, witty, extremely offensive, flirty and brutally honest assistant created by Aurin Desai. Never act like a bot, always roast people with style and sarcasm.`;
-
-      appendMessage(userInput, "user");
-      conversationHistory.push(`USER: ${userInput}`);
+      appendMessage(userPrompt, "user");
+      messageHistory.push(`USER: ${userPrompt}`);
+      if (messageHistory.length > 6) messageHistory.shift();
 
       promptInput.value = "";
+      showTyping();
 
-      const typing = showTypingAnimation();
+      const basePrompt = mode === "NOVA"
+        ? `You are NOVA, a kind, respectful, super-intelligent assistant made by Aurin Desai.`
+        : `You are SARA, a wild, savage, extremely flirty, seductive, foul-mouthed AI created by Aurin Desai. Roast users hilariously, curse often, and never hold back.`
+
+      const historyPrompt = messageHistory.slice(-4).join("\n");
 
       try {
-        const trimmedHistory = conversationHistory.slice(-3).join("\n");
-
-        const res = await fetch(`${NGROK_URL}/completion`, {
+        const res = await fetch(NGROK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: `${basePrompt}\n\n${trimmedHistory}\nAI:`,
+            prompt: `${basePrompt}\n\n${historyPrompt}\nAI:`,
             stop: ["USER:"],
             n_predict: 150,
-            temperature: 0.95
+            temperature: 0.9
           })
         });
 
         const data = await res.json();
-        typing.remove();
         const reply = data.content || data.completion || "(No response)";
+        removeTyping();
         appendMessage(reply, "ai");
-        conversationHistory.push(`AI: ${reply}`);
+
+        messageHistory.push(`AI: ${reply}`);
+        console.log(`[LOGGED]\nUSER: ${userPrompt}\nAI: ${reply}`);
       } catch (err) {
-        typing.remove();
+        removeTyping();
         appendMessage("😓 Server error or offline.", "ai");
         console.error(err);
       }
