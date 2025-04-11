@@ -197,32 +197,6 @@
     .scroll-buttons button:hover {
       background-color: #2a2a2a;
     }
-    @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding: 10px;
-        border-right: none;
-        border-bottom: 1px solid #333;
-      }
-      .sidebar button {
-        flex: 1;
-        min-width: 140px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
-      .chat-container {
-        flex: 1;
-      }
-      .chat-box {
-        max-height: 60vh;
-      }
-    }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -262,9 +236,8 @@
     const chatBox = document.getElementById("chat");
     const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
-    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app/v1/chat/completions"; // Replace with your current ngrok
+    const NGROK_URL = "https://09bc-117-248-156-179.ngrok-free.app/completion"; // replace with actual
     const LOG_SERVER = "http://localhost:5050/log";
-
     let lastScrollTop = 0;
 
     function scrollToTop() { chatBox.scrollTop = 0; }
@@ -311,11 +284,11 @@
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
 
-      try {
-        const basePrompt = isInnocent
-          ? `You are NOVA, a respectful super smart, helpful, and intelligent assistant created by Aurin Desai.`
-          : `You are SARA, a badass, savage, flirty, hilarious, brutally honest AI created by Aurin Desai.`
+      const basePrompt = isInnocent
+        ? `You are NOVA, a respectful super smart assistant created by Aurin Desai.`
+        : `You are SARA, a badass, savage, clever, flirty AI created by Aurin Desai.`;
 
+      try {
         const res = await fetch(NGROK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -331,7 +304,7 @@
         thinking.remove();
         appendMessage(data.content || "(No response)", "ai");
 
-        // ✅ Log both messages
+        // Send to your log server
         fetch(LOG_SERVER, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
