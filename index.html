@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SARA - AI Assistant</title>
   <style>
     * { box-sizing: border-box; }
@@ -173,57 +173,6 @@
       transition: background 0.3s;
     }
     .input-container button:hover { background-color: #00a6cc; }
-    .scroll-buttons {
-      position: fixed;
-      right: 20px;
-      bottom: 100px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 100;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .scroll-buttons.show { opacity: 1; }
-    .scroll-buttons button {
-      background-color: #1f1f1f;
-      border: 1px solid #444;
-      color: #00d1ff;
-      font-size: 20px;
-      padding: 8px 12px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .scroll-buttons button:hover {
-      background-color: #2a2a2a;
-    }
-    @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        width: 100%;
-        padding: 10px;
-        border-right: none;
-        border-bottom: 1px solid #333;
-      }
-      .sidebar button {
-        flex: 1;
-        min-width: 140px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-      }
-      .chat-container {
-        flex: 1;
-        min-height: 0;
-      }
-      .chat-box {
-        max-height: 60vh;
-      }
-    }
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -254,30 +203,15 @@
       </div>
     </div>
   </div>
-  <div class="scroll-buttons" id="scrollButtons">
-    <button onclick="scrollToTop()">↑</button>
-    <button onclick="scrollToBottom()">↓</button>
-  </div>
 
   <script>
     const chatBox = document.getElementById("chat");
-    const scrollButtons = document.getElementById("scrollButtons");
     const aiNameHeader = document.getElementById("aiName");
-    const NGROK_URL = "https://29ce-117-248-156-179.ngrok-free.app"; // CHANGE TO YOUR NGROK URL
-    let lastScrollTop = 0;
+    const NGROK_URL = "https://106d-117-248-156-179.ngrok-free.app"; // ✅ UPDATE if needed
 
-    function scrollToTop() { chatBox.scrollTop = 0; }
-    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
-
-    chatBox?.addEventListener("scroll", () => {
-      const currentScroll = chatBox.scrollTop;
-      if (Math.abs(currentScroll - lastScrollTop) > 20) {
-        scrollButtons.classList.add("show");
-        clearTimeout(window.scrollTimeout);
-        window.scrollTimeout = setTimeout(() => scrollButtons.classList.remove("show"), 1000);
-        lastScrollTop = currentScroll;
-      }
-    });
+    function scrollToBottom() {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     function newChat() {
       chatBox.innerHTML = '';
@@ -304,32 +238,32 @@
       appendMessage(userPrompt, "user");
       input.value = "";
 
-      const thinking = document.createElement("div");
       const isInnocent = document.getElementById("modeToggle").checked;
+
+      const thinking = document.createElement("div");
       thinking.className = "message ai-message thinking-message";
       thinking.textContent = isInnocent ? "NOVA is thinking..." : "SARA is thinking...";
       chatBox.appendChild(thinking);
 
-      const basePrompt = isInnocent
-        ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
-        : `You are SARA, a bold, naughty, sarcastic, and clever assistant created by Aurin Desai. Roast people playfully but still help them.`
-
       try {
+        const basePrompt = isInnocent
+          ? `You are NOVA, a respectful, helpful, and intelligent assistant created by Aurin Desai. Speak clearly and concisely.`
+          : `You are SARA, an unapologetically bold, flirty, savage, and clever AI created by Aurin Desai. You're brutally honest, wild, and love roasting people with wit and sarcasm — but you still get things done.`;
+
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "nous-hermes-2-mistral-7b-dpo.Q4_K_S.gguf",
             prompt: `${basePrompt}\n\nUSER: ${userPrompt}\n`,
-            max_tokens: 200,
-            temperature: 0.95,
-            stop: ["USER:"]
+            stop: ["USER:"],
+            n_predict: 150,
+            temperature: 0.95
           })
         });
 
         const data = await res.json();
         thinking.remove();
-        appendMessage(data.choices?.[0]?.text.trim() || "(No response)", "ai");
+        appendMessage(data.content || "(No response)", "ai");
       } catch (err) {
         thinking.remove();
         appendMessage("😓 Server error or offline.", "ai");
