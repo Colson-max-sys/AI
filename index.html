@@ -221,8 +221,8 @@
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    const header = document.querySelector("header");
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1"; // Correct colors for NOVA and SARA
+    // Only change the color of the header text, not the whole background
+    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // Blue for NOVA, Pink for SARA
   }
 
   function appendMessage(text, type) {
