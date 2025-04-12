@@ -317,7 +317,7 @@
       const data = await res.json();
       removeTyping();
       const aiResponse = data.content || data.completion || "🤖 (No response)";
-      appendMessage(aiResponse, "ai");
+      appendMessage(aiResponse.trim().replace(/\n{3,}/g, '\n\n'), "ai");
       conversationHistory.push(`AI: ${aiResponse}`);
 
       fetch(LOG_URL, {
