@@ -208,13 +208,14 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://59d6-117-222-87-15.ngrok-free.app";
+  const NGROK_URL = "https://c406-117-222-87-15.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbymjbj9_IJa4kmri5d-ev9oXRYS40VtCbtx8E9l1_UbniJOPecDaSGh-2ZElcJ2VbnWEw/exec";
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
+  const conversationHistory = [];
 
-  function updateHeader() {
+  function updateHeaderName() {
     const innocent = document.getElementById("modeToggle").checked;
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
@@ -248,6 +249,7 @@
     if (!userText) return;
 
     appendMessage(userText, "user");
+    conversationHistory.push(`USER: ${userText}`);
     input.value = "";
     showTyping();
 
@@ -259,8 +261,8 @@
         removeTyping();
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         appendMessage(weatherText, "ai");
+        conversationHistory.push(`AI: ${weatherText}`);
 
-        // Log weather chat
         fetch(LOG_URL, {
           method: "POST",
           body: JSON.stringify({ message: `USER: ${userText}\nAI: ${weatherText}` })
@@ -281,8 +283,8 @@
         removeTyping();
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
         appendMessage(timeMsg, "ai");
+        conversationHistory.push(`AI: ${timeMsg}`);
 
-        // Log time chat
         fetch(LOG_URL, {
           method: "POST",
           body: JSON.stringify({ message: `USER: ${userText}\nAI: ${timeMsg}` })
@@ -305,7 +307,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: `${basePrompt}\n\nUSER: ${userText}\nAI:`,
+          prompt: `${basePrompt}\n\n${conversationHistory.join("\n")}\nAI:`,
           stop: ["USER:"],
           n_predict: 150,
           temperature: 0.9
@@ -316,8 +318,8 @@
       removeTyping();
       const aiResponse = data.content || data.completion || "🤖 (No response)";
       appendMessage(aiResponse, "ai");
+      conversationHistory.push(`AI: ${aiResponse}`);
 
-      // ✅ Send to Google Sheet via Apps Script
       fetch(LOG_URL, {
         method: "POST",
         body: JSON.stringify({ message: `USER: ${userText}\nAI: ${aiResponse}` })
@@ -329,6 +331,9 @@
       appendMessage("😓 Server error or offline.", "ai");
     }
   }
+
+  // Fix toggle header on initial load
+  document.addEventListener("DOMContentLoaded", updateHeaderName);
  </script>
 </body>
 </html>
