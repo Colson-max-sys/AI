@@ -222,6 +222,7 @@
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
     // Change header color based on mode
+    const header = document.getElementById("header");
     header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1"; // Light blue for NOVA, pinkish for SARA
   }
 
@@ -263,8 +264,8 @@
     // Push user message into history
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // 🌦 Weather - updated to trigger only when the user asks about weather
-    if (/\b(weather|forecast|temperature)\b/i.test(userText)) {
+    // 🌦 Weather (Triggered only by .weather)
+    if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
         const data = await res.json();
@@ -285,8 +286,8 @@
       }
     }
 
-    // 🕒 Time - Updated to avoid unnecessary triggers
-    if (/\btime\b/i.test(userText)) {
+    // 🕒 Time (Triggered only by .time)
+    if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
         const data = await res.json();
@@ -309,7 +310,7 @@
 
     const basePrompt = mode === "NOVA"
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
+      : `You are SARA, a no-filter, horny chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
