@@ -17,14 +17,16 @@
     }
 
     .system-message {
-      background-color: #f1f1f1;
-      color: #444;
-      border-left: 4px solid #ccc;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
+      max-width: 80%;
+      margin: 10px auto;
+      background-color: #eeeeee;
+      color: #333;
+      padding: 12px 16px;
+      border-radius: 12px;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     .app {
@@ -231,9 +233,7 @@
     const innocent = document.getElementById("modeToggle").checked;
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
-
-    // Only change header text color
-    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // NOVA = Blue, SARA = Pink
+    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70";
   }
 
   function appendMessage(text, type) {
@@ -263,12 +263,11 @@
     intro.id = "introMessage";
     intro.className = "message system-message";
     intro.innerHTML = `
-      <strong>Welcome to your dual AI assistant!</strong><br><br>
-      🩷 <b>SARA</b>: Wild, unfiltered, chaotic, and flirty AI.<br>
-      💙 <b>NOVA</b>: Calm, respectful, helpful assistant.<br><br>
-      🔁 Use the switch at the top to toggle between SARA & NOVA.<br>
-      🧪 This AI is still in development – expect surprises!<br><br>
-      <em>(This message will disappear once you send a message)</em>
+      💬 <strong>Welcome to your AI Chat</strong><br><br>
+      🩷 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
+      💙 <b>NOVA</b> – Calm, kind, respectful, helpful.<br><br>
+      🔁 Use the toggle above to switch between them.<br>
+      ⚙️ Still in development – feedback welcome!
     `;
     chat.appendChild(intro);
   }
@@ -300,7 +299,6 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // Check if message is just a name mention
     if (checkForMentionsOnly(userText)) {
       const mentionResponse = innocent
         ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
@@ -319,7 +317,6 @@
       return;
     }
 
-    // 🌦 Weather (.weather)
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -345,7 +342,6 @@
       }
     }
 
-    // ⏰ Time (.time)
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -394,7 +390,6 @@
 
       const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
 
-      // Streaming typing effect
       const aiMsg = document.createElement("div");
       aiMsg.className = "message ai-message";
       aiMsg.textContent = "";
