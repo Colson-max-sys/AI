@@ -214,13 +214,15 @@
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
 
+  let chatHistory = [];
+
   function updateHeader() {
     const innocent = document.getElementById("modeToggle").checked;
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    const header = document.querySelector("header");
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1";
+    // Only change the color of the header text, not the whole background
+    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // Blue for NOVA, Pink for SARA
   }
 
   function appendMessage(text, type) {
@@ -259,6 +261,27 @@
     const aiLabel = mode;
     const userLabel = "USER";
 
+    chatHistory.push(`${userLabel}: ${userText}`);
+
+    // If either SARA or NOVA is mentioned, AI will acknowledge the other AI
+    if (checkForMentions(userText)) {
+      const mentionResponse = innocent
+        ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
+        : "Oh, NOVA? He's quite the gentleman, I must admit. But I can be even more daring than him.";
+      removeTyping();
+      appendMessage(mentionResponse, "ai");
+      chatHistory.push({ role: "ai", message: mentionResponse });
+      fetch(LOG_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          user: userLabel,
+          message: `USER: ${userText}\nAI: ${mentionResponse}`,
+          mode: mode
+        })
+      });
+      return;
+    }
+
     // 🌦 Weather (.weather only)
     if (/\b\.weather\b/i.test(userText)) {
       try {
@@ -266,7 +289,7 @@
         const data = await res.json();
         removeTyping();
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-        chatHistory.push({ role: "ai", message: weatherText });
+        chatHistory.push(`${aiLabel}: ${weatherText}`);
         appendMessage(weatherText, "ai");
 
         fetch(LOG_URL, {
@@ -292,7 +315,7 @@
         const data = await res.json();
         removeTyping();
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
-        chatHistory.push({ role: "ai", message: timeMsg });
+        chatHistory.push(`${aiLabel}: ${timeMsg}`);
         appendMessage(timeMsg, "ai");
 
         fetch(LOG_URL, {
@@ -312,10 +335,10 @@
     }
 
     const basePrompt = innocent
-      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
+      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai, also you understand that others who chat with you are not your creator.`
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god, If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it , also you understand that others who chat with you are not your creator.`;
 
-    const fullPrompt = `${basePrompt}\n\n${chatHistory.map(turn => `${turn.role}: ${turn.message}`).join('\n')}\n${aiLabel}:`;
+    const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
     try {
       const res = await fetch(`${NGROK_URL}/completion`, {
@@ -349,7 +372,7 @@
           chat.scrollTop = chat.scrollHeight;
           setTimeout(typeChar, 10);
         } else {
-          chatHistory.push({ role: "ai", message: aiResponse });
+          chatHistory.push(`${aiLabel}: ${aiResponse}`);
           fetch(LOG_URL, {
             method: "POST",
             body: JSON.stringify({
