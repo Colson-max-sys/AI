@@ -221,9 +221,8 @@
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    // Change header color based on mode
     const header = document.getElementById("header");
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1"; // Light blue for NOVA, pinkish for SARA
+    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1";
   }
 
   function appendMessage(text, type) {
@@ -257,14 +256,14 @@
     input.value = "";
     showTyping();
 
-    const mode = document.getElementById("modeToggle").checked ? "NOVA" : "SARA";
-    const aiLabel = mode === "NOVA" ? "NOVA" : "SARA";
+    const innocent = document.getElementById("modeToggle").checked;
+    const mode = innocent ? "NOVA" : "SARA";
+    const aiLabel = mode;
     const userLabel = "USER";
 
-    // Push user message into history
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // 🌦 Weather (Triggered only by .weather)
+    // 🌦 Weather (only if .weather is typed)
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -276,7 +275,11 @@
 
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({ message: `USER: ${userText}\nAI: ${weatherText}` })
+          body: JSON.stringify({
+            user: userLabel,
+            message: `USER: ${userText}\nAI: ${weatherText}`,
+            mode: mode
+          })
         });
         return;
       } catch {
@@ -286,7 +289,7 @@
       }
     }
 
-    // 🕒 Time (Triggered only by .time)
+    // 🕒 Time (only if .time is typed)
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -298,7 +301,11 @@
 
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({ message: `USER: ${userText}\nAI: ${timeMsg}` })
+          body: JSON.stringify({
+            user: userLabel,
+            message: `USER: ${userText}\nAI: ${timeMsg}`,
+            mode: mode
+          })
         });
         return;
       } catch {
@@ -308,9 +315,9 @@
       }
     }
 
-    const basePrompt = mode === "NOVA"
+    const basePrompt = innocent
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
-      : `You are SARA, a no-filter, horny chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
@@ -334,7 +341,11 @@
 
       fetch(LOG_URL, {
         method: "POST",
-        body: JSON.stringify({ message: `USER: ${userText}\nAI: ${aiResponse}` })
+        body: JSON.stringify({
+          user: userLabel,
+          message: `USER: ${userText}\nAI: ${aiResponse}`,
+          mode: mode
+        })
       });
 
     } catch (err) {
@@ -344,7 +355,6 @@
     }
   }
 
-  // Call this initially to set the correct name
   updateHeader();
  </script>
 </body>
