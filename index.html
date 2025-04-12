@@ -288,6 +288,20 @@
     if (typing) typing.remove();
   }
 
+  function showIntroMessage() {
+    const intro = document.createElement("div");
+    intro.id = "introMessage";
+    intro.className = "message system-message";
+    intro.innerHTML = `
+      💬 <strong>Welcome to your AI Chat</strong><br><br>
+      🩷 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
+      💙 <b>NOVA</b> – Calm, kind, respectful, helpful.<br><br>
+      🔁 Use the toggle above to switch between them.<br>
+      ⚙️ Still in development – feedback welcome!
+    `;
+    chat.appendChild(intro);
+  }
+
   function checkForMentions(text) {
     return /\b(hey\s*)?(sara|nova)\b/i.test(text);
   }
