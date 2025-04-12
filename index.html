@@ -214,8 +214,6 @@
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
 
-  let chatHistory = [];
-
   function updateHeader() {
     const innocent = document.getElementById("modeToggle").checked;
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
@@ -260,8 +258,6 @@
     const mode = innocent ? "NOVA" : "SARA";
     const aiLabel = mode;
     const userLabel = "USER";
-
-    chatHistory.push({ role: "user", message: userText });
 
     // 🌦 Weather (.weather only)
     if (/\b\.weather\b/i.test(userText)) {
