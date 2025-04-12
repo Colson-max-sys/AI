@@ -211,6 +211,7 @@
   const NGROK_URL = "https://c00b-117-222-87-15.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbymjbj9_IJa4kmri5d-ev9oXRYS40VtCbtx8E9l1_UbniJOPecDaSGh-2ZElcJ2VbnWEw/exec";
+
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
 
@@ -221,8 +222,8 @@
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    // Only change text color
-    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70";
+    // Only change the color of the header text
+    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // Blue for NOVA, Pink for SARA
   }
 
   function appendMessage(text, type) {
@@ -247,8 +248,22 @@
     if (typing) typing.remove();
   }
 
-  function checkForMentions(userText) {
-    return /\b(SARA|NOVA)\b/i.test(userText);
+  function checkForMentions(message) {
+    const lower = message.toLowerCase();
+
+    const askAboutSara =
+      /who\s+is\s+sara/.test(lower) ||
+      /tell\s+me\s+about\s+sara/.test(lower) ||
+      /do\s+you\s+know\s+sara/.test(lower) ||
+      /what\s+do\s+you\s+think\s+of\s+sara/.test(lower);
+
+    const askAboutNova =
+      /who\s+is\s+nova/.test(lower) ||
+      /tell\s+me\s+about\s+nova/.test(lower) ||
+      /do\s+you\s+know\s+nova/.test(lower) ||
+      /what\s+do\s+you\s+think\s+of\s+nova/.test(lower);
+
+    return askAboutSara || askAboutNova;
   }
 
   async function sendMessage() {
@@ -267,7 +282,7 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // Mention response for SARA/NOVA
+    // If either SARA or NOVA is mentioned in a proper question
     if (checkForMentions(userText)) {
       const mentionResponse = innocent
         ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
@@ -286,7 +301,7 @@
       return;
     }
 
-    // Weather command
+    // 🌦 Weather (.weather only)
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -295,6 +310,7 @@
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         chatHistory.push(`${aiLabel}: ${weatherText}`);
         appendMessage(weatherText, "ai");
+
         fetch(LOG_URL, {
           method: "POST",
           body: JSON.stringify({
@@ -311,7 +327,7 @@
       }
     }
 
-    // Time command
+    // 🕒 Time (.time only)
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -320,6 +336,7 @@
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
         chatHistory.push(`${aiLabel}: ${timeMsg}`);
         appendMessage(timeMsg, "ai");
+
         fetch(LOG_URL, {
           method: "POST",
           body: JSON.stringify({
@@ -336,10 +353,9 @@
       }
     }
 
-    // AI behavior prompts
     const basePrompt = innocent
-      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You understand that others who chat with you are not your creator.`
-      : `You are SARA, a no-filter, chaotic, horny, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it. You understand that others who chat with you are not your creator.`;
+      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai, also you understand that others who chat with you are not your creator.`
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious. Also, you understand that others who chat with you are not your creator.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
@@ -360,6 +376,7 @@
 
       const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
 
+      // Streaming simulation
       const aiMsg = document.createElement("div");
       aiMsg.className = "message ai-message";
       aiMsg.textContent = "";
