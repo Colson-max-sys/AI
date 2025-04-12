@@ -208,173 +208,155 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://c00b-117-222-87-15.ngrok-free.app";
-  const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-  const LOG_URL = "https://script.google.com/macros/s/AKfycbymjbj9_IJa4kmri5d-ev9oXRYS40VtCbtx8E9l1_UbniJOPecDaSGh-2ZElcJ2VbnWEw/exec";
-  const chat = document.getElementById("chat");
-  const aiName = document.getElementById("aiName");
+    const NGROK_URL = "https://c00b-117-222-87-15.ngrok-free.app";
+    const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+    const LOG_URL = "https://script.google.com/macros/s/AKfycbymjbj9_IJa4kmri5d-ev9oXRYS40VtCbtx8E9l1_UbniJOPecDaSGh-2ZElcJ2VbnWEw/exec";
 
-  let chatHistory = [];
+    const chat = document.getElementById("chat");
+    const aiName = document.getElementById("aiName");
+    let chatHistory = [];
 
-  function updateHeader() {
-    const innocent = document.getElementById("modeToggle").checked;
-    aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
-    document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
-
-    const header = document.querySelector("header");
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1";
-  }
-
-  function appendMessage(text, type) {
-    const msg = document.createElement("div");
-    msg.className = `message ${type}-message`;
-    msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-  }
-
-  function showTyping() {
-    const typing = document.createElement("div");
-    typing.className = "message ai-message";
-    typing.innerHTML = `<span class="typing">● ● ●</span>`;
-    typing.id = "typing";
-    chat.appendChild(typing);
-    chat.scrollTop = chat.scrollHeight;
-  }
-
-  function removeTyping() {
-    const typing = document.getElementById("typing");
-    if (typing) typing.remove();
-  }
-
-  async function sendMessage() {
-    const input = document.getElementById("prompt");
-    const userText = input.value.trim();
-    if (!userText) return;
-
-    appendMessage(userText, "user");
-    input.value = "";
-    showTyping();
-
-    const innocent = document.getElementById("modeToggle").checked;
-    const mode = innocent ? "NOVA" : "SARA";
-    const aiLabel = mode;
-    const userLabel = "USER";
-
-    chatHistory.push(`${userLabel}: ${userText}`);
-
-    // 🌦 Weather (.weather only)
-    if (/\b\.weather\b/i.test(userText)) {
-      try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
-        const data = await res.json();
-        removeTyping();
-        const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-        chatHistory.push(`${aiLabel}: ${weatherText}`);
-        appendMessage(weatherText, "ai");
-
-        fetch(LOG_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            user: userLabel,
-            message: `USER: ${userText}\nAI: ${weatherText}`,
-            mode: mode
-          })
-        });
-        return;
-      } catch {
-        removeTyping();
-        appendMessage("Couldn't fetch weather info 😕", "ai");
-        return;
-      }
+    function updateHeader() {
+      const innocent = document.getElementById("modeToggle").checked;
+      aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+      document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
+      document.querySelector("header").style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1";
     }
 
-    // 🕒 Time (.time only)
-    if (/\b\.time\b/i.test(userText)) {
-      try {
-        const res = await fetch("https://worldtimeapi.org/api/ip");
-        const data = await res.json();
-        removeTyping();
-        const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
-        chatHistory.push(`${aiLabel}: ${timeMsg}`);
-        appendMessage(timeMsg, "ai");
-
-        fetch(LOG_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            user: userLabel,
-            message: `USER: ${userText}\nAI: ${timeMsg}`,
-            mode: mode
-          })
-        });
-        return;
-      } catch {
-        removeTyping();
-        appendMessage("Time service not available 😕", "ai");
-        return;
-      }
-    }
-
-    const basePrompt = innocent
-      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
-
-    const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
-
-    try {
-      const res = await fetch(`${NGROK_URL}/completion`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          stop: [`\n${userLabel}:`],
-          n_predict: 150,
-          temperature: 0.9
-        })
-      });
-
-      const data = await res.json();
-      removeTyping();
-
-      const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
-
-      // Streaming simulation
-      const aiMsg = document.createElement("div");
-      aiMsg.className = "message ai-message";
-      aiMsg.textContent = "";
-      chat.appendChild(aiMsg);
+    function appendMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = `message ${type}-message`;
+      msg.textContent = text.trim().replace(/\n{3,}/g, "\n\n");
+      chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
+    }
 
-      let i = 0;
-      function typeChar() {
-        if (i < aiResponse.length) {
-          aiMsg.textContent += aiResponse.charAt(i);
-          i++;
-          chat.scrollTop = chat.scrollHeight;
-          setTimeout(typeChar, 10);
-        } else {
-          chatHistory.push(`${aiLabel}: ${aiResponse}`);
-          fetch(LOG_URL, {
-            method: "POST",
-            body: JSON.stringify({
-              user: userLabel,
-              message: `USER: ${userText}\nAI: ${aiResponse}`,
-              mode: mode
-            })
-          });
+    function showTyping() {
+      const typing = document.createElement("div");
+      typing.className = "message ai-message";
+      typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+      typing.id = "typing";
+      chat.appendChild(typing);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function removeTyping() {
+      const typing = document.getElementById("typing");
+      if (typing) typing.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("prompt");
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      appendMessage(userText, "user");
+      input.value = "";
+      showTyping();
+
+      const innocent = document.getElementById("modeToggle").checked;
+      const mode = innocent ? "NOVA" : "SARA";
+      const aiLabel = mode;
+      const userLabel = "USER";
+
+      chatHistory.push(`${userLabel}: ${userText}`);
+
+      if (/\b\.weather\b/i.test(userText)) {
+        try {
+          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+          const data = await res.json();
+          removeTyping();
+          const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+          chatHistory.push(`${aiLabel}: ${weatherText}`);
+          appendMessage(weatherText, "ai");
+          logMessage(userText, weatherText, mode);
+          return;
+        } catch {
+          removeTyping();
+          appendMessage("Couldn't fetch weather info 😕", "ai");
+          return;
         }
       }
 
-      typeChar();
+      if (/\b\.time\b/i.test(userText)) {
+        try {
+          const res = await fetch("https://worldtimeapi.org/api/ip");
+          const data = await res.json();
+          removeTyping();
+          const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
+          chatHistory.push(`${aiLabel}: ${timeMsg}`);
+          appendMessage(timeMsg, "ai");
+          logMessage(userText, timeMsg, mode);
+          return;
+        } catch {
+          removeTyping();
+          appendMessage("Time service not available 😕", "ai");
+          return;
+        }
+      }
 
-    } catch (err) {
-      console.error(err);
-      removeTyping();
-      appendMessage("😓 Server error or offline.", "ai");
+      const basePrompt = innocent
+        ? "You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai."
+        : "You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.";
+
+      const fullPrompt = `${basePrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+
+      try {
+        const res = await fetch(`${NGROK_URL}/completion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: fullPrompt,
+            stop: [`\n${userLabel}:`],
+            n_predict: 150,
+            temperature: 0.9
+          })
+        });
+
+        const data = await res.json();
+        removeTyping();
+        const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, "\n\n");
+
+        const aiMsg = document.createElement("div");
+        aiMsg.className = "message ai-message";
+        aiMsg.textContent = "";
+        chat.appendChild(aiMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+        let i = 0;
+        function typeChar() {
+          if (i < aiResponse.length) {
+            aiMsg.textContent += aiResponse.charAt(i);
+            i++;
+            chat.scrollTop = chat.scrollHeight;
+            setTimeout(typeChar, 10);
+          } else {
+            chatHistory.push(`${aiLabel}: ${aiResponse}`);
+            logMessage(userText, aiResponse, mode);
+          }
+        }
+
+        typeChar();
+
+      } catch (err) {
+        console.error(err);
+        removeTyping();
+        appendMessage("😓 Server error or offline.", "ai");
+      }
     }
-  }
 
-  updateHeader();
- </script>
+    function logMessage(userText, aiText, mode) {
+      fetch(LOG_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          user: "USER",
+          message: `USER: ${userText}\nAI: ${aiText}`,
+          mode: mode
+        })
+      });
+    }
+
+    updateHeader();
+  </script>
 </body>
 </html>
