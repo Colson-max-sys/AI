@@ -222,7 +222,7 @@
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
     const header = document.querySelector("header");
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#1f1f1f";
+    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1"; // Correct colors for NOVA and SARA
   }
 
   function appendMessage(text, type) {
@@ -338,6 +338,7 @@
 
       const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
 
+      // Streaming simulation
       const aiMsg = document.createElement("div");
       aiMsg.className = "message ai-message";
       aiMsg.textContent = "";
@@ -373,8 +374,7 @@
     }
   }
 
-  // Ensure header updates on first load too
-  window.addEventListener("DOMContentLoaded", updateHeader);
+  updateHeader();
   </script>
 </body>
 </html>
