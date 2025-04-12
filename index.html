@@ -16,6 +16,17 @@
       overflow: hidden;
     }
 
+    .system-message {
+      background-color: #f1f1f1;
+      color: #444;
+      border-left: 4px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
     .app {
       display: flex;
       flex-direction: column;
@@ -208,10 +219,9 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://c00b-117-222-87-15.ngrok-free.app";
+  const NGROK_URL = "https://d8f4-117-222-87-15.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbymjbj9_IJa4kmri5d-ev9oXRYS40VtCbtx8E9l1_UbniJOPecDaSGh-2ZElcJ2VbnWEw/exec";
-
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
 
@@ -222,8 +232,8 @@
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    // Only change the color of the header text
-    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // Blue for NOVA, Pink for SARA
+    // Only change header text color
+    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // NOVA = Blue, SARA = Pink
   }
 
   function appendMessage(text, type) {
@@ -248,22 +258,29 @@
     if (typing) typing.remove();
   }
 
-  function checkForMentions(message) {
-    const lower = message.toLowerCase();
+  function showIntroMessage() {
+    const intro = document.createElement("div");
+    intro.id = "introMessage";
+    intro.className = "message system-message";
+    intro.innerHTML = `
+      <strong>Welcome to your dual AI assistant!</strong><br><br>
+      🩷 <b>SARA</b>: Wild, unfiltered, chaotic, and flirty AI.<br>
+      💙 <b>NOVA</b>: Calm, respectful, helpful assistant.<br><br>
+      🔁 Use the switch at the top to toggle between SARA & NOVA.<br>
+      🧪 This AI is still in development – expect surprises!<br><br>
+      <em>(This message will disappear once you send a message)</em>
+    `;
+    chat.appendChild(intro);
+  }
 
-    const askAboutSara =
-      /who\s+is\s+sara/.test(lower) ||
-      /tell\s+me\s+about\s+sara/.test(lower) ||
-      /do\s+you\s+know\s+sara/.test(lower) ||
-      /what\s+do\s+you\s+think\s+of\s+sara/.test(lower);
+  function removeIntroIfExists() {
+    const intro = document.getElementById("introMessage");
+    if (intro) intro.remove();
+  }
 
-    const askAboutNova =
-      /who\s+is\s+nova/.test(lower) ||
-      /tell\s+me\s+about\s+nova/.test(lower) ||
-      /do\s+you\s+know\s+nova/.test(lower) ||
-      /what\s+do\s+you\s+think\s+of\s+nova/.test(lower);
-
-    return askAboutSara || askAboutNova;
+  function checkForMentionsOnly(text) {
+    const mentionRegex = /^(hey[\s,]*)?(sara|nova)[\s!?.]*$/i;
+    return mentionRegex.test(text.trim());
   }
 
   async function sendMessage() {
@@ -271,6 +288,7 @@
     const userText = input.value.trim();
     if (!userText) return;
 
+    removeIntroIfExists();
     appendMessage(userText, "user");
     input.value = "";
     showTyping();
@@ -282,8 +300,8 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // If either SARA or NOVA is mentioned in a proper question
-    if (checkForMentions(userText)) {
+    // Check if message is just a name mention
+    if (checkForMentionsOnly(userText)) {
       const mentionResponse = innocent
         ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
         : "Oh, NOVA? He's quite the gentleman, I must admit. But I can be even more daring than him.";
@@ -301,7 +319,7 @@
       return;
     }
 
-    // 🌦 Weather (.weather only)
+    // 🌦 Weather (.weather)
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -327,7 +345,7 @@
       }
     }
 
-    // 🕒 Time (.time only)
+    // ⏰ Time (.time)
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -354,8 +372,8 @@
     }
 
     const basePrompt = innocent
-      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai, also you understand that others who chat with you are not your creator.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious. Also, you understand that who chats with you is not your creator untill the person mentions that he is Aurin.`;
+      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You understand that others who chat with you are not your creator.`
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god, but understand that others who chat with you are not your creator.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
@@ -376,7 +394,7 @@
 
       const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
 
-      // Streaming simulation
+      // Streaming typing effect
       const aiMsg = document.createElement("div");
       aiMsg.className = "message ai-message";
       aiMsg.textContent = "";
@@ -413,6 +431,7 @@
   }
 
   updateHeader();
+  showIntroMessage();
   </script>
 </body>
 </html>
