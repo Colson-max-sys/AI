@@ -221,8 +221,8 @@
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
 
-    // Only change the color of the header text, not the whole background
-    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70"; // Blue for NOVA, Pink for SARA
+    const header = document.querySelector("header");
+    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1";
   }
 
   function appendMessage(text, type) {
@@ -261,7 +261,7 @@
     const aiLabel = mode;
     const userLabel = "USER";
 
-    chatHistory.push(`${userLabel}: ${userText}`);
+    chatHistory.push({ role: "user", message: userText });
 
     // 🌦 Weather (.weather only)
     if (/\b\.weather\b/i.test(userText)) {
@@ -270,7 +270,7 @@
         const data = await res.json();
         removeTyping();
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-        chatHistory.push(`${aiLabel}: ${weatherText}`);
+        chatHistory.push({ role: "ai", message: weatherText });
         appendMessage(weatherText, "ai");
 
         fetch(LOG_URL, {
@@ -296,7 +296,7 @@
         const data = await res.json();
         removeTyping();
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
-        chatHistory.push(`${aiLabel}: ${timeMsg}`);
+        chatHistory.push({ role: "ai", message: timeMsg });
         appendMessage(timeMsg, "ai");
 
         fetch(LOG_URL, {
@@ -316,12 +316,10 @@
     }
 
     const basePrompt = innocent
-  ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You treat everyone with respect and kindness, but you're still your own independent personality.`
-  : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, curse unapologetically, and show no mercy. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god, but you understand that others who chat with you are not your creator, and you treat them accordingly. You love to have fun, but respect personal boundaries when needed.`;
+      ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
 
-
-
-    const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
+    const fullPrompt = `${basePrompt}\n\n${chatHistory.map(turn => `${turn.role}: ${turn.message}`).join('\n')}\n${aiLabel}:`;
 
     try {
       const res = await fetch(`${NGROK_URL}/completion`, {
@@ -355,7 +353,7 @@
           chat.scrollTop = chat.scrollHeight;
           setTimeout(typeChar, 10);
         } else {
-          chatHistory.push(`${aiLabel}: ${aiResponse}`);
+          chatHistory.push({ role: "ai", message: aiResponse });
           fetch(LOG_URL, {
             method: "POST",
             body: JSON.stringify({
