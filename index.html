@@ -223,6 +223,57 @@
       .input-container { flex-direction: column; }
       .input-container button { width: 100%; }
     }
+
+   @media screen and (max-width: 768px) {
+     .app {
+       height: 100%;
+       overflow: hidden;
+     }
+     
+     header {
+       flex-direction: column;
+       align-items: flex-start;
+       gap: 6px;
+     }
+     
+     .system-message {
+       font-size: 14px;
+       padding: 14px;
+       line-height: 1.6;
+       margin: 10px 16px;
+       word-break: break-word;
+     }
+
+     .chat-box {
+       padding: 12px 14px;
+       gap: 10px;
+       font-size: 15px;
+     }
+
+     .input-container {
+       flex-direction: column;
+       padding: 12px;
+       gap: 8px;
+     }
+
+     .input-container input {
+       width: 100%;
+       font-size: 16px;
+     }
+
+     .input-container button {
+       width: 100%;
+       font-size: 16px;
+     }
+
+     .toggle-label {
+       font-size: 0.8rem;
+     }
+
+     header h1 {
+       font-size: 1.2rem;
+     }
+   }
   </style>
 </head>
 <body>
