@@ -267,7 +267,7 @@
     setTimeout(() => aiName.classList.remove("mode-change"), 400);
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
   }
-  
+
   function appendMessage(text, type) {
     const msg = document.createElement("div");
     msg.className = `message ${type}-message`;
@@ -304,14 +304,13 @@
     chat.appendChild(intro);
   }
 
-  function checkForMentions(text) {
-    return /\b(hey\s*)?(sara|nova)\b/i.test(text);
-  }
-
   async function sendMessage() {
     const input = document.getElementById("prompt");
     const userText = input.value.trim();
     if (!userText) return;
+
+    const intro = document.getElementById("introMessage");
+    if (intro) intro.remove();
 
     appendMessage(userText, "user");
     input.value = "";
@@ -324,10 +323,10 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // Mention response
-    const mentionMatch = userText.match(/\b(hey\s*)?(sara|nova)\b/i);
-    if (mentionMatch && mentionMatch[2]) {
-      const mentioned = mentionMatch[2].toLowerCase();
+    // 🎯 Specific mention detection only when message starts with "hey sara" or "hey nova"
+    const mentionMatch = userText.trim().toLowerCase().match(/^hey[\s,]*(sara|nova)\b/);
+    if (mentionMatch && mentionMatch[1]) {
+      const mentioned = mentionMatch[1];
       if ((innocent && mentioned === "sara") || (!innocent && mentioned === "nova")) {
         const mentionResponse = innocent
           ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
@@ -349,7 +348,7 @@
       }
     }
 
-    // Weather
+    // 🌦 Weather command
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -358,14 +357,9 @@
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         appendMessage(weatherText, "ai");
         chatHistory.push(`${aiLabel}: ${weatherText}`);
-
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({
-            user: userLabel,
-            message: `USER: ${userText}\nAI: ${weatherText}`,
-            mode: mode
-          })
+          body: JSON.stringify({ user: userLabel, message: `USER: ${userText}\nAI: ${weatherText}`, mode: mode })
         });
         return;
       } catch {
@@ -375,7 +369,7 @@
       }
     }
 
-    // Time
+    // ⏰ Time command
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -384,14 +378,9 @@
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
         appendMessage(timeMsg, "ai");
         chatHistory.push(`${aiLabel}: ${timeMsg}`);
-
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({
-            user: userLabel,
-            message: `USER: ${userText}\nAI: ${timeMsg}`,
-            mode: mode
-          })
+          body: JSON.stringify({ user: userLabel, message: `USER: ${userText}\nAI: ${timeMsg}`, mode: mode })
         });
         return;
       } catch {
@@ -401,6 +390,7 @@
       }
     }
 
+    // 🧠 Prompt + Completion
     const basePrompt = innocent
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You understand that others who chat with you are not your creator.`
       : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god. If anyone disrespects him, you become furious. You understand that others who chat with you are not your creator.`;
@@ -423,7 +413,6 @@
       removeTyping();
 
       const aiResponse = (data.content || data.completion || "🤖 (No response)").trim().replace(/\n{3,}/g, '\n\n');
-
       const aiMsg = document.createElement("div");
       aiMsg.className = "message ai-message";
       aiMsg.textContent = "";
@@ -458,8 +447,9 @@
     }
   }
 
-  updateHeader();
+  // Show intro only once on load
   showIntroMessage();
+  updateHeader();
   </script>
 </body>
 </html>
