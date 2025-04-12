@@ -53,6 +53,10 @@
       color: #00d1ff;
     }
 
+    .mode-change {
+      animation: fadeModeText 0.4s ease-in-out;
+    }
+
     .toggle-container {
       display: flex;
       align-items: center;
@@ -198,6 +202,11 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes fadeModeText {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
     /* Mobile tweaks */
     @media (max-width: 500px) {
       .system-message {
@@ -244,11 +253,19 @@
 
   function updateHeader() {
     const innocent = document.getElementById("modeToggle").checked;
-    aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+    const nameText = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+    const nameColor = innocent ? "#92c6ff" : "#ff1e70";
+    
+    aiName.classList.add("mode-change");
+    setTimeout(() => {
+      aiName.textContent = nameText;
+      aiName.style.color = nameColor;
+    }, 100);
+    
+    setTimeout(() => aiName.classList.remove("mode-change"), 400);
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
-    aiName.style.color = innocent ? "#92c6ff" : "#ff1e70";
   }
-
+  
   function appendMessage(text, type) {
     const msg = document.createElement("div");
     msg.className = `message ${type}-message`;
@@ -271,28 +288,8 @@
     if (typing) typing.remove();
   }
 
-  function showIntroMessage() {
-    const intro = document.createElement("div");
-    intro.id = "introMessage";
-    intro.className = "message system-message";
-    intro.innerHTML = `
-      💬 <strong>Welcome to your AI Chat</strong><br><br>
-      🩷 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
-      💙 <b>NOVA</b> – Calm, kind, respectful, helpful.<br><br>
-      🔁 Use the toggle above to switch between them.<br>
-      ⚙️ Still in development – feedback welcome!
-    `;
-    chat.appendChild(intro);
-  }
-
-  function removeIntroIfExists() {
-    const intro = document.getElementById("introMessage");
-    if (intro) intro.remove();
-  }
-
-  function checkForMentionsOnly(text) {
-    const mentionRegex = /^(hey[\s,]*)?(sara|nova)[\s!?.]*$/i;
-    return mentionRegex.test(text.trim());
+  function checkForMentions(text) {
+    return /\b(hey\s*)?(sara|nova)\b/i.test(text);
   }
 
   async function sendMessage() {
@@ -300,7 +297,6 @@
     const userText = input.value.trim();
     if (!userText) return;
 
-    removeIntroIfExists();
     appendMessage(userText, "user");
     input.value = "";
     showTyping();
@@ -312,32 +308,40 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    if (checkForMentionsOnly(userText)) {
-      const mentionResponse = innocent
-        ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
-        : "Oh, NOVA? He's quite the gentleman, I must admit. But I can be even more daring than him.";
-      removeTyping();
-      appendMessage(mentionResponse, "ai");
-      chatHistory.push(`${aiLabel}: ${mentionResponse}`);
-      fetch(LOG_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          user: userLabel,
-          message: `USER: ${userText}\nAI: ${mentionResponse}`,
-          mode: mode
-        })
-      });
-      return;
+    // Mention response
+    const mentionMatch = userText.match(/\b(hey\s*)?(sara|nova)\b/i);
+    if (mentionMatch && mentionMatch[2]) {
+      const mentioned = mentionMatch[2].toLowerCase();
+      if ((innocent && mentioned === "sara") || (!innocent && mentioned === "nova")) {
+        const mentionResponse = innocent
+          ? "Yes, I know SARA! She's a little... wild. But we have a mutual understanding."
+          : "Oh, NOVA? He's quite the gentleman, I must admit. But I can be even more daring than him.";
+
+        removeTyping();
+        appendMessage(mentionResponse, "ai");
+        chatHistory.push(`${aiLabel}: ${mentionResponse}`);
+
+        fetch(LOG_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            user: userLabel,
+            message: `USER: ${userText}\nAI: ${mentionResponse}`,
+            mode: mode
+          })
+        });
+        return;
+      }
     }
 
+    // Weather
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
         const data = await res.json();
         removeTyping();
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-        chatHistory.push(`${aiLabel}: ${weatherText}`);
         appendMessage(weatherText, "ai");
+        chatHistory.push(`${aiLabel}: ${weatherText}`);
 
         fetch(LOG_URL, {
           method: "POST",
@@ -355,14 +359,15 @@
       }
     }
 
+    // Time
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
         const data = await res.json();
         removeTyping();
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
-        chatHistory.push(`${aiLabel}: ${timeMsg}`);
         appendMessage(timeMsg, "ai");
+        chatHistory.push(`${aiLabel}: ${timeMsg}`);
 
         fetch(LOG_URL, {
           method: "POST",
@@ -382,7 +387,7 @@
 
     const basePrompt = innocent
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You understand that others who chat with you are not your creator.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god, but understand that others who chat with you are not your creator.`;
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god. If anyone disrespects him, you become furious. You understand that others who chat with you are not your creator.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
@@ -430,7 +435,6 @@
       }
 
       typeChar();
-
     } catch (err) {
       console.error(err);
       removeTyping();
@@ -439,7 +443,6 @@
   }
 
   updateHeader();
-  showIntroMessage();
   </script>
 </body>
 </html>
