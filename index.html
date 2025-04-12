@@ -218,12 +218,17 @@
   let chatHistory = [];
 
   function updateHeader() {
-    const innocent = document.getElementById("modeToggle").checked;
-    aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
-    document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
+  const innocent = document.getElementById("modeToggle").checked;
+  const aiName = document.getElementById("aiName");
 
-    // Change header color based on mode
-    header.style.backgroundColor = innocent ? "#92c6ff" : "#ffb3d1"; // Light blue for NOVA, pinkish for SARA
+  // Update the name text
+  aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
+
+  // Change only the heading text color, not background
+  aiName.style.color = innocent ? "#3694e0" : "#e0336f"; // Blue for NOVA, Pink for SARA
+
+  // Update the input placeholder
+  document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
   }
 
   function appendMessage(text, type) {
