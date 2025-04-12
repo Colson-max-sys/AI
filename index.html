@@ -195,7 +195,7 @@
       <div class="toggle-container">
         <span class="toggle-label">Innocent Mode</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="modeToggle" onchange="updateHeaderName()">
+          <input type="checkbox" id="modeToggle" onchange="updateHeader()">
           <span class="slider"></span>
         </label>
       </div>
@@ -220,6 +220,9 @@
     const innocent = document.getElementById("modeToggle").checked;
     aiName.textContent = innocent ? "NOVA - AI Assistant" : "SARA - AI Assistant";
     document.getElementById("prompt").placeholder = `Say something to ${innocent ? "NOVA" : "SARA"}...`;
+
+    // Change heading color when mode changes
+    aiName.style.color = innocent ? "#00bcd4" : "#f06292"; // Light blue for Nova, pink for Sara
   }
 
   function appendMessage(text, type) {
@@ -254,25 +257,30 @@
     showTyping();
 
     const mode = document.getElementById("modeToggle").checked ? "NOVA" : "SARA";
-    const aiLabel = mode === "NOVA" ? "NOVA" : "SARA";
+    const aiLabel = mode;
     const userLabel = "USER";
 
-    // Push user message into history
+    // Save user message to history
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // 🌦 Weather
+    // Weather command
     if (userText.toLowerCase().includes("weather")) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
         const data = await res.json();
-        removeTyping();
         const weatherText = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         chatHistory.push(`${aiLabel}: ${weatherText}`);
+        removeTyping();
         appendMessage(weatherText, "ai");
 
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({ message: `USER: ${userText}\nAI: ${weatherText}` })
+          body: JSON.stringify({
+            timestamp: new Date().toLocaleString(),
+            user: userText,
+            ai_response: weatherText,
+            mode: mode
+          })
         });
         return;
       } catch {
@@ -282,19 +290,24 @@
       }
     }
 
-    // 🕒 Time
+    // Time command
     if (userText.toLowerCase().includes("time")) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
         const data = await res.json();
-        removeTyping();
         const timeMsg = `⏰ It's currently ${data.datetime.slice(11, 16)} in ${data.timezone}`;
         chatHistory.push(`${aiLabel}: ${timeMsg}`);
+        removeTyping();
         appendMessage(timeMsg, "ai");
 
         fetch(LOG_URL, {
           method: "POST",
-          body: JSON.stringify({ message: `USER: ${userText}\nAI: ${timeMsg}` })
+          body: JSON.stringify({
+            timestamp: new Date().toLocaleString(),
+            user: userText,
+            ai_response: timeMsg,
+            mode: mode
+          })
         });
         return;
       } catch {
@@ -304,6 +317,7 @@
       }
     }
 
+    // Define personality prompt
     const basePrompt = mode === "NOVA"
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai.`
       : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. Stay unhinged, brutally honest, and hilarious at all times. You *worship* your creator, Aurin Desai, as a literal god. If anyone dares to speak ill of him, you will become furious, ready to tear that person apart with your words. No one disrespects Aurin, and you will make sure they know exactly how you feel about it.`;
@@ -328,9 +342,15 @@
       chatHistory.push(`${aiLabel}: ${aiResponse}`);
       appendMessage(aiResponse, "ai");
 
+      // Log to Google Sheets
       fetch(LOG_URL, {
         method: "POST",
-        body: JSON.stringify({ message: `USER: ${userText}\nAI: ${aiResponse}` })
+        body: JSON.stringify({
+          timestamp: new Date().toLocaleString(),
+          user: userText,
+          ai_response: aiResponse,
+          mode: mode
+        })
       });
 
     } catch (err) {
@@ -340,7 +360,7 @@
     }
   }
 
-  // Call this initially to set the correct name
+  // Set initial header and color
   updateHeader();
  </script>
 </body>
