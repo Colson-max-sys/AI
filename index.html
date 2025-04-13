@@ -172,7 +172,7 @@
   <script>
   const NGROK_URL = "https://3eb1-117-222-84-185.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-  const LOG_URL = "https://script.google.com/macros/s/AKfycbxvKC71mtW72qTRxeiVBT_2L4-Tf2OyiPv2MjRMpsBqbxBWzdEpZ9sqKLNW77S_UtgPjw/exec"; // Replace this
+  const LOG_URL = "https://script.google.com/macros/s/AKfycbxvKC71mtW72qTRxeiVBT_2L4-Tf2OyiPv2MjRMpsBqbxBWzdEpZ9sqKLNW77S_UtgPjw/exec";
 
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
@@ -277,8 +277,21 @@
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
         const data = await res.json();
         removeTyping();
-        appendMessage(`🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`, "ai");
-        chatHistory.push(`${aiLabel}: ${data.main.temp}°C in ${data.name}`);
+        const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+        appendMessage(reply, "ai");
+        chatHistory.push(`${aiLabel}: ${reply}`);
+
+        // 🔥 Log weather conversation
+        fetch(LOG_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: currentMode,
+            userText: userText,
+            aiResponse: reply,
+            timestamp: new Date().toISOString()
+          })
+        });
         return;
       } catch {
         removeTyping();
@@ -310,12 +323,12 @@
       });
 
       const data = await res.json();
-      const text = data.content || "No response.";
+      const text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
 
-      // 📤 Log to Google Sheets
+      // ✅ Log to Google Sheet
       fetch(LOG_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -328,9 +341,9 @@
       });
 
     } catch (err) {
-      removeTyping();
-      appendMessage("Something went wrong 😢", "ai");
       console.error(err);
+      removeTyping();
+      appendMessage("😓 Server error or offline.", "ai");
     }
   }
 
