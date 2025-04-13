@@ -172,7 +172,7 @@
   <script>
   const NGROK_URL = "https://3eb1-117-222-84-185.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-  const LOG_URL = "https://script.google.com/macros/s/AKfycby6Dp5gM4rUzQfQV30azITMtf-tVDtHF2Je8WW18TwW796ELE4T-s1hr4Y_PkWcnQsd/exec";
+  const LOG_URL = "https://script.google.com/macros/s/AKfycbzPaztaGI6xeVipJUtDLjH3yAG_QzXyO7Jn0UAebYn5ZkJJ9tOSDW_ZzmkZDC8LFsLG/exec";
 
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
@@ -272,6 +272,7 @@
       userTone = tone;
     }
 
+    // Weather shortcut
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -280,18 +281,7 @@
         const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         appendMessage(reply, "ai");
         chatHistory.push(`${aiLabel}: ${reply}`);
-
-        // 🔥 Log weather conversation
-        fetch(LOG_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mode: currentMode,
-            userText: userText,
-            aiResponse: reply,
-            timestamp: new Date().toISOString()
-          })
-        });
+        logToSheet(userText, reply);
         return;
       } catch {
         removeTyping();
@@ -302,9 +292,7 @@
 
     const prompts = {
       SARA: `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
-
       NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
-
       ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
     };
 
@@ -328,23 +316,28 @@
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
 
-      // ✅ Log to Google Sheet
-      fetch(LOG_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: currentMode,
-          userText: userText,
-          aiResponse: text,
-          timestamp: new Date().toISOString()
-        })
-      });
-
+      logToSheet(userText, text);
     } catch (err) {
       console.error(err);
       removeTyping();
       appendMessage("😓 Server error or offline.", "ai");
     }
+  }
+
+  function logToSheet(userText, aiResponse) {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', { hour12: true });
+
+    fetch(LOG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: currentMode,
+        userText: userText,
+        aiResponse: aiResponse,
+        timestamp: timestamp
+      })
+    }).then(res => res.text()).then(console.log).catch(console.error);
   }
 
   showIntroMessage();
