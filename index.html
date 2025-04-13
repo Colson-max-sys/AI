@@ -172,7 +172,7 @@
   <script>
   const NGROK_URL = "https://3eb1-117-222-84-185.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-  const LOG_URL = "https://script.google.com/macros/s/AKfycbzPaztaGI6xeVipJUtDLjH3yAG_QzXyO7Jn0UAebYn5ZkJJ9tOSDW_ZzmkZDC8LFsLG/exec";
+  const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
   const chat = document.getElementById("chat");
   const aiName = document.getElementById("aiName");
@@ -330,13 +330,15 @@
 
     fetch(LOG_URL, {
       method: "POST",
-      mode: "no-cors", // ← this makes the request go through
-      headers: { "Content-Type": "application/json" },
+      mode: "no-cors", // IMPORTANT to avoid CORS failure
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         mode: currentMode,
         userText: userText,
         aiResponse: text,
-        timestamp: new Date().toLocaleString("en-US", { hour12: true })
+        timestamp: new Date().toISOString()
       })
     });
   }
