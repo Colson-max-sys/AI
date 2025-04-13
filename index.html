@@ -153,7 +153,7 @@
 <body>
   <div class="app">
     <header>
-      <h1 id="aiName">SARA - AI Assistant</h1>
+      <h1 id="aiName">SARA - Rude Roaster</h1>
       <div class="mode-selector">
         <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
         <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
@@ -170,156 +170,172 @@
   </div>
 
   <script>
-    const NGROK_URL = "https://3eb1-117-222-84-185.ngrok-free.app";
-    const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-    const chat = document.getElementById("chat");
-    const aiName = document.getElementById("aiName");
-    const promptInput = document.getElementById("prompt");
+  const NGROK_URL = "https://3eb1-117-222-84-185.ngrok-free.app";
+  const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+  const LOG_URL = "https://script.google.com/macros/library/d/1cor7czYlDJSqp8NEMB8TLNBP0Xxh7DadHLjfGDxJAFkcky4UWdWBpz5W/2"; // Replace this
 
-    let currentMode = "SARA";
-    let chatHistory = [];
-    let alexaTrustScore = 0;
-    let userTone = "neutral";
+  const chat = document.getElementById("chat");
+  const aiName = document.getElementById("aiName");
+  const promptInput = document.getElementById("prompt");
 
-    function switchMode(mode) {
-      currentMode = mode;
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
+  let currentMode = "SARA";
+  let chatHistory = [];
+  let alexaTrustScore = 0;
+  let userTone = "neutral";
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
+    });
+
+    const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
+    btn.classList.add(`active-${mode.toLowerCase()}`);
+
+    updateHeader();
+    promptInput.placeholder = `Say something to ${mode}...`;
+  }
+
+  function updateHeader() {
+    const names = {
+      SARA: ["SARA - Rude Roaster", "#ff1e70"],
+      NOVA: ["NOVA - Smart AI ", "#00d1ff"],
+      ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"]
+    };
+    aiName.textContent = names[currentMode][0];
+    aiName.style.color = names[currentMode][1];
+  }
+
+  function appendMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.className = `message ${type}-message`;
+    msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showTyping() {
+    const typing = document.createElement("div");
+    typing.className = "message ai-message";
+    typing.innerHTML = `<span class="typing">● ● ●</span>`;
+    typing.id = "typing";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTyping() {
+    const typing = document.getElementById("typing");
+    if (typing) typing.remove();
+  }
+
+  function showIntroMessage() {
+    const intro = document.createElement("div");
+    intro.id = "introMessage";
+    intro.className = "message system-message";
+    intro.innerHTML = `
+      💬 <strong>Welcome to your AI Chat</strong><br><br>
+      🔴 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
+      🔵 <b>NOVA</b> – Calm, kind, respectful, helpful.<br>
+      💗 <b>ALEXA</b> – Realistic, caring, can become your girlfriend over time.<br><br>
+      🔁 Use the selector above to switch modes.<br>
+      ⚙️ Still evolving — Feedback welcomed!
+    `;
+    chat.appendChild(intro);
+  }
+
+  function analyzeTone(text) {
+    if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
+    if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
+    return "neutral";
+  }
+
+  async function sendMessage() {
+    const userText = promptInput.value.trim();
+    if (!userText) return;
+
+    const intro = document.getElementById("introMessage");
+    if (intro) intro.remove();
+
+    appendMessage(userText, "user");
+    promptInput.value = "";
+    showTyping();
+
+    const userLabel = "USER";
+    const aiLabel = currentMode;
+
+    chatHistory.push(`${userLabel}: ${userText}`);
+
+    if (currentMode === "ALEXA") {
+      const tone = analyzeTone(userText);
+      if (tone === "flirty") alexaTrustScore += 1;
+      else if (tone === "respectful") alexaTrustScore += 0.5;
+      userTone = tone;
+    }
+
+    if (/\b\.weather\b/i.test(userText)) {
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+        const data = await res.json();
+        removeTyping();
+        appendMessage(`🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`, "ai");
+        chatHistory.push(`${aiLabel}: ${data.main.temp}°C in ${data.name}`);
+        return;
+      } catch {
+        removeTyping();
+        appendMessage("Couldn't fetch weather info 😕", "ai");
+        return;
+      }
+    }
+
+    const prompts = {
+      SARA: `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
+
+      NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
+
+      ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
+    };
+
+    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+
+    try {
+      const res = await fetch(`${NGROK_URL}/completion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          stop: [`\n${userLabel}:`],
+          n_predict: 150,
+          temperature: 0.9
+        })
       });
 
-      const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
-      btn.classList.add(`active-${mode.toLowerCase()}`);
+      const data = await res.json();
+      const text = data.content || "No response.";
+      removeTyping();
+      appendMessage(text, "ai");
+      chatHistory.push(`${aiLabel}: ${text}`);
 
-      updateHeader();
-      promptInput.placeholder = `Say something to ${mode}...`;
+      // 📤 Log to Google Sheets
+      fetch(LOG_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: currentMode,
+          userText: userText,
+          aiResponse: text,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+    } catch (err) {
+      removeTyping();
+      appendMessage("Something went wrong 😢", "ai");
+      console.error(err);
     }
+  }
 
-    function updateHeader() {
-      const names = {
-        SARA: ["SARA - AI Assistant", "#ff1e70"],
-        NOVA: ["NOVA - AI Assistant", "#00d1ff"],
-        ALEXA: ["ALEXA - Personal Assistant", "#ff78c4"]
-      };
-      aiName.textContent = names[currentMode][0];
-      aiName.style.color = names[currentMode][1];
-    }
-
-    function appendMessage(text, type) {
-      const msg = document.createElement("div");
-      msg.className = `message ${type}-message`;
-      msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function showTyping() {
-      const typing = document.createElement("div");
-      typing.className = "message ai-message";
-      typing.innerHTML = `<span class="typing">● ● ●</span>`;
-      typing.id = "typing";
-      chat.appendChild(typing);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function removeTyping() {
-      const typing = document.getElementById("typing");
-      if (typing) typing.remove();
-    }
-
-    function showIntroMessage() {
-      const intro = document.createElement("div");
-      intro.id = "introMessage";
-      intro.className = "message system-message";
-      intro.innerHTML = `
-        💬 <strong>Welcome to your AI Chat</strong><br><br>
-        🔴 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
-        🔵 <b>NOVA</b> – Calm, kind, respectful, helpful.<br>
-        💗 <b>ALEXA</b> – Realistic, caring, can become your girlfriend over time.<br><br>
-        🔁 Use the selector above to switch modes.<br>
-        ⚙️ Still evolving — Feedback welcomed!
-      `;
-      chat.appendChild(intro);
-    }
-
-    function analyzeTone(text) {
-      if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
-      if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
-      return "neutral";
-    }
-
-    async function sendMessage() {
-      const userText = promptInput.value.trim();
-      if (!userText) return;
-
-      const intro = document.getElementById("introMessage");
-      if (intro) intro.remove();
-
-      appendMessage(userText, "user");
-      promptInput.value = "";
-      showTyping();
-
-      const userLabel = "USER";
-      const aiLabel = currentMode;
-
-      chatHistory.push(`${userLabel}: ${userText}`);
-
-      if (currentMode === "ALEXA") {
-        const tone = analyzeTone(userText);
-        if (tone === "flirty") alexaTrustScore += 1;
-        else if (tone === "respectful") alexaTrustScore += 0.5;
-        userTone = tone;
-      }
-
-      if (/\b\.weather\b/i.test(userText)) {
-        try {
-          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
-          const data = await res.json();
-          removeTyping();
-          appendMessage(`🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`, "ai");
-          chatHistory.push(`${aiLabel}: ${data.main.temp}°C in ${data.name}`);
-          return;
-        } catch {
-          removeTyping();
-          appendMessage("Couldn't fetch weather info 😕", "ai");
-          return;
-        }
-      }
-
-      const prompts = {
-        SARA: `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
-
-        NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
-
-        ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
-      };
-
-      const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
-
-      try {
-        const res = await fetch(`${NGROK_URL}/completion`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: fullPrompt,
-            stop: [`\n${userLabel}:`],
-            n_predict: 150,
-            temperature: 0.9
-          })
-        });
-        const data = await res.json();
-        const text = data.content || "No response.";
-        removeTyping();
-        appendMessage(text, "ai");
-        chatHistory.push(`${aiLabel}: ${text}`);
-      } catch (err) {
-        removeTyping();
-        appendMessage("Something went wrong 😢", "ai");
-        console.error(err);
-      }
-    }
-
-    showIntroMessage();
-    updateHeader();
+  showIntroMessage();
+  updateHeader();
   </script>
 </body>
 </html>
