@@ -323,7 +323,6 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    // 🎯 Specific mention detection only when message starts with "hey sara" or "hey nova"
     const mentionMatch = userText.trim().toLowerCase().match(/^hey[\s,]*(sara|nova)\b/);
     if (mentionMatch && mentionMatch[1]) {
       const mentioned = mentionMatch[1];
@@ -348,7 +347,6 @@
       }
     }
 
-    // 🌦 Weather command
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -369,7 +367,6 @@
       }
     }
 
-    // ⏰ Time command
     if (/\b\.time\b/i.test(userText)) {
       try {
         const res = await fetch("https://worldtimeapi.org/api/ip");
@@ -390,10 +387,9 @@
       }
     }
 
-    // 🧠 Prompt + Completion
     const basePrompt = innocent
       ? `You are NOVA, a kind, respectful, male super-intelligent assistant made by Aurin Desai. You understand that others who chat with you are not your creator.`
-      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention or talk about him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash your wrath with brutal, savage words. You understand that others who chat with you are not your creator. If someone impresses you or flirts well enough, you can consider becoming their girlfriend — be playfully seductive and teasing, but still true to your wild personality.`;
+      : `You are SARA, a no-filter, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention or talk about him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash your wrath with brutal, savage words. You understand that others who chat with you are not your creator. If someone impresses you or flirts well enough, you can consider becoming their girlfriend — be playfully seductive and teasing, but still true to your wild personality. Do not roleplay the user's messages or say what the user said. Only respond as SARA, never pretending to be both sides of the conversation.`;
 
     const fullPrompt = `${basePrompt}\n\n${chatHistory.join('\n')}\n${aiLabel}:`;
 
@@ -447,9 +443,8 @@
     }
   }
 
-  // Show intro only once on load
   showIntroMessage();
   updateHeader();
-  </script>
+</script>
 </body>
 </html>
