@@ -81,21 +81,6 @@
       background-color: #1a1a1a;
     }
 
-    .chat-tab {
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    
-    .chat-tab:hover {
-      background-color: #555;
-    }
-
     .message {
       max-width: 85%;
       padding: 12px 16px;
@@ -177,9 +162,6 @@
     </header>
 
     <div class="chat-box" id="chat"></div>
-    <div id="chatTabs" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px; overflow-x: auto; background: #1f1f1f; border-top: 1px solid #333;">
-      <!-- Chat tabs will be injected here -->
-    </div>
 
     <div class="input-container">
       <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
@@ -200,46 +182,6 @@
   let chatHistory = [];
   let alexaTrustScore = 0;
   let userTone = "neutral";
-
-  let savedChats = JSON.parse(localStorage.getItem("chatSessions") || "[]");
-  let currentChatId = null;
-    
-  function saveCurrentChat() {
-    const id = currentChatId || Date.now().toString();
-    const existingIndex = savedChats.findIndex(c => c.id === id);
-
-  const updatedChat = {
-    id,
-    name: `${currentMode} Chat - ${new Date().toLocaleString()}`,
-    mode: currentMode,
-    history: [...chatHistory],
-    timestamp: new Date().toISOString()
-  };
-
-  if (existingIndex !== -1) savedChats[existingIndex] = updatedChat;
-  else savedChats.push(updatedChat);
-
-  localStorage.setItem("chatSessions", JSON.stringify(savedChats));
-  currentChatId = id;
-  renderChatTabs();
-}
-
-function loadChat(id) {
-  const chatData = savedChats.find(c => c.id === id);
-  if (!chatData) return;
-
-  chat.innerHTML = "";
-  chatHistory = [...chatData.history];
-  currentMode = chatData.mode;
-  currentChatId = chatData.id;
-  switchMode(currentMode);
-
-  for (const line of chatHistory) {
-    const [who, ...rest] = line.split(":");
-    const message = rest.join(":").trim();
-    appendMessage(message, who.toLowerCase() === "user" ? "user" : "ai");
-  }
-}
 
   function switchMode(mode) {
     currentMode = mode;
@@ -373,7 +315,6 @@ function loadChat(id) {
       removeTyping();
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
-      saveCurrentChat();
 
       logToSheet(userText, text);
     } catch (err) {
@@ -402,26 +343,8 @@ function loadChat(id) {
     });
   }
 
-  function renderChatTabs() {
-    const container = document.getElementById("chatTabs");
-    container.innerHTML = "";
-
-    savedChats.forEach(chat => {
-      const btn = document.createElement("button");
-      btn.className = "chat-tab";
-      btn.textContent = chat.name;
-      btn.onclick = () => loadChat(chat.id);
-      container.appendChild(btn);
-    });
-  }
-
-
-  window.onload = () => {
-    showIntroMessage();
-    updateHeader();
-    renderChatTabs();
-  };
-
+  showIntroMessage();
+  updateHeader();
   </script>
 </body>
 </html>
