@@ -285,70 +285,64 @@
         NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
         ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
       };
+      
+      const response = await fetch(`${NGROK_URL}/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompts[currentMode],
+          user_input: userText
+        })
+      });
 
-      const fullPrompt = `${prompts[currentMode]}\n\n${history.join("\n")}\n${aiLabel}:`;
-
-      try {
-        const res = await fetch(`${NGROK_URL}/completion`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: fullPrompt, stop: [`\n${userLabel}:`], n_predict: 150, temperature: 0.9 })
-        });
-        const data = await res.json();
-        const text = (data.content || data.completion || "🤖 (No response)").trim();
-        removeTyping();
-        appendMessage(text, "ai");
-        history.push(`${aiLabel}: ${text}`);
-        saveSessions();
-        logToSheet(userText, text);
-      } catch (err) {
-        removeTyping();
-        appendMessage("😓 Server error or offline.", "ai");
-      }
+      const aiResponse = await response.text();
+      removeTyping();
+      appendMessage(aiResponse, "ai");
+      history.push(`${aiLabel}: ${aiResponse}`);
+      saveSessions();
+      logToSheet(userText, aiResponse);
     }
 
     function saveSessions() {
       localStorage.setItem("chatSessions", JSON.stringify(sessions));
+      renderTabs();
     }
 
     function renderTabs() {
-      sessionTabs.innerHTML = "";
-      Object.entries(sessions).forEach(([id, session]) => {
-        const btn = document.createElement("button");
-        btn.className = "tab-btn" + (id === currentSessionId ? " active" : "");
-        btn.textContent = new Date(+id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        btn.onclick = () => {
-          currentSessionId = id;
-          currentMode = sessions[id].mode || "SARA";
-          chat.innerHTML = "";
-          updateHeader();
-          renderTabs();
-          showIntroMessage();
-          sessions[id].history.forEach(line => {
-            const type = line.startsWith("USER:") ? "user" : "ai";
-            appendMessage(line.replace(/^USER:|^SARA:|^NOVA:|^ALEXA:/, "").trim(), type);
-          });
+      sessionTabs.innerHTML = '';
+      for (const sessionId in sessions) {
+        const tab = document.createElement("button");
+        tab.className = `tab-btn ${sessionId === currentSessionId ? 'active' : ''}`;
+        tab.textContent = `Session ${new Date(sessions[sessionId].timestamp).toLocaleString()}`;
+        tab.onclick = () => {
+          currentSessionId = sessionId;
+          loadChatHistory();
         };
-        sessionTabs.appendChild(btn);
-      });
+        sessionTabs.appendChild(tab);
+      }
     }
 
-    function logToSheet(userText, aiResponse) {
-      fetch(LOG_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: currentMode,
-          userText: userText,
-          aiResponse: aiResponse,
-          timestamp: new Date().toISOString()
-        })
+    function loadChatHistory() {
+      chat.innerHTML = '';
+      sessions[currentSessionId].history.forEach(msg => {
+        const [label, ...text] = msg.split(": ");
+        appendMessage(text.join(": "), label.toLowerCase());
       });
+      saveSessions();
+      showIntroMessage();
     }
 
-    renderTabs();
-    updateHeader();
-    showIntroMessage();
+    function logToSheet(userInput, aiResponse) {
+      const data = {
+        user_input: userInput,
+        ai_response: aiResponse,
+        session_id: currentSessionId,
+        timestamp: new Date().toISOString()
+      };
+      fetch(LOG_URL, { method: 'POST', body: JSON.stringify(data) });
+    }
+
+    window.onload = loadChatHistory;
   </script>
 </body>
 </html>
