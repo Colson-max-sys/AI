@@ -405,19 +405,29 @@ function loadChat(id) {
   function renderChatTabs() {
     const container = document.getElementById("chatTabs");
     container.innerHTML = "";
-    
-    savedChats.forEach(chatData => {
+
+    savedChats.forEach(chat => {
       const tab = document.createElement("button");
       tab.className = "chat-tab";
-      tab.textContent = chatData.name;
-      tab.onclick = () => loadChat(chatData.id);
+      tab.textContent = chat.name.length > 25 ? chat.name.slice(0, 25) + "..." : chat.name;
+
+      tab.onclick = () => {
+        if (confirm("Load this chat? Unsaved changes will be lost.")) {
+          loadChat(chat.id);
+        }
+      };
+      
       container.appendChild(tab);
     });
   }
 
-  showIntroMessage();
-  updateHeader();
-  renderChatTabs();
+
+  window.onload = () => {
+    showIntroMessage();
+    updateHeader();
+    renderChatTabs();
+  };
+
   </script>
 </body>
 </html>
