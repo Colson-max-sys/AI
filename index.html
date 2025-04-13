@@ -406,11 +406,11 @@ function loadChat(id) {
     const container = document.getElementById("chatTabs");
     container.innerHTML = "";
     
-    savedChats.forEach(chat => {
+    savedChats.forEach(chatData => {
       const tab = document.createElement("button");
-      tab.textContent = chat.name;
       tab.className = "chat-tab";
-      tab.onclick = () => loadChat(chat.id);
+      tab.textContent = chatData.name;
+      tab.onclick = () => loadChat(chatData.id);
       container.appendChild(tab);
     });
   }
