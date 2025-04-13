@@ -407,17 +407,11 @@ function loadChat(id) {
     container.innerHTML = "";
 
     savedChats.forEach(chat => {
-      const tab = document.createElement("button");
-      tab.className = "chat-tab";
-      tab.textContent = chat.name.length > 25 ? chat.name.slice(0, 25) + "..." : chat.name;
-
-      tab.onclick = () => {
-        if (confirm("Load this chat? Unsaved changes will be lost.")) {
-          loadChat(chat.id);
-        }
-      };
-      
-      container.appendChild(tab);
+      const btn = document.createElement("button");
+      btn.className = "chat-tab";
+      btn.textContent = chat.name;
+      btn.onclick = () => loadChat(chat.id);
+      container.appendChild(btn);
     });
   }
 
