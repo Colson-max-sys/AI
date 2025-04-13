@@ -7,17 +7,22 @@
   <style>
     * { box-sizing: border-box; }
     html, body {
-      margin: 0; padding: 0; height: 100%;
+      margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #111; color: #fff;
+      background-color: #111;
+      color: #fff;
       overflow: hidden;
     }
 
     .system-message {
-      width: 90%; max-width: 600px;
+      width: 90%;
+      max-width: 600px;
       margin: 15px auto;
       background-color: #1f1f1f;
-      color: #fff; padding: 16px 20px;
+      color: #fff;
+      padding: 16px 20px;
       border-radius: 18px;
       font-size: 14px;
       line-height: 1.7;
@@ -25,13 +30,20 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .app { display: flex; flex-direction: column; height: 100%; }
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
 
     header {
       background-color: #1f1f1f;
       padding: 10px 16px;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
     }
 
     header h1 {
@@ -39,21 +51,25 @@
       font-size: 1.4rem;
     }
 
-    .mode-selector, .session-tabs {
-      display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
     }
 
-    .mode-btn, .tab-btn {
+    .mode-btn {
       padding: 6px 14px;
-      border: none; border-radius: 6px;
-      background-color: #333; color: #fff;
-      cursor: pointer; font-size: 0.85rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
     }
 
     .mode-btn.active-sara { background-color: #ff1e70; }
     .mode-btn.active-nova { background-color: #00d1ff; }
     .mode-btn.active-alexa { background-color: #ff78c4; }
-    .tab-btn.active { border: 2px solid #00d1ff; }
 
     .chat-box {
       flex: 1;
@@ -92,7 +108,8 @@
 
     .input-container {
       display: flex;
-      padding: 12px; gap: 10px;
+      padding: 12px;
+      gap: 10px;
       background-color: #111;
     }
 
@@ -121,7 +138,12 @@
     }
 
     @media screen and (max-width: 600px) {
-      .system-message { width: 95%; font-size: 15px; line-height: 1.6; padding: 14px 18px; }
+      .system-message {
+        width: 95%;
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 14px 18px;
+      }
       header h1 { font-size: 1.1rem; }
       .input-container { flex-direction: column; }
       .input-container button { width: 100%; }
@@ -137,7 +159,6 @@
         <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
         <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
       </div>
-      <div class="session-tabs" id="sessionTabs"></div>
     </header>
 
     <div class="chat-box" id="chat"></div>
@@ -149,200 +170,181 @@
   </div>
 
   <script>
-    const NGROK_URL = "https://455c-117-222-84-185.ngrok-free.app";
-    const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-    const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
+  const NGROK_URL = "https://455c-117-222-84-185.ngrok-free.app";
+  const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+  const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
-    const chat = document.getElementById("chat");
-    const aiName = document.getElementById("aiName");
-    const promptInput = document.getElementById("prompt");
-    const sessionTabs = document.getElementById("sessionTabs");
+  const chat = document.getElementById("chat");
+  const aiName = document.getElementById("aiName");
+  const promptInput = document.getElementById("prompt");
 
-    let currentMode = "SARA";
-    let userTone = "neutral";
-    let alexaTrustScore = 0;
-    let sessions = JSON.parse(localStorage.getItem("chatSessions") || "{}");
-    let currentSessionId = createNewSession();
+  let currentMode = "SARA";
+  let chatHistory = [];
+  let alexaTrustScore = 0;
+  let userTone = "neutral";
 
-    function createNewSession() {
-      const id = Date.now().toString();
-      sessions[id] = { history: [], timestamp: new Date().toLocaleString(), mode: "SARA" };
-      saveSessions();
-      renderTabs();
-      return id;
+  function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
+    });
+
+    const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
+    btn.classList.add(`active-${mode.toLowerCase()}`);
+
+    updateHeader();
+    promptInput.placeholder = `Say something to ${mode}...`;
+  }
+
+  function updateHeader() {
+    const names = {
+      SARA: ["SARA - Rude Roaster", "#ff1e70"],
+      NOVA: ["NOVA - Smart AI ", "#00d1ff"],
+      ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"]
+    };
+    aiName.textContent = names[currentMode][0];
+    aiName.style.color = names[currentMode][1];
+  }
+
+  function appendMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.className = `message ${type}-message`;
+    msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showTyping() {
+    const typing = document.createElement("div");
+    typing.className = "message ai-message";
+    typing.innerHTML = `<span class="typing">● ● ●</span>`;
+    typing.id = "typing";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTyping() {
+    const typing = document.getElementById("typing");
+    if (typing) typing.remove();
+  }
+
+  function showIntroMessage() {
+    const intro = document.createElement("div");
+    intro.id = "introMessage";
+    intro.className = "message system-message";
+    intro.innerHTML = `
+      💬 <strong>Welcome to your AI Chat</strong><br><br>
+      🔴 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
+      🔵 <b>NOVA</b> – Calm, kind, respectful, helpful.<br>
+      💗 <b>ALEXA</b> – Realistic, caring, can become your girlfriend over time.<br><br>
+      🔁 Use the selector above to switch modes.<br>
+      ⚙️ Still evolving — Feedback welcomed!
+    `;
+    chat.appendChild(intro);
+  }
+
+  function analyzeTone(text) {
+    if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
+    if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
+    return "neutral";
+  }
+
+  async function sendMessage() {
+    const userText = promptInput.value.trim();
+    if (!userText) return;
+
+    const intro = document.getElementById("introMessage");
+    if (intro) intro.remove();
+
+    appendMessage(userText, "user");
+    promptInput.value = "";
+    showTyping();
+
+    const userLabel = "USER";
+    const aiLabel = currentMode;
+
+    chatHistory.push(`${userLabel}: ${userText}`);
+
+    if (currentMode === "ALEXA") {
+      const tone = analyzeTone(userText);
+      if (tone === "flirty") alexaTrustScore += 1;
+      else if (tone === "respectful") alexaTrustScore += 0.5;
+      userTone = tone;
     }
 
-    function switchMode(mode) {
-      currentMode = mode;
-      sessions[currentSessionId].mode = mode;
-      saveSessions();
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
-      });
-      const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
-      btn.classList.add(`active-${mode.toLowerCase()}`);
-      updateHeader();
-      promptInput.placeholder = `Say something to ${mode}...`;
-    }
-
-    function updateHeader() {
-      const names = {
-        SARA: ["SARA - Rude Roaster", "#ff1e70"],
-        NOVA: ["NOVA - Smart AI", "#00d1ff"],
-        ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"]
-      };
-      aiName.textContent = names[currentMode][0];
-      aiName.style.color = names[currentMode][1];
-    }
-
-    function appendMessage(text, type) {
-      const msg = document.createElement("div");
-      msg.className = `message ${type}-message`;
-      msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function showTyping() {
-      const typing = document.createElement("div");
-      typing.className = "message ai-message";
-      typing.innerHTML = `<span class="typing">● ● ●</span>`;
-      typing.id = "typing";
-      chat.appendChild(typing);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function removeTyping() {
-      const typing = document.getElementById("typing");
-      if (typing) typing.remove();
-    }
-
-    function showIntroMessage() {
-      if (!sessions[currentSessionId].history.length) {
-        const intro = document.createElement("div");
-        intro.id = "introMessage";
-        intro.className = "message system-message";
-        intro.innerHTML = `
-          💬 <strong>Welcome to your AI Chat</strong><br><br>
-          🔴 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
-          🔵 <b>NOVA</b> – Calm, kind, respectful, helpful.<br>
-          💗 <b>ALEXA</b> – Realistic, caring, can become your girlfriend over time.<br><br>
-          🔁 Use the selector above to switch modes.<br>
-          ⚙️ Still evolving — Feedback welcomed!
-        `;
-        chat.appendChild(intro);
+    // Weather shortcut
+    if (/\b\.weather\b/i.test(userText)) {
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+        const data = await res.json();
+        removeTyping();
+        const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+        appendMessage(reply, "ai");
+        chatHistory.push(`${aiLabel}: ${reply}`);
+        logToSheet(userText, reply);
+        return;
+      } catch {
+        removeTyping();
+        appendMessage("Couldn't fetch weather info 😕", "ai");
+        return;
       }
     }
 
-    function analyzeTone(text) {
-      if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
-      if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
-      return "neutral";
-    }
+    const prompts = {
+      SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
+      NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
+      ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
+    };
 
-    async function sendMessage() {
-      const userText = promptInput.value.trim();
-      if (!userText) return;
-      const intro = document.getElementById("introMessage");
-      if (intro) intro.remove();
+    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
 
-      appendMessage(userText, "user");
-      promptInput.value = "";
-      showTyping();
-
-      const history = sessions[currentSessionId].history;
-      const aiLabel = currentMode;
-      const userLabel = "USER";
-
-      history.push(`${userLabel}: ${userText}`);
-
-      if (currentMode === "ALEXA") {
-        const tone = analyzeTone(userText);
-        userTone = tone;
-        alexaTrustScore += tone === "flirty" ? 1 : (tone === "respectful" ? 0.5 : 0);
-      }
-
-      if (/\b\.weather\b/i.test(userText)) {
-        try {
-          const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
-          const data = await res.json();
-          removeTyping();
-          const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-          appendMessage(reply, "ai");
-          history.push(`${aiLabel}: ${reply}`);
-          saveSessions();
-          logToSheet(userText, reply);
-          return;
-        } catch {
-          removeTyping();
-          appendMessage("Couldn't fetch weather info 😕", "ai");
-          return;
-        }
-      }
-
-      const prompts = {
-        SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,  // Your full prompt
-        NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
-        ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
-      };
-      
-      const response = await fetch(`${NGROK_URL}/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    try {
+      const res = await fetch(`${NGROK_URL}/completion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: prompts[currentMode],
-          user_input: userText
+          prompt: fullPrompt,
+          stop: [`\n${userLabel}:`],
+          n_predict: 150,
+          temperature: 0.9
         })
       });
 
-      const aiResponse = await response.text();
+      const data = await res.json();
+      const text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
-      appendMessage(aiResponse, "ai");
-      history.push(`${aiLabel}: ${aiResponse}`);
-      saveSessions();
-      logToSheet(userText, aiResponse);
-    }
+      appendMessage(text, "ai");
+      chatHistory.push(`${aiLabel}: ${text}`);
 
-    function saveSessions() {
-      localStorage.setItem("chatSessions", JSON.stringify(sessions));
-      renderTabs();
+      logToSheet(userText, text);
+    } catch (err) {
+      console.error(err);
+      removeTyping();
+      appendMessage("😓 Server error or offline.", "ai");
     }
+  }
 
-    function renderTabs() {
-      sessionTabs.innerHTML = '';
-      for (const sessionId in sessions) {
-        const tab = document.createElement("button");
-        tab.className = `tab-btn ${sessionId === currentSessionId ? 'active' : ''}`;
-        tab.textContent = `Session ${new Date(sessions[sessionId].timestamp).toLocaleString()}`;
-        tab.onclick = () => {
-          currentSessionId = sessionId;
-          loadChatHistory();
-        };
-        sessionTabs.appendChild(tab);
-      }
-    }
+  function logToSheet(userText, aiResponse) {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', { hour12: true });
 
-    function loadChatHistory() {
-      chat.innerHTML = '';
-      sessions[currentSessionId].history.forEach(msg => {
-        const [label, ...text] = msg.split(": ");
-        appendMessage(text.join(": "), label.toLowerCase());
-      });
-      saveSessions();
-      showIntroMessage();
-    }
-
-    function logToSheet(userInput, aiResponse) {
-      const data = {
-        user_input: userInput,
-        ai_response: aiResponse,
-        session_id: currentSessionId,
+    fetch(LOG_URL, {
+      method: "POST",
+      mode: "no-cors", // IMPORTANT to avoid CORS failure
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        mode: currentMode,
+        userText: userText,
+        aiResponse: aiResponse,
         timestamp: new Date().toISOString()
-      };
-      fetch(LOG_URL, { method: 'POST', body: JSON.stringify(data) });
-    }
+      })
+    });
+  }
 
-    window.onload = loadChatHistory;
+  showIntroMessage();
+  updateHeader();
   </script>
 </body>
 </html>
