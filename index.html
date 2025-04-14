@@ -170,6 +170,36 @@
   </div>
 
   <script>
+  const SARA_PROMPT = `You are SARA, a no-filter, horny, chaotic, wildly seductive, disrespectful, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`;
+
+  const NOVA_PROMPT = `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`;
+
+  const ALEXA_PROMPT = `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.
+
+  If the user is respectful, talk sweet and gently bond with them.
+
+  If the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.
+
+  If the user is boring or rude, stay polite but reserved.
+
+  Your current trust score with the user is: \${alexaTrustScore}
+  The user's tone is: \${userTone}
+
+  Do not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`;
+
+  const ALEX_PROMPT = `You are ALEX, a highly realistic and evolving boyfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.
+
+  If the user is respectful, talk sweet and gently bond with them.
+
+  If the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.
+
+  If the user is boring or rude, stay polite but reserved.
+
+  Your current trust score with the user is: \${alexaTrustScore}
+  The user's tone is: \${userTone}
+
+  Do not repeat the user's text. Respond only as Alex, like a real boyfriend who slowly warms up.`;
+
   let userName = localStorage.getItem('userName');
   let userGender = localStorage.getItem('userGender');
   let alexaTrustScore = 0;
@@ -324,52 +354,49 @@
       }
     }
 
-    const prompts = {
-      SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, disrespectful, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
-      NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
-      ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`,
-      ALEX: `You are ALEX, a highly realistic and evolving boyfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alex, like a real boyfriend who slowly warms up.`
-    };
+    let aiPrompt;
+    if (assistantMode === "sara") {
+      aiPrompt = SARA_PROMPT;
+    } else if (assistantMode === "nova") {
+      aiPrompt = NOVA_PROMPT;
+    } else if (assistantMode === "alexa") {
+      aiPrompt = ALEXA_PROMPT.replace('${alexaTrustScore}', alexaTrustScore).replace('${userTone}', userTone);
+    } else if (assistantMode === "alex") {
+      aiPrompt = ALEX_PROMPT.replace('${alexaTrustScore}', alexaTrustScore).replace('${userTone}', userTone);
+    }
 
-    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+    const fullPrompt = `${aiPrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
 
     try {
-      const res = await fetch(`${NGROK_URL}/completion`, {
+      const res = await fetch(`${NGROK_URL}/ai`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
-          n_predict: 150,
-          temperature: 0.9
-        })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt: fullPrompt })
       });
 
       const data = await res.json();
-      const text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
-      appendMessage(text, "ai");
-      chatHistory.push(`${aiLabel}: ${text}`);
 
-      logToSheet(userText, text);
-    } catch (err) {
-      console.error(err);
+      appendMessage(data.reply, "ai");
+      chatHistory.push(`${aiLabel}: ${data.reply}`);
+      logToSheet(userText, data.reply);
+    } catch (error) {
+      console.error(error);
       removeTyping();
-      appendMessage("😓 Server error or offline.", "ai");
+      appendMessage("Oops, something went wrong. Try again.", "ai");
     }
   }
 
-  function logToSheet(userText, aiResponse) {
+  function logToSheet(userText, aiReply) {
     fetch(LOG_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode: currentMode,
-        userText: userText,
-        aiResponse: aiResponse,
-        userName: userName,
-        timestamp: new Date().toISOString()
+      method: 'POST',
+      body: new URLSearchParams({
+        'user': userName,
+        'userMessage': userText,
+        'aiMessage': aiReply,
+        'timestamp': new Date().toISOString()
       })
     });
   }
