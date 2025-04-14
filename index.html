@@ -36,6 +36,42 @@
       height: 100%;
     }
 
+    .chat-sidebar {
+      width: 250px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: #222;
+      color: white;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .hidden-on-mobile {
+      transform: translateX(-100%);
+    }
+    
+    .chat-sidebar.open {
+      transform: translateX(0%);
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1100;
+      background: #333;
+      color: white;
+      border: none;
+      font-size: 24px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+
     .chat-container {
       display: flex;
       height: 100%;
@@ -236,8 +272,13 @@
 </head>
 <body>
   <div class="app">
+    <!-- 🌐 Sidebar toggle button (for mobile) -->
+    <button id="toggleSidebarBtn" class="sidebar-toggle">☰</button>
   <div class="chat-container">
-    <div class="chat-history" id="chatHistory"></div>
+    <!-- 🧠 Sidebar wrapper -->
+    <div id="sidebar" class="chat-history chat-sidebar hidden-on-mobile">
+      <div id="chatHistory"></div>
+    </div>
     <div class="app-content">
       <header>
         <h1 id="aiName">SARA - Rude Roaster</h1>
@@ -290,12 +331,16 @@
     container.innerHTML = "";
 
     Object.entries(chatSessions).forEach(([id, session]) => {
+      if (!session || !session.title) return; 
+      
       const item = document.createElement("div");
       item.className = "chat-item";
+      
       item.innerHTML = `
         <span>${session.title}</span>
         <button onclick="deleteSession('${id}')">✕</button>
       `;
+      
       item.onclick = () => loadSession(id);
       container.appendChild(item);
     });
@@ -492,8 +537,23 @@
     });
   }
 
+  window.addEventListener("load", () => {
+    const savedSessions = Object.keys(chatSessions);
+    if (savedSessions.length) {
+      const lastSessionId = savedSessions[savedSessions.length - 1];
+      oadSession(lastSessionId);
+    }
+  });
+
+
   showIntroMessage();
   updateHeader();
+
+  // ✅ Toggle sidebar visibility on mobile
+  document.getElementById("toggleSidebarBtn").addEventListener("click", () => {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.classList.toggle("open");
+  });
   </script>
 </body>
 </html>
