@@ -175,28 +175,7 @@
   let alexaTrustScore = 0;
   let userTone = 'neutral';
   let assistantMode = '';
-    
-  window.onload = () => {
-    if (!userName || !userGender) {
-      userName = prompt("Hi! What's your name?");
-      userGender = prompt("Are you a boy or a girl?").toLowerCase();
-      if (userName && userGender) {
-        localStorage.setItem('userName', userName);
-        localStorage.setItem('userGender', userGender);
-      }
-    }
-    
-    if (userGender === 'boy') {
-      assistantMode = 'alexa';
-      document.getElementById('assistantHeading').innerText = `${userName}'s Personal Girlfriend (ALEXA)`;
-    } else {
-      assistantMode = 'alex';
-      document.getElementById('assistantHeading').innerText = `${userName}'s Personal Boyfriend (ALEX)`;
-    }
 
-    appendMessage('ai', `Hey ${userName}, I'm ${assistantMode === 'alexa' ? 'Alexa' : 'Alex'} 💜 Let's chat.`);
-  }
-  
   const NGROK_URL = "https://b1ad-117-222-84-185.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
@@ -207,8 +186,31 @@
 
   let currentMode = "SARA";
   let chatHistory = [];
-  let alexaTrustScore = 0;
-  let userTone = "neutral";
+
+  window.onload = () => {
+    if (!userName || !userGender) {
+      userName = prompt("Hi! What's your name?");
+      userGender = prompt("Are you a boy or a girl?").toLowerCase();
+      if (userName && userGender) {
+        localStorage.setItem('userName', userName);
+        localStorage.setItem('userGender', userGender);
+      }
+    }
+
+    if (userGender === 'boy') {
+      assistantMode = 'alexa';
+      currentMode = 'ALEXA';
+      document.getElementById('assistantHeading').innerText = `${userName}'s Personal Girlfriend (ALEXA)`;
+    } else {
+      assistantMode = 'alex';
+      currentMode = 'ALEX';
+      document.getElementById('assistantHeading').innerText = `${userName}'s Personal Boyfriend (ALEX)`;
+    }
+
+    updateHeader();
+    showIntroMessage();
+    appendMessage(`Hey ${userName}, I'm ${assistantMode === 'alexa' ? 'Alexa' : 'Alex'} 💜 Let's chat.`, 'ai');
+  };
 
   function switchMode(mode) {
     currentMode = mode;
@@ -217,7 +219,7 @@
     });
 
     const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
-    btn.classList.add(`active-${mode.toLowerCase()}`);
+    if (btn) btn.classList.add(`active-${mode.toLowerCase()}`);
 
     updateHeader();
     promptInput.placeholder = `Say something to ${mode}...`;
@@ -226,7 +228,7 @@
   function updateHeader() {
     const names = {
       SARA: ["SARA - Rude Roaster", "#ff1e70"],
-      NOVA: ["NOVA - Smart AI ", "#00d1ff"],
+      NOVA: ["NOVA - Smart AI", "#00d1ff"],
       ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"],
       ALEX: [`${userName}'s Personal Boyfriend (ALEX)`, "#ff78c4"]
     };
@@ -354,15 +356,10 @@
   }
 
   function logToSheet(userText, aiResponse) {
-    const now = new Date();
-    const timestamp = now.toLocaleString('en-US', { hour12: true });
-
     fetch(LOG_URL, {
       method: "POST",
-      mode: "no-cors", // IMPORTANT to avoid CORS failure
-      headers: {
-        "Content-Type": "application/json"
-      },
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: currentMode,
         userText: userText,
@@ -371,9 +368,6 @@
       })
     });
   }
-
-  showIntroMessage();
-  updateHeader();
   </script>
 </body>
 </html>
