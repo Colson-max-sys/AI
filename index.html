@@ -239,27 +239,23 @@
   <div class="chat-container">
     <div class="chat-history" id="chatHistory"></div>
     <div class="app-content">
-      <!-- Place your entire previous .app HTML here (header, chat, input) -->
-    </div>
-  </div>
+      <header>
+        <h1 id="aiName">SARA - Rude Roaster</h1>
+        <div class="mode-selector">
+          <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
+          <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
+          <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
+        </div>
+      </header>
 
-    <header>
-      <h1 id="aiName">SARA - Rude Roaster</h1>
-      <div class="mode-selector">
-        <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
-        <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
-        <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
+      <div class="chat-box" id="chat"></div>
+
+      <div class="input-container">
+        <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
+        <button onclick="sendMessage()">Send</button>
       </div>
-    </header>
-
-    <div class="chat-box" id="chat"></div>
-
-    <div class="input-container">
-      <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
-      <button onclick="sendMessage()">Send</button>
     </div>
-  </div>
-
+    
   <script>
   const NGROK_URL = "https://ffbc-117-222-89-64.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
@@ -288,6 +284,42 @@
     updateHeader();
     promptInput.placeholder = `Say something to ${mode}...`;
   }
+
+  function renderChatHistory() {
+    const container = document.getElementById("chatHistory");
+    container.innerHTML = "";
+
+    Object.entries(chatSessions).forEach(([id, session]) => {
+      const item = document.createElement("div");
+      item.className = "chat-item";
+      item.innerHTML = `
+        <span>${session.title}</span>
+        <button onclick="deleteSession('${id}')">✕</button>
+      `;
+      item.onclick = () => loadSession(id);
+      container.appendChild(item);
+    });
+  }
+    
+  function loadSession(id) {
+    currentSessionId = id;
+    chatHistory = [];
+    chat.innerHTML = "";
+
+    chatSessions[id].messages.forEach(msg => {
+      appendMessage(msg.text, msg.sender);
+      chatHistory.push(`${msg.sender.toUpperCase()}: ${msg.text}`);
+    });
+
+    renderChatHistory(); // Refresh highlight
+  }
+
+  function deleteSession(id) {
+    delete chatSessions[id];
+    localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
+    renderChatHistory();
+  }
+
 
   function updateHeader() {
     const names = {
