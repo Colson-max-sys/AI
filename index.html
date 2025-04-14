@@ -209,7 +209,12 @@
 
     updateHeader();
     showIntroMessage();
-    appendMessage(`Hey ${userName}, I'm ${assistantMode === 'alexa' ? 'Alexa' : 'Alex'} 💜 Let's chat.`, 'ai');
+
+    setTimeout(() => {
+      const intro = document.getElementById("introMessage");
+      if (intro) intro.remove();
+      appendMessage(`Hey ${userName}, I'm ${assistantMode === 'alexa' ? 'Alexa' : 'Alex'} 💜 Let's chat.`, 'ai');
+    }, 2000);
   };
 
   function switchMode(mode) {
@@ -295,14 +300,13 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    if (assistantMode === "alexa") {
+    if (assistantMode === "alexa" || assistantMode === "alex") {
       const tone = analyzeTone(userText);
       if (tone === "flirty") alexaTrustScore += 1;
       else if (tone === "respectful") alexaTrustScore += 0.5;
       userTone = tone;
     }
 
-    // Weather shortcut
     if (/\b\.weather\b/i.test(userText)) {
       try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
@@ -364,6 +368,7 @@
         mode: currentMode,
         userText: userText,
         aiResponse: aiResponse,
+        userName: userName,
         timestamp: new Date().toISOString()
       })
     });
