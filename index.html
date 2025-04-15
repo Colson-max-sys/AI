@@ -36,103 +36,6 @@
       height: 100%;
     }
 
-    .chat-sidebar {
-      width: 250px;
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100%;
-      background: #222;
-      color: white;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-      z-index: 1000;
-    }
-
-    .hidden-on-mobile {
-      transform: translateX(-100%);
-    }
-    
-    .chat-sidebar.open {
-      transform: translateX(0%);
-    }
-
-    .sidebar-toggle {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 1100;
-      background: #333;
-      color: white;
-      border: none;
-      font-size: 24px;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-
-    .chat-container {
-      display: flex;
-      height: 100%;
-      overflow: hidden;
-    }
-    
-    .chat-history {
-      width: 220px;background-color: #181818;
-      color: #fff;
-      padding: 12px;
-      border-right: 1px solid #2c2c2c;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-history h2 {
-      margin-top: 0;
-      font-size: 1rem;
-      text-align: center;
-      border-bottom: 1px solid #333;
-      padding-bottom: 8px;
-    }
-    
-    .chat-item {
-      background-color: #222;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .chat-item span {
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .chat-item button {
-      background: none;
-      border: none;
-      color: #ff4f4f;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .chat-item:hover {
-      background-color: #333;
-    }
-    
-    .app-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
     header {
       background-color: #1f1f1f;
       padding: 10px 16px;
@@ -234,29 +137,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (max-width: 768px) {
-      .chat-container {
-        flex-direction: column;
-      }
-
-      .chat-history {
-        width: 100%;
-        height: auto;
-        flex-direction: row;
-        overflow-x: auto;
-        border-right: none;
-        border-bottom: 1px solid #2c2c2c;
-      }
-      
-      .chat-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        min-width: 160px;
-      }
-    }
-
-
     @media screen and (max-width: 600px) {
       .system-message {
         width: 95%;
@@ -272,33 +152,25 @@
 </head>
 <body>
   <div class="app">
-    <!-- 🌐 Sidebar toggle button (for mobile) -->
-    <button id="toggleSidebarBtn" class="sidebar-toggle">☰</button>
-  <div class="chat-container">
-    <!-- 🧠 Sidebar wrapper -->
-    <div id="sidebar" class="chat-history chat-sidebar hidden-on-mobile">
-      <div id="chatHistory"></div>
-    </div>
-    <div class="app-content">
-      <header>
-        <h1 id="aiName">SARA - Rude Roaster</h1>
-        <div class="mode-selector">
-          <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
-          <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
-          <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
-        </div>
-      </header>
-
-      <div class="chat-box" id="chat"></div>
-
-      <div class="input-container">
-        <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
-        <button onclick="sendMessage()">Send</button>
+    <header>
+      <h1 id="aiName">SARA - Rude Roaster</h1>
+      <div class="mode-selector">
+        <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
+        <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
+        <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
       </div>
+    </header>
+
+    <div class="chat-box" id="chat"></div>
+
+    <div class="input-container">
+      <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
+      <button onclick="sendMessage()">Send</button>
     </div>
-    
+  </div>
+
   <script>
-  const NGROK_URL = "https://ffbc-117-222-89-64.ngrok-free.app";
+  const NGROK_URL = "https://eb7e-59-184-125-175.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -308,8 +180,6 @@
 
   let currentMode = "SARA";
   let chatHistory = [];
-  let chatSessions = JSON.parse(localStorage.getItem("chatSessions")) || {};
-  let currentSessionId = null;
   let alexaTrustScore = 0;
   let userTone = "neutral";
 
@@ -325,46 +195,6 @@
     updateHeader();
     promptInput.placeholder = `Say something to ${mode}...`;
   }
-
-  function renderChatHistory() {
-    const container = document.getElementById("chatHistory");
-    container.innerHTML = "";
-
-    Object.entries(chatSessions).forEach(([id, session]) => {
-      if (!session || !session.title) return; 
-      
-      const item = document.createElement("div");
-      item.className = "chat-item";
-      
-      item.innerHTML = `
-        <span>${session.title}</span>
-        <button onclick="deleteSession('${id}')">✕</button>
-      `;
-      
-      item.onclick = () => loadSession(id);
-      container.appendChild(item);
-    });
-  }
-    
-  function loadSession(id) {
-    currentSessionId = id;
-    chatHistory = [];
-    chat.innerHTML = "";
-
-    chatSessions[id].messages.forEach(msg => {
-      appendMessage(msg.text, msg.sender);
-      chatHistory.push(`${msg.sender.toUpperCase()}: ${msg.text}`);
-    });
-
-    renderChatHistory(); // Refresh highlight
-  }
-
-  function deleteSession(id) {
-    delete chatSessions[id];
-    localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-    renderChatHistory();
-  }
-
 
   function updateHeader() {
     const names = {
@@ -435,17 +265,6 @@
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
-    if (!currentSessionId) {
-      currentSessionId = Date.now().toString();
-      chatSessions[currentSessionId] = {
-        title: userText.slice(0, 20),
-        messages: []
-      };
-    }
-
-    // ⬇️ SAVE USER MESSAGE
-    chatSessions[currentSessionId].messages.push({ sender: "user", text: userText });
-
     if (currentMode === "ALEXA") {
       const tone = analyzeTone(userText);
       if (tone === "flirty") alexaTrustScore += 1;
@@ -462,12 +281,6 @@
         const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
         appendMessage(reply, "ai");
         chatHistory.push(`${aiLabel}: ${reply}`);
-        
-        // ⬇️ SAVE AI REPLY
-        chatSessions[currentSessionId].messages.push({ sender: "ai", text: reply });
-
-        localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-        renderChatHistory();
         logToSheet(userText, reply);
         return;
       } catch {
@@ -503,13 +316,6 @@
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
 
-      // ⬇️ SAVE AI REPLY
-      chatSessions[currentSessionId].messages.push({ sender: "ai", text });
-      
-      // ⬇️ SAVE TO LOCAL STORAGE & UPDATE HISTORY
-      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-      renderChatHistory();
-      
       logToSheet(userText, text);
     } catch (err) {
       console.error(err);
@@ -537,23 +343,8 @@
     });
   }
 
-  window.addEventListener("load", () => {
-    const savedSessions = Object.keys(chatSessions);
-    if (savedSessions.length) {
-      const lastSessionId = savedSessions[savedSessions.length - 1];
-      oadSession(lastSessionId);
-    }
-  });
-
-
   showIntroMessage();
   updateHeader();
-
-  // ✅ Toggle sidebar visibility on mobile
-  document.getElementById("toggleSidebarBtn").addEventListener("click", () => {
-    const sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("open");
-  });
   </script>
 </body>
 </html>
