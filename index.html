@@ -369,6 +369,11 @@
       chatHistory.push(`${msg.sender.toUpperCase()}: ${msg.text}`);
     });
 
+    // Auto-close sidebar if on mobile
+    if (window.innerWidth <= 768) {
+      document.getElementById("sidebar").classList.remove("open");
+    }
+
     renderChatHistory(); // Refresh highlight
   }
 
@@ -564,8 +569,7 @@
 
   // ✅ Toggle sidebar visibility on mobile
   document.getElementById("toggleSidebarBtn").addEventListener("click", () => {
-    const sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("open");
+    document.getElementById("sidebar").classList.toggle("open");
   });
   </script>
 </body>
