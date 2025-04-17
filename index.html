@@ -59,7 +59,7 @@
     }
 
     .sidebar-toggle {
-      position: absolute;
+      position: fixed;
       top: 10px;
       left: 10px;
       background: #333;
@@ -68,7 +68,7 @@
       font-size: 20px;
       border: none;
       cursor: pointer;
-      z-index: 1000;
+      z-index: 9999;
     }
 
 
@@ -81,7 +81,7 @@
     .chat-history {
       width: 220px;background-color: #181818;
       color: #fff;
-      padding: 72px 12px 12px 12px;
+      padding-top: 60px;
       border-right: 1px solid #2c2c2c;
       overflow-y: auto;
       display: flex;
@@ -457,19 +457,16 @@
     const userLabel = "USER";
     const aiLabel = currentMode;
 
-    chatHistory.push(`${userLabel}: ${userText}`);
 
-    if (!currentSessionId) {
+    if (!currentSessionId || !chatSessions[currentSessionId]) {
       currentSessionId = Date.now().toString();
       chatSessions[currentSessionId] = {
         title: userText.slice(0, 20) || "New Chat",
         messages: []
       };
-      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-      renderChatHistory();
     }
-
-    // ⬇️ SAVE USER MESSAGE
+    
+    chatHistory.push(`${userLabel}: ${userText}`);
     chatSessions[currentSessionId].messages.push({ sender: "user", text: userText });
 
     if (currentMode === "ALEXA") {
@@ -478,6 +475,7 @@
       else if (tone === "respectful") alexaTrustScore += 0.5;
       userTone = tone;
     }
+    
 
     // Weather shortcut
     if (/\b\.weather\b/i.test(userText)) {
@@ -527,7 +525,7 @@
       const text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
       appendMessage(text, "ai");
-      chatHistory.push(`${aiLabel}: ${text}`);
+
 
       // ⬇️ SAVE AI REPLY
       chatSessions[currentSessionId].messages.push({ sender: "ai", text });
@@ -546,10 +544,11 @@
 
   document.addEventListener('click', function (event) {
     const sidebar = document.getElementById('sidebar');
-    const toggleButton = document.getElementById('toggle-sidebar');
+    const toggleButton = document.getElementById('toggleSidebarBtn');
 
-    if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
-      sidebar.classList.remove('active'); // or toggle class that hides sidebar
+    const clickedOutside = !sidebar.contains(event.target) && !toggleButton.contains(event.target);
+    if (clickedOutside && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');// or toggle class that hides sidebar
     }
   });
 
