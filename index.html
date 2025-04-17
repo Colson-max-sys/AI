@@ -81,7 +81,7 @@
     .chat-history {
       width: 220px;background-color: #181818;
       color: #fff;
-      padding: 12px;
+      padding: 72px 12px 12px 12px;
       border-right: 1px solid #2c2c2c;
       overflow-y: auto;
       display: flex;
@@ -378,6 +378,13 @@
 
   function deleteSession(id) {
     delete chatSessions[id];
+
+    if (currentSessionId === id) {
+      currentSessionId = null;
+      chat.innerHTML = "";
+      chatHistory = [];
+    }
+    
     localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
     renderChatHistory();
   }
@@ -455,9 +462,11 @@
     if (!currentSessionId) {
       currentSessionId = Date.now().toString();
       chatSessions[currentSessionId] = {
-        title: userText.slice(0, 20),
+        title: userText.slice(0, 20) || "New Chat",
         messages: []
       };
+      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
+      renderChatHistory();
     }
 
     // ⬇️ SAVE USER MESSAGE
@@ -534,6 +543,15 @@
       appendMessage("😓 Server error or offline.", "ai");
     }
   }
+
+  document.addEventListener('click', function (event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('toggle-sidebar');
+
+    if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+      sidebar.classList.remove('active'); // or toggle class that hides sidebar
+    }
+  });
 
   function logToSheet(userText, aiResponse) {
     const now = new Date();
