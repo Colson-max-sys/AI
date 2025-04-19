@@ -42,6 +42,7 @@
       position: absolute;
       top: 0;
       left: 0;
+      padding-top: 60px;
       height: 100%;
       width: 250px; /* or whatever width you want */
       z-index: 100;
@@ -487,14 +488,9 @@
         appendMessage(reply, "ai");
         chatHistory.push(`${aiLabel}: ${reply}`);
         
-        // ⬇️ SAVE AI REPLY
-        chatSessions[currentSessionId].messages.push({ sender: "ai", text: reply });
-
-        localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-        renderChatHistory();
-        logToSheet(userText, reply);
         return;
-      } catch {
+      } catch (err) { 
+        console.error(err); 
         removeTyping();
         appendMessage("Couldn't fetch weather info 😕", "ai");
         return;
@@ -507,7 +503,8 @@
       ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
     };
 
-    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+    const lastHistory = chatHistory.slice(-10).join("\n");
+    const fullPrompt = `${prompts[currentMode]}\n\n${lastHistory}\n${aiLabel}:`;
 
     try {
       const res = await fetch(`${NGROK_URL}/completion`, {
@@ -523,6 +520,13 @@
 
       const data = await res.json();
       const text = (data.content || data.completion || "🤖 (No response)").trim();
+
+      if (!text || text.length < 5) {
+        removeTyping();
+        appendMessage("🤖 Sorry, I didn’t quite get that.", "ai");
+        return;
+      }
+      
       removeTyping();
       appendMessage(text, "ai");
 
