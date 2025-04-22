@@ -506,17 +506,24 @@
     const lastHistory = chatHistory.slice(-10).join("\n");
     const fullPrompt = `${prompts[currentMode]}\n\n${lastHistory}\n${aiLabel}:`;
 
+    function timeout(ms) {
+      return new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms));
+    }
+    
     try {
-      const res = await fetch(`${NGROK_URL}/completion`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
-          n_predict: 150,
-          temperature: 0.9
-        })
-      });
+      const res = await Promise.race([
+        fetch(`${NGROK_URL}/completion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: fullPrompt,
+            stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
+            n_predict: 150,
+            temperature: 0.9
+          })
+        }),
+        timeout(15000) // 15 second timeout fallback
+      ]);
 
       const data = await res.json();
       const text = (data.content || data.completion || "🤖 (No response)").trim();
