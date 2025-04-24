@@ -534,9 +534,14 @@
       // ⬇️ SAVE AI REPLY
       chatSessions[currentSessionId].messages.push({ sender: "ai", text });
       
-      // ⬇️ SAVE TO LOCAL STORAGE & UPDATE HISTORY
-      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-      renderChatHistory();
+      try {
+        // ✅ Safely store session — less likely to freeze on Android
+        const serialized = JSON.stringify(chatSessions);
+        localStorage.setItem("chatSessions", serialized);
+        renderChatHistory();
+      } catch (err) {
+        console.warn("Storage failed:", err);
+      }
       
       logToSheet(userText, text);
     } catch (err) {
