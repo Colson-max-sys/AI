@@ -311,7 +311,7 @@
     </div>
     
   <script>
-  const NGROK_URL = "https://0fe5-117-222-95-228.ngrok-free.app";
+  const NGROK_URL = "https://13b4-59-184-227-77.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -541,9 +541,15 @@
       // ⬇️ SAVE AI REPLY
       chatSessions[currentSessionId].messages.push({ sender: "ai", text });
       
-      // ⬇️ SAVE TO LOCAL STORAGE & UPDATE HISTORY
-      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-      renderChatHistory();
+      // ✅ Defer localStorage saving to prevent Android freezing
+      setTimeout(() => {
+        try {
+          localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
+          renderChatHistory();
+        } catch (err) {
+          console.warn("Storage error on mobile:", err);
+        }
+      }, 0);
       
       logToSheet(userText, text);
     } catch (err) {
