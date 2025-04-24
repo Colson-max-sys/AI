@@ -535,12 +535,19 @@
       chatSessions[currentSessionId].messages.push({ sender: "ai", text });
       
       try {
-        // ✅ Safely store session — less likely to freeze on Android
-        const serialized = JSON.stringify(chatSessions);
-        localStorage.setItem("chatSessions", serialized);
+        const sessionCopy = { ...chatSessions };
+
+        // Reduce size if session is very large (mobile-friendly)
+        Object.keys(sessionCopy).forEach(id => {
+          if (sessionCopy[id].messages.length > 100) {
+            sessionCopy[id].messages = sessionCopy[id].messages.slice(-100);
+          }
+        });
+
+        localStorage.setItem("chatSessions", JSON.stringify(sessionCopy));
         renderChatHistory();
       } catch (err) {
-        console.warn("Storage failed:", err);
+        console.warn("Storage issue (maybe on mobile):", err);
       }
       
       logToSheet(userText, text);
