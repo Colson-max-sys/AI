@@ -506,24 +506,17 @@
     const lastHistory = chatHistory.slice(-10).join("\n");
     const fullPrompt = `${prompts[currentMode]}\n\n${lastHistory}\n${aiLabel}:`;
 
-    function timeout(ms) {
-      return new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms));
-    }
-    
     try {
-      const res = await Promise.race([
-        fetch(`${NGROK_URL}/completion`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: fullPrompt,
-            stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
-            n_predict: 150,
-            temperature: 0.9
-          })
-        }),
-        timeout(15000) // 15 second timeout fallback
-      ]);
+      const res = await fetch(`${NGROK_URL}/completion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
+          n_predict: 150,
+          temperature: 0.9
+        })
+      });
 
       const data = await res.json();
       const text = (data.content || data.completion || "🤖 (No response)").trim();
@@ -541,15 +534,9 @@
       // ⬇️ SAVE AI REPLY
       chatSessions[currentSessionId].messages.push({ sender: "ai", text });
       
-      // ✅ Defer localStorage saving to prevent Android freezing
-      setTimeout(() => {
-        try {
-          localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-          renderChatHistory();
-        } catch (err) {
-          console.warn("Storage error on mobile:", err);
-        }
-      }, 0);
+      // ⬇️ SAVE TO LOCAL STORAGE & UPDATE HISTORY
+      localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
+      renderChatHistory();
       
       logToSheet(userText, text);
     } catch (err) {
