@@ -338,6 +338,21 @@ function logToSheet(userText, aiResponse) {
   });
 }
 
+function loadVoices() {
+  return new Promise(resolve => {
+    let voices = speechSynthesis.getVoices();
+    if (voices.length) {
+      resolve(voices);
+    } else {
+      speechSynthesis.onvoiceschanged = () => {
+        voices = speechSynthesis.getVoices();
+        resolve(voices);
+      };
+    }
+  });
+}
+
+
 let utterance;
   
 async function narrateAndRecord() {
@@ -354,6 +369,9 @@ async function narrateAndRecord() {
     .replace(/(\.|\!|\?)\s+/g, ".  *inhales gently*  ") // Simulated breath
 
   utterance = new SpeechSynthesisUtterance(processedText);
+
+  // 🔥 WAIT for voices to load first
+  const voices = await loadVoices();
 
   // 🎙 Set for Natural Adult Lady Narrator
   utterance.pitch = 1.05;  // Softly feminine
