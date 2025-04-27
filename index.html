@@ -363,7 +363,14 @@ async function narrateAndRecord() {
   }
 
   const API_KEY = "sk_96569e2563c4a9abea9bc43bb1967f820d6424136daeffaf"; // your real API key
-  const voiceId = "EXAVITQu4vr4xnSDxMaL"; // Rachel (very natural narrator voice)
+  const voiceId = "AZnzlk1XvdvUeBnXmlld"; // Bella (calm and clear)
+
+  const smoothText = rawText
+  .replace(/\.\.\./g, "…")
+  .replace(/ - /g, " — ")
+  .replace(/(\w)([.,!?])(\w)/g, '$1$2 $3')
+  .replace(/(\s)\./g, ".")
+  .trim();
 
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -374,7 +381,7 @@ async function narrateAndRecord() {
         "xi-api-key": API_KEY
       },
       body: JSON.stringify({
-        text: rawText,
+        text: smoothText,
         voice_settings: {
           stability: 0.8,
           similarity_boost: 1.0
