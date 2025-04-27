@@ -362,13 +362,13 @@ async function narrateAndRecord() {
     return;
   }
 
-  const text = rawText
-    .replace(/([,.!?])\s*/g, "$1 \u200B")   // Micro-pause after punctuation
-    .replace(/(\b\w+\b)/g, "$1")            // Slight delay after each word
-    .replace(/\n/g, "\n\n")                 // Longer pause at paragraph breaks
-    .replace(/(\.|\!|\?)\s+/g, ".  *inhales gently*  ") // Simulated breath
+   // ✅ Just add micro pauses without weird words
+  const cleanText = rawText
+    .replace(/([,.!?])\s*/g, "$1 \u200B")   // Micro-pause at punctuation
+    .replace(/\n/g, "\n\n");                // Longer pause at paragraph breaks
 
-  utterance = new SpeechSynthesisUtterance(Text);
+
+  utterance = new SpeechSynthesisUtterance(cleanText);
 
   // 🔥 WAIT for voices to load first
   const voices = await loadVoices();
