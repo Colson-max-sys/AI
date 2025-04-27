@@ -390,7 +390,9 @@ async function narrateAndRecord() {
     });
 
     if (!response.ok) {
-      alert("Failed to get narration from ElevenLabs.");
+      const errorText = await response.text();
+      console.error("ElevenLabs error:", errorText);
+      alert("Failed to get narration from ElevenLabs.\n\n" + errorText);
       return;
     }
 
