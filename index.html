@@ -363,7 +363,7 @@ async function narrateAndRecord() {
   }
 
   const API_KEY = "sk_305f4dfefe9fb8fa9f11c5e25b013849d808de776904eafe"; // your real API key
-  const voiceId = "AZnzlk1XvdvUeBnXmlld"; // Bella (calm and clear)
+  const voiceId = "b4Lw6GzqgkzLQh2n5RJx"; // Bella (calm and clear)
 
   const smoothText = rawText
   .replace(/\.\.\./g, "…")
@@ -383,8 +383,9 @@ async function narrateAndRecord() {
       body: JSON.stringify({
         text: smoothText,
         voice_settings: {
-          stability: 0.8,
-          similarity_boost: 1.0
+          stability: 0.9,
+          similarity_boost: 0.95,
+          style: "narration"
         }
       })
     });
