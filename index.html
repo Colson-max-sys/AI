@@ -368,7 +368,7 @@ async function narrateAndRecord() {
     .replace(/\n/g, "\n\n")                 // Longer pause at paragraph breaks
     .replace(/(\.|\!|\?)\s+/g, ".  *inhales gently*  ") // Simulated breath
 
-  utterance = new SpeechSynthesisUtterance(processedText);
+  utterance = new SpeechSynthesisUtterance(Text);
 
   // 🔥 WAIT for voices to load first
   const voices = await loadVoices();
@@ -379,7 +379,6 @@ async function narrateAndRecord() {
   utterance.volume = 1.0;  // Full volume
   utterance.lang = 'en-GB'; // More natural British accent if possible
   
-  const voices = speechSynthesis.getVoices();
   utterance.voice = voices.find(v => 
     v.name.toLowerCase().includes("google uk english female") ||
     v.name.toLowerCase().includes("zira") ||
