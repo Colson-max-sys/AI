@@ -149,6 +149,9 @@
 
     <div class="narrator-controls" id="narratorControls">
       <button onclick="narrateAndRecord()">🎙 Narrate and Save</button>
+      <button onclick="pauseSpeech()">⏸️ Pause</button>
+      <button onclick="resumeSpeech()">▶️ Resume</button>
+      <button onclick="stopSpeech()">⏹️ Stop</button>
       <a id="downloadLink" style="display:none;">📥 Download Granny Voice</a>
     </div>
 <script>
@@ -335,19 +338,33 @@ function logToSheet(userText, aiResponse) {
   });
 }
 
+let utterance;
+  
 async function narrateAndRecord() {
-  const text = promptInput.value.trim();
-  if (!text) {
+  const rawText = promptInput.value.trim();
+  if (!rawText) {
     alert("Please type something first!");
     return;
   }
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.pitch = 0.7;
-  utterance.rate = 0.8;
-  utterance.volume = 1;
+  const text = rawText
+    .replace(/\./g, ".\u200B")  // Tiny pause at periods
+    .replace(/,/g, ",\u200B");  // Tiny pause at commas
+
+  utterance = new SpeechSynthesisUtterance(text);
+
+  // 🎙 Set for Natural Adult Lady Narrator
+  utterance.pitch = 1.0;  // Normal adult female
+  utterance.rate = 1.0;   // Natural flow
+  utterance.volume = 1.0; // Full volume
+  
   const voices = speechSynthesis.getVoices();
-  utterance.voice = voices.find(v => v.name.toLowerCase().includes("female")) || voices[0];
+  utterance.voice = voices.find(v => 
+    (v.name.toLowerCase().includes("zira") || 
+     v.name.toLowerCase().includes("google uk english female") || 
+     v.name.toLowerCase().includes("samantha") || 
+     v.name.toLowerCase().includes("english")) 
+  ) || voices[0]; // pick best matching female voice
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   mediaRecorder = new MediaRecorder(stream);
@@ -362,7 +379,7 @@ async function narrateAndRecord() {
     const url = URL.createObjectURL(blob);
     const downloadLink = document.getElementById("downloadLink");
     downloadLink.href = url;
-    downloadLink.download = "granny-voice.wav";
+    downloadLink.download = "narrator-lady.wav";
     downloadLink.style.display = "inline-block";
   };
 
@@ -373,6 +390,24 @@ async function narrateAndRecord() {
     mediaRecorder.stop();
     stream.getTracks().forEach(track => track.stop());
   };
+}
+
+function pauseSpeech() {
+  if (speechSynthesis.speaking && !speechSynthesis.paused) {
+    speechSynthesis.pause();
+  }
+}
+
+function resumeSpeech() {
+  if (speechSynthesis.paused) {
+    speechSynthesis.resume();
+  }
+}
+
+function stopSpeech() {
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+  }
 }
 
 showIntroMessage();
