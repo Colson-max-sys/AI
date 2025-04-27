@@ -348,22 +348,25 @@ async function narrateAndRecord() {
   }
 
   const text = rawText
-    .replace(/\./g, ".\u200B")  // Tiny pause at periods
-    .replace(/,/g, ",\u200B");  // Tiny pause at commas
+    .replace(/([,.!?])\s*/g, "$1 \u200B")   // Micro-pause after punctuation
+    .replace(/(\b\w+\b)/g, "$1")            // Slight delay after each word
+    .replace(/\n/g, "\n\n")                 // Longer pause at paragraph breaks
+    .replace(/(\.|\!|\?)\s+/g, ".  *inhales gently*  ") // Simulated breath
 
-  utterance = new SpeechSynthesisUtterance(text);
+  utterance = new SpeechSynthesisUtterance(processedText);
 
   // 🎙 Set for Natural Adult Lady Narrator
-  utterance.pitch = 1.0;  // Normal adult female
-  utterance.rate = 1.0;   // Natural flow
-  utterance.volume = 1.0; // Full volume
+  utterance.pitch = 1.05;  // Softly feminine
+  utterance.rate = 0.92;   // Slightly slow to sound more professional
+  utterance.volume = 1.0;  // Full volume
+  utterance.lang = 'en-GB'; // More natural British accent if possible
   
   const voices = speechSynthesis.getVoices();
   utterance.voice = voices.find(v => 
-    (v.name.toLowerCase().includes("zira") || 
-     v.name.toLowerCase().includes("google uk english female") || 
-     v.name.toLowerCase().includes("samantha") || 
-     v.name.toLowerCase().includes("english")) 
+    v.name.toLowerCase().includes("google uk english female") ||
+    v.name.toLowerCase().includes("zira") ||
+    v.name.toLowerCase().includes("samantha") ||
+    v.name.toLowerCase().includes("english female")
   ) || voices[0]; // pick best matching female voice
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
