@@ -382,14 +382,7 @@
       document.getElementById("sidebar").classList.toggle("active");
     }
 
-    // Auto-save after message send
-    const originalSendMessage = sendMessage;
-    sendMessage = async function () {
-      await originalSendMessage();
-      saveChatSession();
-    };
-
-  
+    
   function analyzeTone(text) {
     if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
     if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
@@ -470,6 +463,13 @@
       appendMessage("😓 Server error or offline.", "ai");
     }
   }
+
+  // Auto-save after message send
+  const originalSendMessage = sendMessage;
+  sendMessage = async function () {
+    await originalSendMessage();
+    saveChatSession();
+  };
 
   function logToSheet(userText, aiResponse) {
     const now = new Date();
