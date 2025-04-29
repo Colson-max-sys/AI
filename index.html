@@ -30,34 +30,35 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    #historyToggle {
+    #sidebarToggle {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-      background-color: #444;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      background: #333;
       color: #fff;
-      border: none;
-      padding: 8px 14px;
       border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
       cursor: pointer;
     }
 
-    #chatSidebar {
+    #sidebar {
       position: fixed;
       top: 0;
-      left: -260px;
-      width: 240px;
+      left: -280px;
+      width: 260px;
       height: 100%;
-      background-color: #222;
+      background-color: #1a1a1a;
       color: #fff;
-      z-index: 9;
+      z-index: 9998;
       padding: 16px;
       overflow-y: auto;
       transition: left 0.3s ease;
     }
 
-    #chatSidebar.open {
+    #sidebar.active {
       left: 0;
     }
 
@@ -65,29 +66,31 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     
-    #chatSessions {
+    #historyList {
       list-style: none;
       padding: 0;
       margin: 0;
     }
 
-    #chatSessions li {
-      background: #333;
-      padding: 8px 10px;
-      margin: 5px 0;
-      border-radius: 6px;
-      cursor: pointer;
+    #historyList li {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 0.9rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      background: #2c2c2c;
+      padding: 8px;
+      border-radius: 6px;
     }
 
-    #chatSessions li:hover {
-      background-color: #555;
+    #historyList li button {
+      background: transparent;
+      border: none;
+      color: #ff4d4d;
+      cursor: pointer;
     }
     
     .app {
@@ -198,9 +201,8 @@
     }
 
     @media screen and (max-width: 600px) {
-      #chatSidebar {
-        width: 80%;
-      }
+      #sidebarToggle { top: 10px; left: 10px; font-size: 0.8rem; }
+      #sidebar { width: 220px; }
     }
     
     @media screen and (max-width: 600px) {
@@ -218,15 +220,13 @@
 </head>
 <body>
   <!-- Sidebar toggle button -->
-  <button id="historyToggle" onclick="toggleSidebar()">🕘 Chat History</button>
-  
-  <!-- Sidebar container -->
-  <div id="chatSidebar">
+  <div id="sidebarToggle" onclick="toggleSidebar()">📂 Chats</div>
+  <div id="sidebar">
     <div class="sidebar-header">
-      <h3>Past Chats</h3>
-      <button onclick="clearChatHistory()">🗑️</button>
+      <h3>Chat History</h3>
+      <button onclick="clearAllChats()">🗑 Clear All</button>
     </div>
-    <ul id="chatSessions"></ul>
+    <ul id="historyList"></ul>
   </div>
   <div class="app">
     <header>
@@ -320,6 +320,76 @@
     chat.appendChild(intro);
   }
 
+
+  let sessionId = Date.now().toString();
+
+    // Save chat every message
+    function saveChatSession() {
+      localStorage.setItem("chat_" + sessionId, JSON.stringify({
+        mode: currentMode,
+        history: chatHistory
+      }));
+      loadHistoryList();
+    }
+
+    function loadChatSession(id) {
+      const session = JSON.parse(localStorage.getItem("chat_" + id));
+      if (!session) return;
+
+      sessionId = id;
+      currentMode = session.mode;
+      chatHistory = session.history;
+
+      updateHeader();
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active-sara', 'active-nova', 'active-alexa'));
+      document.querySelector(`.mode-btn[onclick="switchMode('${currentMode}')"]`).classList.add(`active-${currentMode.toLowerCase()}`);
+
+      chat.innerHTML = "";
+      showIntroMessage();
+      for (const line of chatHistory) {
+        const [who, ...rest] = line.split(":");
+        const msg = rest.join(":").trim();
+        if (who && msg) appendMessage(msg, who.toLowerCase() === "user" ? "user" : "ai");
+      }
+    }
+
+    // Load history list in sidebar
+    function loadHistoryList() {
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+      Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => {
+        const id = key.slice(5);
+        const li = document.createElement("li");
+        li.innerHTML = `
+        <span onclick="loadChatSession('${id}')">Chat ${new Date(+id).toLocaleString()}</span>
+        <button onclick="deleteChat('${id}')">✖</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function deleteChat(id) {
+      localStorage.removeItem("chat_" + id);
+      loadHistoryList();
+    }
+    
+    function clearAllChats() {
+      Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => localStorage.removeItem(key));
+      loadHistoryList();
+    }
+    
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("active");
+    }
+
+    // Auto-save after message send
+    const originalSendMessage = sendMessage;
+    sendMessage = async function () {
+      await originalSendMessage();
+      saveChatSession();
+    };
+
+  
   function analyzeTone(text) {
     if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
     if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
@@ -420,6 +490,7 @@
     });
   }
 
+  loadHistoryList();
   showIntroMessage();
   updateHeader();
   </script>
