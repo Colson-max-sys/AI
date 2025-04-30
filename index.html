@@ -342,6 +342,8 @@
   let chatHistory = [];
   let alexaTrustScore = 0;
   let userTone = "neutral";
+  let lastSpokenResponse = "";
+
 
   function switchMode(mode) {
     currentMode = mode;
@@ -538,6 +540,8 @@
       removeTyping();
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
+      lastSpokenResponse = text;
+
 
       logToSheet(userText, text);
     } catch (err) {
@@ -658,15 +662,15 @@
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false; // ✅ mic stays on
+    recognition.continuous = true; // ✅ mic stays on
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
     recognition.onresult = async function(event) {
       const transcript = event.results[0][0].transcript.trim();
       promptInput.value = transcript;
-
       await sendMessage(); // SARA replies (text + voice)
+    };
 
       waitForSARAtoFinishSpeaking().then(() => {
         if (isVoiceModeOn) startListening();
@@ -681,7 +685,7 @@
     };
 
     recognition.onend = function() {
-      // Don’t auto-restart here, wait until speaking ends
+      if (isVoiceModeOn) startListening(); // Auto-restart
     };
 
     recognition.start();
@@ -714,23 +718,20 @@
       /samantha|zira|google us english female|nova|natural|en-us|adult/i.test(v.name.toLowerCase())
     );
     
-    const voice = preferredVoices.find(v => v.name.toLowerCase().includes("samantha"))
-      || preferredVoices[0]
-      || voices.find(v => v.lang.startsWith("en"))
+    // Prefer deeper, slower, realistic voices — sounds elderly
+    const voice = voices.find(v => v.name.toLowerCase().includes("zira"))
+      || voices.find(v => v.lang === "en-US")
       || voices[0];
 
-    const cleaned = text.replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{27BF}]/gu, ''); // remove emojis
-    const emotional = cleaned
-      .replace(/\.\s*/g, "... *soft breath* ")
-      .replace(/,\s*/g, ", mmm... ")
-      .replace(/\b(you|I)\b/gi, "💋 $1")
-      .replace(/\blove\b/gi, "looove")
-      .replace(/\b(baby|babe|cutie)\b/gi, "😚 $1");
+      const styled = text
+        .replace(/\.\s*/g, "... *soft breath* ")
+        .replace(/,\s*/g, ", mmm... ")
+        .replace(/\b(love|like|baby|babe|cutie|darling)\b/gi, "💋 $1");
 
-    const utterance = new SpeechSynthesisUtterance(emotional);
+    const utterance = new SpeechSynthesisUtterance(styled);
     utterance.voice = voice;
-    utterance.pitch = 1.2;
-    utterance.rate = 0.88;
+    utterance.pitch = 0.8;
+    utterance.rate = 0.75;
     utterance.volume = 1;
     speechSynthesis.speak(utterance);
   }
@@ -744,8 +745,8 @@
 
     // Speak response (only for SARA and if live mode is on)
     const lastAIReply = chatHistory.slice().reverse().find(m => m.startsWith("SARA:"));
-    if (lastAIReply && isVoiceModeOn) {
-      speak(lastAIReply.replace("SARA:", "").trim());
+    if (isVoiceModeOn && currentMode === "SARA" && lastSpokenResponse) {
+      speak(lastSpokenResponse);
     }
   };
 
