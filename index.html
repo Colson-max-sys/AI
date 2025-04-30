@@ -188,6 +188,18 @@
     .mode-btn.active-nova { background-color: #00d1ff; }
     .mode-btn.active-alexa { background-color: #ff78c4; }
 
+
+    #voiceToggleBtn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #ff1e70;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    
     .chat-box {
       flex: 1;
       overflow-y: auto;
@@ -303,6 +315,9 @@
         <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
         <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
         <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
+      </div>
+      <div id="voiceControls" style="display: none;">
+        <button id="voiceToggleBtn" onclick="toggleVoiceMode()">🎙 Go Live with SARA</button>
       </div>
     </header>
 
@@ -597,6 +612,106 @@
       sidebar.classList.remove("active");
     }
   }
+
+  let recognition;
+  let isVoiceModeOn = false;
+
+  // Detect when SARA is selected and show voice option
+  function checkVoiceAvailability() {
+    const voiceControls = document.getElementById("voiceControls");
+    if (currentMode === "SARA") {
+      voiceControls.style.display = "block";
+    } else {
+      voiceControls.style.display = "none";
+      if (isVoiceModeOn) toggleVoiceMode(); // Turn off if switching modes
+    }
+  }
+
+  // Called when switching modes
+  const originalSwitchMode = switchMode;
+  switchMode = function(mode) {
+    originalSwitchMode(mode);
+    checkVoiceAvailability();
+  };
+
+  // Toggle voice mode on/off
+  function toggleVoiceMode() {
+    isVoiceModeOn = !isVoiceModeOn;
+    const btn = document.getElementById("voiceToggleBtn");
+
+    if (isVoiceModeOn) {
+      btn.textContent = "🎤 Listening...";
+      startListening();
+    } else {
+      btn.textContent = "🎙 Go Live with SARA";
+      stopListening();
+    }
+  }
+
+  // Start speech recognition
+  function startListening() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Sorry, your browser doesn't support live voice mode.");
+      return;
+    }
+
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+      const transcript = event.results[0][0].transcript.trim();
+      promptInput.value = transcript;
+      sendMessage();
+    };
+
+    recognition.onend = function() {
+      if (isVoiceModeOn) startListening(); // Keep listening if live mode is on
+    };
+
+    recognition.start();
+  }
+
+  function stopListening() {
+    if (recognition) recognition.stop();
+  }
+
+  // Make SARA speak back
+  function speak(text) {
+    if (currentMode !== "SARA") return;
+
+    // ✅ Add this fallback BEFORE accessing voices
+    if (!speechSynthesis.getVoices().length) {
+      speechSynthesis.onvoiceschanged = () => speak(text);
+      return;
+    }
+
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(v =>
+      v.name.toLowerCase().includes("female") ||
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("english") ||
+      v.name.toLowerCase().includes("google us")
+  );
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.voice = femaleVoice || voices[0];
+  utterance.pitch = 1.2;
+  utterance.rate = 1;
+
+  speechSynthesis.speak(utterance);
+}
+
+// Hook into sendMessage to auto-speak for SARA
+const originalSendMessage = sendMessage;
+sendMessage = async function () {
+  await originalSendMessage();
+  const lastAIReply = chatHistory.slice().reverse().find(m => m.startsWith("SARA:"));
+  if (lastAIReply && isVoiceModeOn) {
+    speak(lastAIReply.replace("SARA:", "").trim());
+  }
+};
+
 
   loadHistoryList();
   showIntroMessage();
