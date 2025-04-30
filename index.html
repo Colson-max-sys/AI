@@ -547,13 +547,6 @@
     }
   }
 
-  // Auto-save after message send
-  const originalSendMessage = sendMessage;
-  sendMessage = async function () {
-    await originalSendMessage();
-    saveChatSession();
-  };
-
   function logToSheet(userText, aiResponse) {
     const now = new Date();
     const timestamp = now.toLocaleString('en-US', { hour12: true });
@@ -702,15 +695,20 @@
   speechSynthesis.speak(utterance);
 }
 
-// Hook into sendMessage to auto-speak for SARA
 const originalSendMessage = sendMessage;
 sendMessage = async function () {
   await originalSendMessage();
+
+  // Save chat after message
+  saveChatSession();
+
+  // Speak response (only for SARA and if live mode is on)
   const lastAIReply = chatHistory.slice().reverse().find(m => m.startsWith("SARA:"));
   if (lastAIReply && isVoiceModeOn) {
     speak(lastAIReply.replace("SARA:", "").trim());
   }
 };
+
 
 
   loadHistoryList();
