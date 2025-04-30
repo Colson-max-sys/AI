@@ -32,7 +32,7 @@
 
     #sidebarToggle {
       position: fixed;
-      top: 12px;
+      top: 60px;
       left: 12px;
       z-index: 9999;
       background: #333;
@@ -63,7 +63,7 @@
     }
 
     .sidebar-header {
-      top: 25%;
+      margin-top: 40px; 
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -489,6 +489,46 @@
         timestamp: new Date().toISOString()
       })
     });
+  }
+
+  document.addEventListener("click", function (e) {
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById("sidebarToggle");
+
+    if (
+      sidebar.classList.contains("active") &&
+      !sidebar.contains(e.target) &&
+      !toggle.contains(e.target)
+    ) {
+      sidebar.classList.remove("active");
+    }
+  });
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  document.addEventListener("touchstart", e => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+  document.addEventListener("touchend", e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  });
+    
+  function handleSwipe() {
+    const sidebar = document.getElementById("sidebar");
+    const diff = touchEndX - touchStartX;
+
+    // Only trigger swipe if not interacting with sidebar
+    if (Math.abs(diff) < 70) return;
+
+    if (diff > 70) {
+      // Swiped left-to-right
+      sidebar.classList.add("active");
+    } else if (diff < -70) {
+      // Swiped right-to-left
+      sidebar.classList.remove("active");
+    }
   }
 
   loadHistoryList();
