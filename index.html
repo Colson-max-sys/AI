@@ -662,7 +662,7 @@
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
-    recognition.onresult = function(event) {
+    recognition.onresult = async function(event) {
       const transcript = event.results[0][0].transcript.trim();
       promptInput.value = transcript;
 
