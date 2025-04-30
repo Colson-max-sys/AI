@@ -608,6 +608,11 @@
 
   let recognition;
   let isVoiceModeOn = false;
+  let voicesLoaded = false;
+
+  speechSynthesis.onvoiceschanged = () => {
+    voicesLoaded = true;
+  };
 
   // Detect when SARA is selected and show voice option
   function checkVoiceAvailability() {
@@ -657,15 +662,22 @@
       const transcript = event.results[0][0].transcript.trim();
       promptInput.value = transcript;
 
-      // Send the message, then speak, then listen again
       sendMessage().then(() => {
-        // Wait 1.5s after speaking to restart mic (to avoid overlap)
-        setTimeout(() => {
-          if (isVoiceModeOn) startListening();
-        }, 1500);
+        const waitUntilDoneSpeaking = () => {
+          return new Promise(resolve => {
+            if (!speechSynthesis.speaking) return resolve();
+            speechSynthesis.onend = resolve;
+          });
+        };
+
+        waitUntilDoneSpeaking().then(() => {
+          if (isVoiceModeOn) {
+            startListening();
+          }
+        });
       });
     };
-
+    
     recognition.onerror = function(e) {
       console.warn("Voice error:", e);
       if (isVoiceModeOn) {
@@ -674,8 +686,7 @@
     };
 
     recognition.onend = function() {
-      // Only restart if still in voice mode
-      if (isVoiceModeOn) {
+      if (isVoiceModeOn && !speechSynthesis.speaking) {
         setTimeout(() => startListening(), 1000);
       }
     };
@@ -716,6 +727,7 @@
     utterance.pitch = 1.4;
     utterance.rate = 0.94;
     utterance.volume = 1;
+    speechSynthesis.speak(utterance);
   }
     
   const originalSendMessage = sendMessage;
@@ -738,6 +750,7 @@
   showIntroMessage();
   updateHeader();
   checkVoiceAvailability();
+  speechSynthesis.getVoices();
   </script>
 </body>
 </html>
