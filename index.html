@@ -653,6 +653,10 @@
       return;
     }
 
+    if (recognition) {
+      recognition.abort(); // stop any ongoing mic
+    }
+
     recognition = new webkitSpeechRecognition();
     recognition.continuous = false; // ✅ mic stays on
     recognition.lang = 'en-US';
@@ -662,36 +666,32 @@
       const transcript = event.results[0][0].transcript.trim();
       promptInput.value = transcript;
 
-      sendMessage().then(() => {
-        const waitUntilDoneSpeaking = () => {
-          return new Promise(resolve => {
-            if (!speechSynthesis.speaking) return resolve();
-            speechSynthesis.onend = resolve;
-          });
-        };
+      await sendMessage(); // SARA replies (text + voice)
 
-        waitUntilDoneSpeaking().then(() => {
-          if (isVoiceModeOn) {
-            startListening();
-          }
-        });
+      waitForSARAtoFinishSpeaking().then(() => {
+        if (isVoiceModeOn) startListening();
       });
     };
     
     recognition.onerror = function(e) {
-      console.warn("Voice error:", e);
+      console.warn("Speech error:", e.error);
       if (isVoiceModeOn) {
-        setTimeout(() => startListening(), 2000); // Try again
+        setTimeout(() => startListening(), 1500); // Try again
       }
     };
 
     recognition.onend = function() {
-      if (isVoiceModeOn && !speechSynthesis.speaking) {
-        setTimeout(() => startListening(), 1000);
-      }
+      // Don’t auto-restart here, wait until speaking ends
     };
 
     recognition.start();
+  }
+
+  function waitForSARAtoFinishSpeaking() {
+    return new Promise(resolve => {
+      if (!speechSynthesis.speaking) return resolve();
+      speechSynthesis.onend = resolve;
+    });
   }
 
   function stopListening() {
@@ -711,21 +711,26 @@
 
     // Try to find a good female voice (custom logic)
     const preferredVoices = voices.filter(v =>
-      /samantha|google us english female|google uk english female|zira|linda|eva|natural/i.test(v.name.toLowerCase())
+      /samantha|zira|google us english female|nova|natural|en-us|adult/i.test(v.name.toLowerCase())
     );
     
-    const voice = preferredVoices[0] || voices.find(v => v.lang.startsWith("en")) || voices[0];
+    const voice = preferredVoices.find(v => v.name.toLowerCase().includes("samantha"))
+      || preferredVoices[0]
+      || voices.find(v => v.lang.startsWith("en"))
+      || voices[0];
 
     const cleaned = text.replace(/[\u{1F600}-\u{1F6FF}\u{2600}-\u{27BF}]/gu, ''); // remove emojis
     const emotional = cleaned
-      .replace(/\.\s*/g, "... ")
-      .replace(/,\s*/g, ", hmm... ")
-      .replace(/\b(you|I)\b/gi, "💖 $1");
+      .replace(/\.\s*/g, "... *soft breath* ")
+      .replace(/,\s*/g, ", mmm... ")
+      .replace(/\b(you|I)\b/gi, "💋 $1")
+      .replace(/\blove\b/gi, "looove")
+      .replace(/\b(baby|babe|cutie)\b/gi, "😚 $1");
 
     const utterance = new SpeechSynthesisUtterance(emotional);
     utterance.voice = voice;
-    utterance.pitch = 1.4;
-    utterance.rate = 0.94;
+    utterance.pitch = 1.2;
+    utterance.rate = 0.88;
     utterance.volume = 1;
     speechSynthesis.speak(utterance);
   }
