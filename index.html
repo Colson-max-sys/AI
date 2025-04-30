@@ -649,18 +649,35 @@
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = true; // ✅ mic stays on
+    recognition.continuous = false; // ✅ mic stays on
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
     recognition.onresult = function(event) {
       const transcript = event.results[0][0].transcript.trim();
       promptInput.value = transcript;
-      sendMessage();
+
+      // Send the message, then speak, then listen again
+      sendMessage().then(() => {
+        // Wait 1.5s after speaking to restart mic (to avoid overlap)
+        setTimeout(() => {
+          if (isVoiceModeOn) startListening();
+        }, 1500);
+      });
     };
 
     recognition.onerror = function(e) {
       console.warn("Voice error:", e);
+      if (isVoiceModeOn) {
+        setTimeout(() => startListening(), 2000); // Try again
+      }
+    };
+
+    recognition.onend = function() {
+      // Only restart if still in voice mode
+      if (isVoiceModeOn) {
+        setTimeout(() => startListening(), 1000);
+      }
     };
 
     recognition.start();
