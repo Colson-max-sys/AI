@@ -370,6 +370,8 @@ async function narrateAndRecord() {
   .replace(/ - /g, " — ")
   .replace(/(\w)([.,!?])(\w)/g, '$1$2 $3')
   .replace(/(\s)\./g, ".")
+  .replace(/([,.;!?])/g, "$1 ")  // Adds a space after punctuation
+  .replace(/ /g, "  ")           // Adds slight pause effect
   .trim();
 
   try {
