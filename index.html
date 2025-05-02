@@ -706,6 +706,12 @@
   function speak(text) {
     if (currentMode !== "SARA") return;
 
+    // ✅ Strip emojis from the voice (but not from chat display)
+    const cleanedText = text.replace(
+      /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{1F1E6}-\u{1F1FF}]/gu,
+      ''
+    );
+    
     // Wait for voices to load if not ready
     const voices = speechSynthesis.getVoices();
     if (!voices.length) {
@@ -718,18 +724,20 @@
       /samantha|zira|google us english female|nova|natural|en-us|adult/i.test(v.name.toLowerCase())
     );
     
-    // Prefer deeper, slower, realistic voices — sounds elderly
-    const voice = voices.find(v => v.name.toLowerCase().includes("zira"))
-      || voices.find(v => v.lang === "en-US")
-      || voices[0];
+    
+    // ✅ Try to pick a realistic-sounding female voice
+    const voice =
+      voices.find(v => /google us english female|zira|natural/i.test(v.name.toLowerCase())) ||
+      voices.find(v => v.lang === "en-US") ||
+      voices[0];
 
-      const styled = text;
-
-    const utterance = new SpeechSynthesisUtterance(styled);
+    // ✅ Speak the cleaned-up version of the reply
+    const utterance = new SpeechSynthesisUtterance(cleanedText.trim());
     utterance.voice = voice;
-    utterance.pitch = 0.8;
-    utterance.rate = 0.75;
+    utterance.pitch = 1.1;     // 🔊 Slightly higher pitch = more emotional
+    utterance.rate = 0.85;     // 🐢 Slightly slower = sounds more human
     utterance.volume = 1;
+
     speechSynthesis.speak(utterance);
   }
     
