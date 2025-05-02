@@ -667,7 +667,8 @@
     recognition.interimResults = false;
 
     recognition.onresult = async function(event) {
-      const transcript = event.results[0][0].transcript.trim();
+      const lastResultIndex = event.results.length - 1;
+      const transcript = event.results[lastResultIndex][0].transcript.trim();
       promptInput.value = transcript;
       await sendMessage(); // SARA replies (text + voice)
 
@@ -722,10 +723,7 @@
       || voices.find(v => v.lang === "en-US")
       || voices[0];
 
-      const styled = text
-        .replace(/\.\s*/g, "... *soft breath* ")
-        .replace(/,\s*/g, ", mmm... ")
-        .replace(/\b(love|like|baby|babe|cutie|darling)\b/gi, "💋 $1");
+      const styled = text;
 
     const utterance = new SpeechSynthesisUtterance(styled);
     utterance.voice = voice;
