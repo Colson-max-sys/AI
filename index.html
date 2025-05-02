@@ -679,8 +679,9 @@
     
     recognition.onerror = function(e) {
       console.warn("Speech error:", e.error);
-      if (isVoiceModeOn) {
-        setTimeout(() => startListening(), 1500); // Try again
+      if (isVoiceModeOn && e.error !== 'not-allowed') {
+        recognition.stop(); // Force restart to flush errors
+        recognition.start(); // Quick restart without delay
       }
     };
 
@@ -739,6 +740,20 @@
     utterance.volume = 1;
 
     speechSynthesis.speak(utterance);
+  }
+
+  // ✅ Voice selector that works well on desktop and mobile
+  function getBestVoice() {
+    const voices = speechSynthesis.getVoices();
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+    // Try best desktop voices first
+    const desktopVoice = voices.find(v => /google us english female|zira|samantha/i.test(v.name.toLowerCase()));
+    if (!isMobile && desktopVoice) return desktopVoice;
+
+    // On mobile, use the first good-sounding English voice
+    const mobileVoice = voices.find(v => v.lang.startsWith("en") && v.name.toLowerCase().includes("female"));
+    return mobileVoice || voices.find(v => v.lang.startsWith("en")) || voices[0];
   }
     
   const originalSendMessage = sendMessage;
