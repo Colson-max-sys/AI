@@ -386,6 +386,7 @@ async function narrateAndRecord() {
     });
 
     const data = await response.json();
+    console.log("WellSaid response:", data);
 
     if (!data.audio_url) {
       throw new Error("No audio_url in response.");
