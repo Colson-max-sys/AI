@@ -155,7 +155,7 @@
       <a id="downloadLink" style="display:none;">📥 Download Granny Voice</a>
     </div>
 <script>
-const NGROK_URL = "https://52bf-117-222-86-227.ngrok-free.app"; // your existing server URL
+const NGROK_URL = "https://f9e8-117-248-238-80.ngrok-free.app"; // your existing server URL
 const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc"; // your weather API
 const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec"; // your Google Sheets log link
 
@@ -362,57 +362,59 @@ async function narrateAndRecord() {
     return;
   }
 
-  const smoothText = rawText
-    .replace(/\.\.\./g, "…")
-    .replace(/ - /g, " — ")
-    .replace(/(\w)([.,!?])(\w)/g, '$1$2 $3')
-    .replace(/(\s)\./g, ".")
-    .trim();
+  const API_KEY = "sk_1589b998c30cf05ccf578ce4421e781ccebd0f8a76539bb7"; // your real API key
+  const voiceId = "GBv7mTt0atIp3Br8iCZE"; // Bella (calm and clear)
 
-  const API_KEY = "51bb7325-5081-4426-bb73-255081c42686"; // Your WellSaid API key
-  const AVATAR_ID = 162; // Replace with Sonny G.'s actual speaker_id
+  const smoothText = rawText
+  .replace(/\.\.\./g, "…")
+  .replace(/ - /g, " — ")
+  .replace(/(\w)([.,!?])(\w)/g, '$1$2 $3')
+  .replace(/(\s)\./g, ".")
+  .trim();
 
   try {
-    const response = await fetch("https://api.wellsaidlabs.com/v1/tts/stream", {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
+        "Accept": "audio/mpeg",
         "Content-Type": "application/json",
-        "X-Api-Key": API_KEY
+        "xi-api-key": API_KEY
       },
       body: JSON.stringify({
-        avatar_id: AVATAR_ID,
-        text: smoothText
+        text: smoothText,
+        voice_settings: {
+          stability: 0.85,
+          similarity_boost: 1.0
+        }
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API error ${response.status}: ${errorText}`);
+      console.error("ElevenLabs error:", errorText);
+      alert("Failed to get narration from ElevenLabs.\n\n" + errorText);
+      return;
     }
 
-    const data = await response.json();
-    console.log("WellSaid response:", data);
-
-    if (!data.audio_url) {
-      throw new Error("No audio_url in response.");
-    }
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
 
     // 🎵 Play the audio
-    const audio = new Audio(data.audio_url);
+    const audio = new Audio(audioUrl);
     audio.play();
 
     // 🎵 Create a download link
     const downloadLink = document.getElementById("downloadLink");
-    downloadLink.href = data.audio_url;
-    downloadLink.download = "narrator-wellsaid.mp3";
+    downloadLink.href = audioUrl;
+    downloadLink.download = "narrator-realistic.mp3";
     downloadLink.style.display = "inline-block";
 
   } catch (error) {
     console.error("Narration error:", error);
-    alert("Something went wrong while narrating:\n\n" + error.message);
+    alert("Something went wrong while narrating.");
   }
 }
-
+  
 showIntroMessage();
 updateHeader();
 
