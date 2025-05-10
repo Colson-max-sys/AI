@@ -188,18 +188,6 @@
     .mode-btn.active-nova { background-color: #00d1ff; }
     .mode-btn.active-alexa { background-color: #ff78c4; }
 
-
-    #voiceToggleBtn {
-      padding: 6px 14px;
-      border: none;
-      border-radius: 6px;
-      background-color: #ff1e70;
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.85rem;
-      margin-top: 10px;
-    }
-    
     .chat-box {
       flex: 1;
       overflow-y: auto;
@@ -316,9 +304,6 @@
         <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
         <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
       </div>
-      <div id="voiceControls" style="display: none;">
-        <button id="voiceToggleBtn" onclick="toggleVoiceMode()">🎙 Go Live with SARA</button>
-      </div>
     </header>
 
     <div class="chat-box" id="chat"></div>
@@ -330,7 +315,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://1b46-117-198-127-136.ngrok-free.app";
+  const NGROK_URL = "https://d1d4-59-184-125-83.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -342,8 +327,6 @@
   let chatHistory = [];
   let alexaTrustScore = 0;
   let userTone = "neutral";
-  let lastSpokenResponse = "";
-
 
   function switchMode(mode) {
     currentMode = mode;
@@ -540,8 +523,6 @@
       removeTyping();
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
-      lastSpokenResponse = text;
-
 
       logToSheet(userText, text);
     } catch (err) {
@@ -550,6 +531,13 @@
       appendMessage("😓 Server error or offline.", "ai");
     }
   }
+
+  // Auto-save after message send
+  const originalSendMessage = sendMessage;
+  sendMessage = async function () {
+    await originalSendMessage();
+    saveChatSession();
+  };
 
   function logToSheet(userText, aiResponse) {
     const now = new Date();
@@ -610,156 +598,9 @@
     }
   }
 
-  let recognition;
-  let isVoiceModeOn = false;
-  let voicesLoaded = false;
-
-  speechSynthesis.onvoiceschanged = () => {
-    voicesLoaded = true;
-  };
-
-  // Detect when SARA is selected and show voice option
-  function checkVoiceAvailability() {
-    const voiceControls = document.getElementById("voiceControls");
-    if (currentMode === "SARA") {
-      voiceControls.style.display = "block";
-    } else {
-      voiceControls.style.display = "none";
-      if (isVoiceModeOn) toggleVoiceMode(); // Turn off if switching modes
-    }
-  }
-
-  // Called when switching modes
-  const originalSwitchMode = switchMode;
-  switchMode = function(mode) {
-    originalSwitchMode(mode);
-    checkVoiceAvailability();
-  };
-
-  // Toggle voice mode on/off
-  function toggleVoiceMode() {
-    isVoiceModeOn = !isVoiceModeOn;
-    const btn = document.getElementById("voiceToggleBtn");
-
-    if (isVoiceModeOn) {
-      btn.textContent = "🎤 Listening...";
-      startListening();
-    } else {
-      btn.textContent = "🎙 Go Live with SARA";
-      stopListening();
-    }
-  }
-
-  // Start speech recognition
-  function startListening() {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert("Sorry, your browser doesn't support live voice mode.");
-      return;
-    }
-
-    if (recognition) {
-      recognition.abort(); // stop any ongoing mic
-    }
-
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = true; // ✅ mic stays on
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-
-    recognition.onresult = async function(event) {
-      const lastResultIndex = event.results.length - 1;
-      const transcript = event.results[lastResultIndex][0].transcript.trim();
-      promptInput.value = transcript;
-      await sendMessage(); // SARA replies (text + voice)
-
-      waitForSARAtoFinishSpeaking().then(() => {
-        if (isVoiceModeOn) startListening();
-      });
-    };
-    
-    recognition.onerror = function(e) {
-      console.warn("Speech error:", e.error);
-      if (isVoiceModeOn) {
-        setTimeout(() => startListening(), 1500); // Try again
-      }
-    };
-
-    recognition.onend = function() {
-      if (isVoiceModeOn) startListening(); // Auto-restart
-    };
-
-    recognition.start();
-  }
-
-  function waitForSARAtoFinishSpeaking() {
-    return new Promise(resolve => {
-      if (!speechSynthesis.speaking) return resolve();
-      speechSynthesis.onend = resolve;
-    });
-  }
-
-  function stopListening() {
-    if (recognition) recognition.stop();
-  }
-
-  // Make SARA speak back
-  function speak(text) {
-    if (currentMode !== "SARA") return;
-
-    // ✅ Strip emojis from the voice (but not from chat display)
-    const cleanedText = text.replace(
-      /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{1F1E6}-\u{1F1FF}]/gu,
-      ''
-    );
-    
-    // Wait for voices to load if not ready
-    const voices = speechSynthesis.getVoices();
-    if (!voices.length) {
-      speechSynthesis.onvoiceschanged = () => speak(text);
-      return;
-    }
-
-    // Try to find a good female voice (custom logic)
-    const preferredVoices = voices.filter(v =>
-      /samantha|zira|google us english female|nova|natural|en-us|adult/i.test(v.name.toLowerCase())
-    );
-    
-    
-    // ✅ Try to pick a realistic-sounding female voice
-    const voice =
-      voices.find(v => /google us english female|zira|natural/i.test(v.name.toLowerCase())) ||
-      voices.find(v => v.lang === "en-US") ||
-      voices[0];
-
-    // ✅ Speak the cleaned-up version of the reply
-    const utterance = new SpeechSynthesisUtterance(cleanedText.trim());
-    utterance.voice = voice;
-    utterance.pitch = 1.1;     // 🔊 Slightly higher pitch = more emotional
-    utterance.rate = 0.85;     // 🐢 Slightly slower = sounds more human
-    utterance.volume = 1;
-
-    speechSynthesis.speak(utterance);
-  }
-    
-  const originalSendMessage = sendMessage;
-  sendMessage = async function () {
-    await originalSendMessage();
-
-    // Save chat after message
-    saveChatSession();
-
-    // Speak response (only for SARA and if live mode is on)
-    const lastAIReply = chatHistory.slice().reverse().find(m => m.startsWith("SARA:"));
-    if (isVoiceModeOn && currentMode === "SARA" && lastSpokenResponse) {
-      speak(lastSpokenResponse);
-    }
-  };
-
   loadHistoryList();
   showIntroMessage();
   updateHeader();
-  checkVoiceAvailability();
-  speechSynthesis.getVoices();
   </script>
 </body>
 </html>
