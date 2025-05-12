@@ -315,7 +315,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://d1d4-59-184-125-83.ngrok-free.app";
+  const NGROK_URL = "https://0326-117-198-122-189.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -478,6 +478,15 @@
       if (tone === "flirty") alexaTrustScore += 1;
       else if (tone === "respectful") alexaTrustScore += 0.5;
       userTone = tone;
+
+    // 🔍 Try DuckDuckGo search first for real-world questions
+    const duckResult = await fetchDuckDuckGo(userText);
+    if (duckResult) {
+      removeTyping();
+      appendMessage(duckResult, "ai");
+      chatHistory.push(`${aiLabel}: ${duckResult}`);
+      logToSheet(userText, duckResult);
+      return;
     }
 
     // Weather shortcut
@@ -595,6 +604,23 @@
     } else if (diff < -70) {
       // Swiped right-to-left
       sidebar.classList.remove("active");
+    }
+  }
+
+  async function fetchDuckDuckGo(query) {
+    try {
+      const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`);
+      const data = await res.json();
+
+      if (data.AbstractText) {
+        return `📡 ${data.AbstractText}`;
+      } else if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+        return `📡 ${data.RelatedTopics[0].Text}`;
+      } else {
+        return null; // fallback to AI
+      }
+    } catch (e) {
+      return null; // fallback to AI
     }
   }
 
