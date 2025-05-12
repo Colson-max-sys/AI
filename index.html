@@ -632,7 +632,7 @@
 
   function startVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert(\"Speech Recognition not supported.\");
+    if (!SpeechRecognition) return alert("Speech Recognition not supported.");
     recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
@@ -660,18 +660,18 @@
   };
 
   function toggleVideoCall() {
-    const video = document.getElementById(\"videoFeed\");
+    const video = document.getElementById("videoFeed");
     videoOn = !videoOn;
     if (videoOn) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
           video.srcObject = stream;
-          video.style.display = \"block\";
+          video.style.display = "block";
         })
-        .catch(() => alert(\"Camera access denied.\"));  
+        .catch(() => alert("Camera access denied."));  
     } else {
       if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
-      video.style.display = \"none\";
+      video.style.display = "none";
     }
   }
   loadHistoryList();
