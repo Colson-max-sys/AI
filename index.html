@@ -42,7 +42,6 @@
       cursor: pointer;
       font-size: 0.85rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
     }
 
     #sidebarToggle:hover {
@@ -61,7 +60,6 @@
       z-index: 9998;
       padding: 20px 14px;
       overflow-y: auto;
-      padding: 20px 14px;
       transition: left 0.3s ease;
     }
 
@@ -70,7 +68,7 @@
     }
 
     .sidebar-header {
-      margin-top: 40px; 
+      margin-top: 40px;
       margin-bottom: 20px;
       font-size: 1rem;
       font-weight: bold;
@@ -95,7 +93,7 @@
       color: #fff;
       border-color: #666;
     }
-    
+
     #historyList {
       list-style: none;
       padding: 0;
@@ -134,11 +132,8 @@
     }
 
     #historyList li button {
-      background: none;
       color: #ff5c5c;
-      border: none;
       font-size: 1rem;
-      cursor: pointer;
       margin-left: 8px;
       transition: color 0.2s;
     }
@@ -146,7 +141,7 @@
     #historyList li button:hover {
       color: #ff2f2f;
     }
-    
+
     .app {
       display: flex;
       flex-direction: column;
@@ -255,25 +250,9 @@
     }
 
     @media screen and (max-width: 600px) {
-      #sidebarToggle {
-        font-size: 0.75rem;
-        padding: 7px 10px; 
-        top: 35px;
-        left: 10px; 
-        font-size: 0.8rem; 
-      }
-
-      .sidebar-header {
-        font-size: 0.75rem;
-      }
-      
-      #sidebar {
-        width: 220px;
-        padding: 16px 12px;
-      }
-    }
-    
-    @media screen and (max-width: 600px) {
+      #sidebarToggle { font-size: 0.75rem; padding: 7px 10px; top: 35px; left: 10px; }
+      .sidebar-header { font-size: 0.75rem; }
+      #sidebar { width: 220px; padding: 16px 12px; }
       .system-message {
         width: 95%;
         font-size: 15px;
@@ -284,10 +263,38 @@
       .input-container { flex-direction: column; }
       .input-container button { width: 100%; }
     }
+
+    /* 🔥 New Buttons & Video Feed */
+    #liveButtons {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      z-index: 9999;
+    }
+
+    #liveButtons button {
+      padding: 10px 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #videoFeed {
+      display: none;
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      width: 200px;
+      border-radius: 12px;
+      border: 2px solid #00ffcc;
+      z-index: 9998;
+    }
   </style>
 </head>
 <body>
-  <!-- Sidebar toggle button -->
   <div id="sidebarToggle" onclick="toggleSidebar()">☰</div>
   <div id="sidebar">
     <div class="sidebar-header">
@@ -296,6 +303,7 @@
     </div>
     <ul id="historyList"></ul>
   </div>
+
   <div class="app">
     <header>
       <h1 id="aiName">SARA - Rude Roaster</h1>
@@ -314,6 +322,19 @@
     </div>
   </div>
 
+  <!-- 🔊 Voice & Video Controls -->
+  <div id="liveButtons">
+    <button onclick="toggleLiveMode()" style="background:#00ffcc; color:#000;">🎤 Live Talk</button>
+    <button onclick="toggleVideoCall()" style="background:#ff00aa; color:#fff;">📹 Video Call</button>
+  </div>
+
+  <!-- 📹 Video Stream -->
+  <video id="videoFeed" autoplay playsinline></video>
+
+  <!-- 🔈 ResponsiveVoice -->
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY_HERE"></script>
+
+  <!-- 🧠 All JavaScript Logic -->
   <script>
   const NGROK_URL = "https://0326-117-198-122-189.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
@@ -480,16 +501,6 @@
       userTone = tone;
     }
 
-    // 🔍 Try DuckDuckGo search first for real-world questions
-    const duckResult = await fetchDuckDuckGo(userText);
-    if (duckResult) {
-      removeTyping();
-      appendMessage(duckResult, "ai");
-      chatHistory.push(`${aiLabel}: ${duckResult}`);
-      logToSheet(userText, duckResult);
-      return;
-    }
-
     // Weather shortcut
     if (/\b\.weather\b/i.test(userText)) {
       try {
@@ -608,23 +619,61 @@
     }
   }
 
-  async function fetchDuckDuckGo(query) {
-    try {
-      const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`);
-      const data = await res.json();
+  // 👇 START OF NEW FEATURES
+  let liveMode = false;
+  let recognition;
+  let videoOn = false;
 
-      if (data.AbstractText) {
-        return `📡 ${data.AbstractText}`;
-      } else if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-        return `📡 ${data.RelatedTopics[0].Text}`;
-      } else {
-        return null; // fallback to AI
-      }
-    } catch (e) {
-      return null; // fallback to AI
-    }
+  function toggleLiveMode() {
+    liveMode = !liveMode;
+    if (liveMode) startVoiceInput();
+    else if (recognition) recognition.stop();
   }
 
+  function startVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert(\"Speech Recognition not supported.\");
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.onresult = event => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      promptInput.value = transcript;
+      sendMessage();
+    };
+    recognition.start();
+  }
+
+  function speakText(text) {
+    const voices = {
+      SARA: \"UK English Female"\,
+      ALEXA: \"US English Female"\,
+      NOVA: \"UK English Male"\
+    };
+    responsiveVoice.speak(text, voices[currentMode]);
+  }
+
+  const originalAppendMessage = appendMessage;
+  appendMessage = function(text, type) {
+    originalAppendMessage(text, type);
+    if (type === \"ai\") speakText(text);
+  };
+
+  function toggleVideoCall() {
+    const video = document.getElementById(\"videoFeed\");
+    videoOn = !videoOn;
+    if (videoOn) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          video.style.display = \"block\";
+        })
+        .catch(() => alert(\"Camera access denied.\"));  
+    } else {
+      if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+      video.style.display = \"none\";
+    }
+  }
   loadHistoryList();
   showIntroMessage();
   updateHeader();
