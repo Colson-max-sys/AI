@@ -478,6 +478,7 @@
       if (tone === "flirty") alexaTrustScore += 1;
       else if (tone === "respectful") alexaTrustScore += 0.5;
       userTone = tone;
+    }
 
     // 🔍 Try DuckDuckGo search first for real-world questions
     const duckResult = await fetchDuckDuckGo(userText);
