@@ -656,7 +656,7 @@
   const originalAppendMessage = appendMessage;
   appendMessage = function(text, type) {
     originalAppendMessage(text, type);
-    if (type === \"ai") speakText(text);
+    if (type === "ai") speakText(text);
   };
 
   function toggleVideoCall() {
