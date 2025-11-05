@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://9f73e18aaffb.ngrok-free.app";
+  const NGROK_URL = "https://7eb53d564c14.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -328,6 +328,9 @@
   let chatHistory = [];
   let alexaTrustScore = 0;
   let userTone = "neutral";
+  let previousAIResponse = "";
+  let repetitionCounter = 0;
+
 
   function switchMode(mode) {
     currentMode = mode;
@@ -458,9 +461,36 @@
     return "neutral";
   }
 
+  function isCodingOrMath(text) {
+    return /\b(code|python|html|css|javascript|js|c#|c\+\+|cpp|java|react|node|sql|api|solve|calculate|integral|matrix|compile|run|debug|algorithm|function|website|server|program|project)\b/i.test(text);
+  }
+
+  function isIllegalRequest(text) {
+    const blacklist = [
+      "bomb","gun","hack into","bypass","exploit","steal","credit card",
+      "malware","virus","ransomware","drug","terror","kill","murder","illegal","dox"
+    ];
+    return blacklist.some(w => text.toLowerCase().includes(w));
+  }
+
+  let creatorOverride = false;
+  function checkCreator(text) {
+    if (/\b(i am|i'm|im) the creator aurin\b/i.test(text)) {
+      creatorOverride = true;
+      appendMessage("👑 Creator mode recognized — welcome back Aurin! (Still following safety rules)", 'ai');
+    }
+  }
+
   async function sendMessage() {
     const userText = promptInput.value.trim();
     if (!userText) return;
+
+    checkCreator(userText);
+    if (isIllegalRequest(userText)) {
+      appendMessage("I can’t help with illegal or harmful actions — but I can give you safe technical or conceptual info instead.", 'ai');
+      return;
+    }
+    const expertMode = isCodingOrMath(userText);
 
     const intro = document.getElementById("introMessage");
     if (intro) intro.remove();
@@ -505,6 +535,12 @@
       ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
     };
 
+    if (isCodingOrMath(userText)) {
+      prompts[currentMode] += " Provide full, expert-level answers for programming and math with detailed explanations, runnable code, and examples.";
+    }
+    prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
+
+
     const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
 
     try {
@@ -520,12 +556,24 @@
       });
 
       const data = await res.json();
-      const text = (data.content || data.completion || "🤖 (No response)").trim();
+      let text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
+      
+      // repetition guard
+      if (text === previousAIResponse) {
+        repetitionCounter++;
+        if (repetitionCounter <= 2) {
+          text += "\n\n[Alternative answer]\nHere's another perspective or method for you:";
+        }
+      } else {
+        repetitionCounter = 0;
+      }
+      previousAIResponse = text;
+      
       appendMessage(text, "ai");
       chatHistory.push(`${aiLabel}: ${text}`);
-
       logToSheet(userText, text);
+    
     } catch (err) {
       console.error(err);
       removeTyping();
@@ -605,5 +653,6 @@
   </script>
 </body>
 </html>
+
 
 
