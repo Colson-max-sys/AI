@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://aca4de2587f6.ngrok-free.app";
+  const NGROK_URL = "https://37803dbc4ef6.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -493,11 +493,11 @@ async function generateImage(promptText) {
       negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
       steps: 25,
       sampler_index: "DPM++ 2M Karras",
-      width: 768,
-      height: 768
+      width: 520,
+      height: 520
     };
 
-    const res = await fetch("https://aca4de2587f6.ngrok-free.app/sdapi/v1/txt2img", {
+    const res = await fetch("https://37803dbc4ef6.ngrok-free.app/sdapi/v1/txt2img", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -722,6 +722,7 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
 
 
