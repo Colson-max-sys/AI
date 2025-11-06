@@ -487,35 +487,12 @@ async function generateImage(promptText) {
   try {
     appendMessage("🎨 Generating image... please wait (0%)", "system");
 
-    const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, masterpiece`;
-    const payload = {
-      prompt: boostedPrompt,
-      negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
-      steps: 18,
-      sampler_index: "Euler a",
-      width: 448,
-      height: 448
-    };
-
-    const progressMessage = document.querySelector(".message.system-message:last-child");
-
-    // 🔹 Start progress polling
-    const progressInterval = setInterval(async () => {
-      try {
-        const p = await fetch("https://6248bb866bed.ngrok-free.app/sdapi/v1/progress");
-        const progressData = await p.json();
-        const percent = Math.floor(progressData.progress * 100);
-        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
-      } catch (_) {}
-    }, 1000);
-
-    const res = await fetch("https://6248bb866bed.ngrok-free.app/sdapi/v1/txt2img", {
+    const payload = { prompt: promptText };
+    const res = await fetch(`${NGROK_URL}/generate-image`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-
-    clearInterval(progressInterval);
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -537,11 +514,9 @@ async function generateImage(promptText) {
   } catch (err) {
     console.error("Image generation failed:", err);
     removeTyping();
-    appendMessage("⚠️ Stable Diffusion server not reachable. Make sure WebUI is running locally.", "ai");
+    appendMessage("⚠️ Image generation failed. Make sure server.js and WebUI are running.", "ai");
   }
 }
-
-
 
     
 
@@ -731,5 +706,6 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
 
