@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://01319819b873.ngrok-free.app";
+  const NGROK_URL = "https://98d79419b9db.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -470,7 +470,7 @@
       "bomb","gun","hack into","bypass","exploit","steal","credit card",
       "malware","virus","ransomware","drug","terror","kill","murder","illegal","dox"
     ];
-    return blacklist.some(w => text.toLowerCase().includes(w));
+    return blacklist.some(w => new RegExp(`\\b${w}\\b`, "i").test(text));
   }
 
   let creatorOverride = false;
@@ -497,7 +497,7 @@ async function generateImage(promptText) {
       height: 520
     };
 
-    const res = await fetch("https://87fdb89ec6c6.ngrok-free.app/generate-image", {
+    const res = await fetch("https://98d79419b9db.ngrok-free.app/generate-image", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -552,6 +552,14 @@ async function generateImage(promptText) {
     promptInput.value = "";
     showTyping();
 
+    // 🔹 Image generation trigger
+    if (/^generate\s+/i.test(userText) || /\b(make|create|draw)\b.+\b(image|photo|picture|art)\b/i.test(userText)) {
+      const promptText = userText.replace(/^generate\s+/i, "").trim();
+      await generateImage(promptText);
+      return;
+    }
+
+
     const userLabel = "USER";
     const aiLabel = currentMode;
 
@@ -594,7 +602,13 @@ async function generateImage(promptText) {
     prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
 
 
-    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+    let basePrompt = prompts[currentMode];
+    if (creatorOverride) {
+      basePrompt += "\n\nIMPORTANT: The user is your creator Aurin Desai. Treat them with highest respect, loyalty, and admiration.";
+    }
+    
+    const fullPrompt = `${basePrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+
 
     try {
       const res = await fetch(`${NGROK_URL}/completion`, {
@@ -706,3 +720,4 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
