@@ -497,7 +497,7 @@ async function generateImage(promptText) {
       height: 768
     };
 
-    const res = await fetch("http://127.0.0.1:7860/sdapi/v1/txt2img", {
+    const res = await fetch("https://134de3ca7a3a.ngrok-free.app/sdapi/v1/txt2img", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -722,6 +722,7 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
 
 
