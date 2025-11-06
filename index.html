@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://d4a98f607718.ngrok-free.app";
+  const NGROK_URL = "https://01319819b873.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -555,22 +555,6 @@ async function generateImage(promptText) {
     const userLabel = "USER";
     const aiLabel = currentMode;
 
-        // If user asks for image, generate it
-    // Trigger only if user explicitly asks for generation
-    if (
-      /\b(draw|generate|create|make|render|show me|paint|illustrate|design)\b/i.test(userText) &&
-      !/sent|upload|attached|showed|see|saw|image of mine|photo of me|from my/i.test(userText)
-    ) {
-      removeTyping();
-      await generateImage(
-        userText.replace(/(draw|generate|create|make|render|show me|paint|illustrate|design)/i, "").trim()
-      );
-      saveChatSession();
-      return;
-    }
-
-
-
     chatHistory.push(`${userLabel}: ${userText}`);
 
     if (currentMode === "ALEXA") {
@@ -610,41 +594,22 @@ async function generateImage(promptText) {
     prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
 
 
+    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+
     try {
-      // Keep only the last 6 exchanges to avoid flooding
-      const trimmedHistory = chatHistory.slice(-6).map(line => {
-        const [who, ...rest] = line.split(":");
-        const msg = rest.join(":").trim();
-        return {
-          role: who.trim().toLowerCase() === "user" ? "user" : "assistant",
-          content: msg
-        };
-      });
-
-      const messages = [
-        { role: "system", content: prompts[currentMode] },
-        ...trimmedHistory,
-        { role: "user", content: userText }
-      ];
-
       const res = await fetch(`${NGROK_URL}/completion`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages,
-          max_tokens: 250,
+          prompt: fullPrompt,
+          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
+          n_predict: 150,
           temperature: 0.9
         })
       });
 
       const data = await res.json();
-      let text =
-        (data.choices?.[0]?.message?.content ||
-         data.completion ||
-         data.content ||
-         "🤖 (No response)").trim();
-
-
+      let text = (data.content || data.completion || "🤖 (No response)").trim();
       removeTyping();
       
       // repetition guard
@@ -741,20 +706,3 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
