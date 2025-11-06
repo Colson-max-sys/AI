@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://98d79419b9db.ngrok-free.app";
+  const NGROK_URL = "https://6248bb866bed.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -485,33 +485,42 @@
   // Generate image using local Stable Diffusion API with proper checks
 async function generateImage(promptText) {
   try {
-    appendMessage("🎨 Generating image, please wait...", "system");
+    appendMessage("🎨 Generating image... please wait (0%)", "system");
 
-    const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, trending on artstation, masterpiece`;
+    const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, masterpiece`;
     const payload = {
       prompt: boostedPrompt,
       negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
-      steps: 25,
-      sampler_index: "DPM++ 2M Karras",
-      width: 520,
-      height: 520
+      steps: 18,
+      sampler_index: "Euler a",
+      width: 448,
+      height: 448
     };
 
-    const res = await fetch("https://98d79419b9db.ngrok-free.app/generate-image", {
+    const progressMessage = document.querySelector(".message.system-message:last-child");
+
+    // 🔹 Start progress polling
+    const progressInterval = setInterval(async () => {
+      try {
+        const p = await fetch("https://6248bb866bed.ngrok-free.app/sdapi/v1/progress");
+        const progressData = await p.json();
+        const percent = Math.floor(progressData.progress * 100);
+        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
+      } catch (_) {}
+    }, 1000);
+
+    const res = await fetch("https://6248bb866bed.ngrok-free.app/sdapi/v1/txt2img", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+    clearInterval(progressInterval);
 
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    if (!data.images || !data.images.length) {
-      throw new Error("No image returned from API");
-    }
+    if (!data.images?.length) throw new Error("No image returned");
 
     const imgData = data.images[0];
     const img = document.createElement("img");
@@ -524,12 +533,14 @@ async function generateImage(promptText) {
     appendMessage("Here's your image:", "ai");
     chat.appendChild(img);
     chat.scrollTop = chat.scrollHeight;
+
   } catch (err) {
     console.error("Image generation failed:", err);
     removeTyping();
-    appendMessage("⚠️ Stable Diffusion server not reachable. Make sure WebUI is open at http://127.0.0.1:7860", "ai");
+    appendMessage("⚠️ Stable Diffusion server not reachable. Make sure WebUI is running locally.", "ai");
   }
 }
+
 
 
     
@@ -720,4 +731,5 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
