@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://37803dbc4ef6.ngrok-free.app";
+  const NGROK_URL = "https://c4044ed2480a.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -485,7 +485,7 @@
   // Generate image using local Stable Diffusion API with proper checks
 async function generateImage(promptText) {
   try {
-    appendMessage("🎨 Generating image, please wait...", "ai");
+    appendMessage("🎨 Generating image, please wait...", "system");
 
     const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, trending on artstation, masterpiece`;
     const payload = {
@@ -497,7 +497,7 @@ async function generateImage(promptText) {
       height: 520
     };
 
-    const res = await fetch("https://37803dbc4ef6.ngrok-free.app/sdapi/v1/txt2img", {
+    const res = await fetch("https://c4044ed2480a.ngrok-free.app/sdapi/v1/txt2img", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
