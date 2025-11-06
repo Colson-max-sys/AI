@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://19591604004b.ngrok-free.app";
+  const NGROK_URL = "https://d4a98f607718.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -625,7 +625,12 @@ async function generateImage(promptText) {
       });
 
       const data = await res.json();
-      let text = (data.content || data.completion || "🤖 (No response)").trim();
+      let text =
+        (data.content ||
+         data.completion ||
+         (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
+         "🤖 (No response)").trim();
+
       removeTyping();
       
       // repetition guard
@@ -722,6 +727,7 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
 
 
