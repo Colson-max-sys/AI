@@ -482,37 +482,55 @@
   }
 
     // Generate image using local Stable Diffusion API
-  async function generateImage(promptText) {
-    try {
-      const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, trending on artstation, masterpiece`;
-      const payload = {
-        prompt: boostedPrompt,
-        negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
-        steps: 25,
-        sampler_index: "DPM++ 2M Karras",
-        width: 768,
-        height: 768
-      };
-      const res = await fetch("http://127.0.0.1:7860/sdapi/v1/txt2img", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      const imgData = data.images[0];
-      const img = document.createElement("img");
-      img.src = "data:image/png;base64," + imgData;
-      img.style.maxWidth = "70%";
-      img.style.borderRadius = "12px";
-      img.style.marginTop = "10px";
-      appendMessage("Here's your image:", "ai");
-      chat.appendChild(img);
-      chat.scrollTop = chat.scrollHeight;
-    } catch (err) {
-      console.error("Image generation failed:", err);
-      appendMessage("❌ Image generation failed.", "ai");
+  // Generate image using local Stable Diffusion API with proper checks
+async function generateImage(promptText) {
+  try {
+    appendMessage("🎨 Generating image, please wait...", "ai");
+
+    const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, trending on artstation, masterpiece`;
+    const payload = {
+      prompt: boostedPrompt,
+      negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
+      steps: 25,
+      sampler_index: "DPM++ 2M Karras",
+      width: 768,
+      height: 768
+    };
+
+    const res = await fetch("http://127.0.0.1:7860/sdapi/v1/txt2img", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
+
+    const data = await res.json();
+
+    if (!data.images || !data.images.length) {
+      throw new Error("No image returned from API");
+    }
+
+    const imgData = data.images[0];
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64," + imgData;
+    img.style.maxWidth = "70%";
+    img.style.borderRadius = "12px";
+    img.style.marginTop = "10px";
+
+    removeTyping();
+    appendMessage("Here's your image:", "ai");
+    chat.appendChild(img);
+    chat.scrollTop = chat.scrollHeight;
+  } catch (err) {
+    console.error("Image generation failed:", err);
+    removeTyping();
+    appendMessage("⚠️ Stable Diffusion server not reachable. Make sure WebUI is open at http://127.0.0.1:7860", "ai");
   }
+}
+
 
     
 
@@ -538,12 +556,19 @@
     const aiLabel = currentMode;
 
         // If user asks for image, generate it
-    if (/draw|generate|create|show|picture|image|photo/i.test(userText)) {
+    // Trigger only if user explicitly asks for generation
+    if (
+      /\b(draw|generate|create|make|render|show me|paint|illustrate|design)\b/i.test(userText) &&
+      !/sent|upload|attached|showed|see|saw|image of mine|photo of me|from my/i.test(userText)
+    ) {
       removeTyping();
-      await generateImage(userText.replace(/(draw|generate|create|show|picture|image|photo)/i, '').trim());
+      await generateImage(
+        userText.replace(/(draw|generate|create|make|render|show me|paint|illustrate|design)/i, "").trim()
+      );
       saveChatSession();
       return;
     }
+
 
 
     chatHistory.push(`${userLabel}: ${userText}`);
@@ -697,6 +722,7 @@
   </script>
 </body>
 </html>
+
 
 
 
