@@ -316,7 +316,7 @@
   </div>
 
   <script>
-  const NGROK_URL = "https://7eb53d564c14.ngrok-free.app";
+  const NGROK_URL = "https://134de3ca7a3a.ngrok-free.app";
   const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
   const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -481,6 +481,41 @@
     }
   }
 
+    // Generate image using local Stable Diffusion API
+  async function generateImage(promptText) {
+    try {
+      const boostedPrompt = `(${promptText}), ultra realistic, cinematic lighting, 8k, high detail, trending on artstation, masterpiece`;
+      const payload = {
+        prompt: boostedPrompt,
+        negative_prompt: "blurry, distorted, bad anatomy, low quality, extra limbs, deformed",
+        steps: 25,
+        sampler_index: "DPM++ 2M Karras",
+        width: 768,
+        height: 768
+      };
+      const res = await fetch("http://127.0.0.1:7860/sdapi/v1/txt2img", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      const imgData = data.images[0];
+      const img = document.createElement("img");
+      img.src = "data:image/png;base64," + imgData;
+      img.style.maxWidth = "70%";
+      img.style.borderRadius = "12px";
+      img.style.marginTop = "10px";
+      appendMessage("Here's your image:", "ai");
+      chat.appendChild(img);
+      chat.scrollTop = chat.scrollHeight;
+    } catch (err) {
+      console.error("Image generation failed:", err);
+      appendMessage("❌ Image generation failed.", "ai");
+    }
+  }
+
+    
+
   async function sendMessage() {
     const userText = promptInput.value.trim();
     if (!userText) return;
@@ -501,6 +536,15 @@
 
     const userLabel = "USER";
     const aiLabel = currentMode;
+
+        // If user asks for image, generate it
+    if (/draw|generate|create|show|picture|image|photo/i.test(userText)) {
+      removeTyping();
+      await generateImage(userText.replace(/(draw|generate|create|show|picture|image|photo)/i, '').trim());
+      saveChatSession();
+      return;
+    }
+
 
     chatHistory.push(`${userLabel}: ${userText}`);
 
@@ -653,6 +697,7 @@
   </script>
 </body>
 </html>
+
 
 
 
