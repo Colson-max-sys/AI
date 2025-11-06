@@ -610,26 +610,40 @@ async function generateImage(promptText) {
     prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
 
 
-    const fullPrompt = `${prompts[currentMode]}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
-
     try {
+      // Keep only the last 6 exchanges to avoid flooding
+      const trimmedHistory = chatHistory.slice(-6).map(line => {
+        const [who, ...rest] = line.split(":");
+        const msg = rest.join(":").trim();
+        return {
+          role: who.trim().toLowerCase() === "user" ? "user" : "assistant",
+          content: msg
+        };
+      });
+
+      const messages = [
+        { role: "system", content: prompts[currentMode] },
+        ...trimmedHistory,
+        { role: "user", content: userText }
+      ];
+
       const res = await fetch(`${NGROK_URL}/completion`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: fullPrompt,
-          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
-          n_predict: 150,
+          messages,
+          max_tokens: 250,
           temperature: 0.9
         })
       });
 
       const data = await res.json();
       let text =
-        (data.content ||
+        (data.choices?.[0]?.message?.content ||
          data.completion ||
-         (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
+         data.content ||
          "🤖 (No response)").trim();
+
 
       removeTyping();
       
@@ -727,6 +741,7 @@ async function generateImage(promptText) {
   </script>
 </body>
 </html>
+
 
 
 
