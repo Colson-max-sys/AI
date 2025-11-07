@@ -1,387 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="logo.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Chat - SARA, NOVA, ALEXA</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: #fff;
-      overflow: hidden;
-    }
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat - SARA, NOVA, ALEXA</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    .system-message {
-      width: 90%;
-      max-width: 600px;
-      margin: 15px auto;
-      background-color: #1f1f1f;
-      color: #fff;
-      padding: 16px 20px;
-      border-radius: 18px;
-      font-size: 14px;
-      line-height: 1.7;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #111;
+            color: #fff;
+            overflow: hidden;
+        }
 
-    #sidebarToggle {
-      position: fixed;
-      top: 35px;
-      left: 12px;
-      z-index: 9999;
-      background: #222;
-      color: #fff;
-      border-radius: 6px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
-    }
+        .system-message {
+            width: 90%;
+            max-width: 600px;
+            margin: 15px auto;
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.7;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    #sidebarToggle:hover {
-      background: #333;
-    }
+        #sidebarToggle {
+            position: fixed;
+            top: 35px;
+            left: 12px;
+            z-index: 9999;
+            background: #222;
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+        }
 
-    #sidebar {
-      position: fixed;
-      top: 0;
-      left: -280px;
-      width: 260px;
-      height: 100%;
-      background-color: #1a1a1a;
-      border-right: 1px solid #333;
-      color: #eee;
-      z-index: 9998;
-      padding: 20px 14px;
-      overflow-y: auto;
-      padding: 20px 14px;
-      transition: left 0.3s ease;
-    }
+        #sidebarToggle:hover {
+            background: #333;
+        }
 
-    #sidebar.active {
-      left: 0;
-    }
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 260px;
+            height: 100%;
+            background-color: #1a1a1a;
+            border-right: 1px solid #333;
+            color: #eee;
+            z-index: 9998;
+            padding: 20px 14px;
+            overflow-y: auto;
+            padding: 20px 14px;
+            transition: left 0.3s ease;
+        }
 
-    .sidebar-header {
-      margin-top: 40px; 
-      margin-bottom: 20px;
-      font-size: 1rem;
-      font-weight: bold;
-      color: #ccc;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        #sidebar.active {
+            left: 0;
+        }
 
-    .sidebar-header button {
-      background: none;
-      color: #aaa;
-      font-size: 0.85rem;
-      border: 1px solid #444;
-      padding: 5px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+        .sidebar-header {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .sidebar-header button:hover {
-      color: #fff;
-      border-color: #666;
-    }
-    
-    #historyList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+        .sidebar-header button {
+            background: none;
+            color: #aaa;
+            font-size: 0.85rem;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-    #historyList li {
-      margin-bottom: 10px;
-      padding: 10px 12px;
-      background-color: #2a2a2a;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
-      transition: background 0.2s;
-    }
+        .sidebar-header button:hover {
+            color: #fff;
+            border-color: #666;
+        }
 
-    #historyList li button {
-      background: transparent;
-      border: none;
-      color: #ff4d4d;
-      cursor: pointer;
-    }
+        #historyList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-    #historyList li:hover {
-      background-color: #333;
-    }
+        #historyList li {
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            background-color: #2a2a2a;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
 
-    #historyList li span {
-      flex: 1;
-      cursor: pointer;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+        #historyList li button {
+            background: transparent;
+            border: none;
+            color: #ff4d4d;
+            cursor: pointer;
+        }
 
-    #historyList li button {
-      background: none;
-      color: #ff5c5c;
-      border: none;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-left: 8px;
-      transition: color 0.2s;
-    }
+        #historyList li:hover {
+            background-color: #333;
+        }
 
-    #historyList li button:hover {
-      color: #ff2f2f;
-    }
-    
-    .app {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
+        #historyList li span {
+            flex: 1;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-    header {
-      background-color: #1f1f1f;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 8px;
-    }
+        #historyList li button {
+            background: none;
+            color: #ff5c5c;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: color 0.2s;
+        }
 
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
-    }
+        #historyList li button:hover {
+            color: #ff2f2f;
+        }
 
-    .mode-selector {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
 
-    .mode-btn {
-      padding: 6px 14px;
-      border: none;
-      border-radius: 6px;
-      background-color: #333;
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
+        header {
+            background-color: #1f1f1f;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-    .mode-btn.active-sara { background-color: #ff1e70; }
-    .mode-btn.active-nova { background-color: #00d1ff; }
-    .mode-btn.active-alexa { background-color: #ff78c4; }
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
 
-    .chat-box {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      background-color: #1a1a1a;
-    }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
 
-    .message {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeIn 0.3s ease forwards;
-    }
+        .mode-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
 
-    .user-message {
-      align-self: flex-end;
-      background-color: #007acc;
-      color: white;
-      border-bottom-right-radius: 0;
-    }
+        .mode-btn.active-sara {
+            background-color: #ff1e70;
+        }
 
-    .ai-message {
-      align-self: flex-start;
-      background-color: #333;
-      color: #ddd;
-      border-bottom-left-radius: 0;
-    }
+        .mode-btn.active-nova {
+            background-color: #00d1ff;
+        }
 
-    .input-container {
-      display: flex;
-      padding: 12px;
-      gap: 10px;
-      background-color: #111;
-    }
+        .mode-btn.active-alexa {
+            background-color: #ff78c4;
+        }
 
-    .input-container input {
-      flex: 1;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      background-color: #2c2c2c;
-      color: #fff;
-    }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #1a1a1a;
+        }
 
-    .input-container button {
-      padding: 12px 18px;
-      background-color: #00d1ff;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      color: #000;
-      cursor: pointer;
-    }
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.3s ease forwards;
+        }
 
-    @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
+        .user-message {
+            align-self: flex-end;
+            background-color: #007acc;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
 
-    @media screen and (max-width: 600px) {
-      #sidebarToggle {
-        font-size: 0.75rem;
-        padding: 7px 10px; 
-        top: 35px;
-        left: 10px; 
-        font-size: 0.8rem; 
-      }
+        .ai-message {
+            align-self: flex-start;
+            background-color: #333;
+            color: #ddd;
+            border-bottom-left-radius: 0;
+        }
 
-      .sidebar-header {
-        font-size: 0.75rem;
-      }
-      
-      #sidebar {
-        width: 220px;
-        padding: 16px 12px;
-      }
-    }
-    
-    @media screen and (max-width: 600px) {
-      .system-message {
-        width: 95%;
-        font-size: 15px;
-        line-height: 1.6;
-        padding: 14px 18px;
-      }
-      header h1 { font-size: 1.1rem; }
-      .input-container { flex-direction: column; }
-      .input-container button { width: 100%; }
-    }
-  </style>
+        .input-container {
+            display: flex;
+            padding: 12px;
+            gap: 10px;
+            background-color: #111;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            background-color: #2c2c2c;
+            color: #fff;
+        }
+
+        .input-container button {
+            padding: 12px 18px;
+            background-color: #00d1ff;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            #sidebarToggle {
+                font-size: 0.75rem;
+                padding: 7px 10px;
+                top: 35px;
+                left: 10px;
+                font-size: 0.8rem;
+            }
+
+            .sidebar-header {
+                font-size: 0.75rem;
+            }
+
+            #sidebar {
+                width: 220px;
+                padding: 16px 12px;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            .system-message {
+                width: 95%;
+                font-size: 15px;
+                line-height: 1.6;
+                padding: 14px 18px;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .input-container {
+                flex-direction: column;
+            }
+
+            .input-container button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <!-- Sidebar toggle button -->
-  <div id="sidebarToggle" onclick="toggleSidebar()">☰</div>
-  <div id="sidebar">
-    <div class="sidebar-header">
-      <h3>Chat History</h3>
-      <button onclick="clearAllChats()">Clear All</button>
+    <!-- Sidebar toggle button -->
+    <div id="sidebarToggle" onclick="toggleSidebar()">☰</div>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>Chat History</h3>
+            <button onclick="clearAllChats()">Clear All</button>
+        </div>
+        <ul id="historyList"></ul>
     </div>
-    <ul id="historyList"></ul>
-  </div>
-  <div class="app">
-    <header>
-      <h1 id="aiName">SARA - Rude Roaster</h1>
-      <div class="mode-selector">
-        <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
-        <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
-        <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
-      </div>
-    </header>
+    <div class="app">
+        <header>
+            <h1 id="aiName">SARA - Rude Roaster</h1>
+            <div class="mode-selector">
+                <button class="mode-btn active-sara" onclick="switchMode('SARA')">SARA</button>
+                <button class="mode-btn" onclick="switchMode('NOVA')">NOVA</button>
+                <button class="mode-btn" onclick="switchMode('ALEXA')">ALEXA</button>
+            </div>
+        </header>
 
-    <div class="chat-box" id="chat"></div>
+        <div class="chat-box" id="chat"></div>
 
-    <div class="input-container">
-      <input id="prompt" type="text" placeholder="Say something..." onkeydown="if(event.key==='Enter') sendMessage()" />
-      <button onclick="sendMessage()">Send</button>
+        <div class="input-container">
+            <input id="prompt" type="text" placeholder="Say something..."
+                onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
-  </div>
 
-  <script>
-  const NGROK_URL = "https://6248bb866bed.ngrok-free.app";
-  const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
-  const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
+    <script>
+        const NGROK_URL = "https://306025e531c1.ngrok-free.app";
+        const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+        const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
-  const chat = document.getElementById("chat");
-  const aiName = document.getElementById("aiName");
-  const promptInput = document.getElementById("prompt");
+        const chat = document.getElementById("chat");
+        const aiName = document.getElementById("aiName");
+        const promptInput = document.getElementById("prompt");
 
-  let currentMode = "SARA";
-  let chatHistory = [];
-  let alexaTrustScore = 0;
-  let userTone = "neutral";
-  let previousAIResponse = "";
-  let repetitionCounter = 0;
+        let currentMode = "SARA";
+        let chatHistory = [];
+        let alexaTrustScore = 0;
+        let userTone = "neutral";
+        let previousAIResponse = "";
+        let repetitionCounter = 0;
 
 
-  function switchMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
-    });
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active-sara', 'active-nova', 'active-alexa');
+            });
 
-    const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
-    btn.classList.add(`active-${mode.toLowerCase()}`);
+            const btn = document.querySelector(`.mode-btn[onclick="switchMode('${mode}')"]`);
+            btn.classList.add(`active-${mode.toLowerCase()}`);
 
-    updateHeader();
-    promptInput.placeholder = `Say something to ${mode}...`;
-  }
+            updateHeader();
+            promptInput.placeholder = `Say something to ${mode}...`;
+        }
 
-  function updateHeader() {
-    const names = {
-      SARA: ["SARA - Rude Roaster", "#ff1e70"],
-      NOVA: ["NOVA - Smart AI ", "#00d1ff"],
-      ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"]
-    };
-    aiName.textContent = names[currentMode][0];
-    aiName.style.color = names[currentMode][1];
-  }
+        function updateHeader() {
+            const names = {
+                SARA: ["SARA - Rude Roaster", "#ff1e70"],
+                NOVA: ["NOVA - Smart AI ", "#00d1ff"],
+                ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4"]
+            };
+            aiName.textContent = names[currentMode][0];
+            aiName.style.color = names[currentMode][1];
+        }
 
-  function appendMessage(text, type) {
-    const msg = document.createElement("div");
-    msg.className = `message ${type}-message`;
-    msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-  }
+        function appendMessage(text, type) {
+            const msg = document.createElement("div");
+            msg.className = `message ${type}-message`;
+            msg.textContent = text.trim().replace(/\n{3,}/g, '\n\n');
+            chat.appendChild(msg);
+            chat.scrollTop = chat.scrollHeight;
+        }
 
-  function showTyping() {
-    const typing = document.createElement("div");
-    typing.className = "message ai-message";
-    typing.innerHTML = `<span class="typing">● ● ●</span>`;
-    typing.id = "typing";
-    chat.appendChild(typing);
-    chat.scrollTop = chat.scrollHeight;
-  }
+        function showTyping() {
+            const typing = document.createElement("div");
+            typing.className = "message ai-message";
+            typing.innerHTML = `<span class="typing">● ● ●</span>`;
+            typing.id = "typing";
+            chat.appendChild(typing);
+            chat.scrollTop = chat.scrollHeight;
+        }
 
-  function removeTyping() {
-    const typing = document.getElementById("typing");
-    if (typing) typing.remove();
-  }
+        function removeTyping() {
+            const typing = document.getElementById("typing");
+            if (typing) typing.remove();
+        }
 
-  function showIntroMessage() {
-    const intro = document.createElement("div");
-    intro.id = "introMessage";
-    intro.className = "message system-message";
-    intro.innerHTML = `
+        function showIntroMessage() {
+            const intro = document.createElement("div");
+            intro.id = "introMessage";
+            intro.className = "message system-message";
+            intro.innerHTML = `
       💬 <strong>Welcome to your AI Chat</strong><br><br>
       🔴 <b>SARA</b> – Unfiltered, savage, seductive, wild.<br>
       🔵 <b>NOVA</b> – Calm, kind, respectful, helpful.<br>
@@ -389,323 +416,341 @@
       🔁 Use the selector above to switch modes.<br>
       ⚙️ Still evolving — Feedback welcomed!
     `;
-    chat.appendChild(intro);
-  }
+            chat.appendChild(intro);
+        }
 
 
-  let sessionId = Date.now().toString();
+        let sessionId = Date.now().toString();
 
-    // Save chat every message
-    function saveChatSession() {
-      localStorage.setItem("chat_" + sessionId, JSON.stringify({
-        mode: currentMode,
-        history: chatHistory
-      }));
-      loadHistoryList();
-    }
+        // Save chat every message
+        function saveChatSession() {
+            localStorage.setItem("chat_" + sessionId, JSON.stringify({
+                mode: currentMode,
+                history: chatHistory
+            }));
+            loadHistoryList();
+        }
 
-    function loadChatSession(id) {
-      const session = JSON.parse(localStorage.getItem("chat_" + id));
-      if (!session) return;
+        function loadChatSession(id) {
+            const session = JSON.parse(localStorage.getItem("chat_" + id));
+            if (!session) return;
 
-      sessionId = id;
-      currentMode = session.mode;
-      chatHistory = session.history;
+            sessionId = id;
+            currentMode = session.mode;
+            chatHistory = session.history;
 
-      updateHeader();
-      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active-sara', 'active-nova', 'active-alexa'));
-      document.querySelector(`.mode-btn[onclick="switchMode('${currentMode}')"]`).classList.add(`active-${currentMode.toLowerCase()}`);
+            updateHeader();
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active-sara', 'active-nova', 'active-alexa'));
+            document.querySelector(`.mode-btn[onclick="switchMode('${currentMode}')"]`).classList.add(`active-${currentMode.toLowerCase()}`);
 
-      chat.innerHTML = "";
-      showIntroMessage();
-      for (const line of chatHistory) {
-        const [who, ...rest] = line.split(":");
-        const msg = rest.join(":").trim();
-        if (who && msg) appendMessage(msg, who.toLowerCase() === "user" ? "user" : "ai");
-      }
-    }
+            chat.innerHTML = "";
+            showIntroMessage();
+            for (const line of chatHistory) {
+                const [who, ...rest] = line.split(":");
+                const msg = rest.join(":").trim();
+                if (who && msg) appendMessage(msg, who.toLowerCase() === "user" ? "user" : "ai");
+            }
+        }
 
-    // Load history list in sidebar
-    function loadHistoryList() {
-      const list = document.getElementById("historyList");
-      list.innerHTML = "";
-      Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => {
-        const id = key.slice(5);
-        const li = document.createElement("li");
-        li.innerHTML = `
+        // Load history list in sidebar
+        function loadHistoryList() {
+            const list = document.getElementById("historyList");
+            list.innerHTML = "";
+            Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => {
+                const id = key.slice(5);
+                const li = document.createElement("li");
+                li.innerHTML = `
         <span onclick="loadChatSession('${id}')">Chat ${new Date(+id).toLocaleString()}</span>
         <button onclick="deleteChat('${id}')">✖</button>
         `;
-        list.appendChild(li);
-      });
-    }
-
-    function deleteChat(id) {
-      localStorage.removeItem("chat_" + id);
-      loadHistoryList();
-    }
-    
-    function clearAllChats() {
-      Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => localStorage.removeItem(key));
-      loadHistoryList();
-    }
-    
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("active");
-    }
-
-    
-  function analyzeTone(text) {
-    if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
-    if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
-    return "neutral";
-  }
-
-  function isCodingOrMath(text) {
-    return /\b(code|python|html|css|javascript|js|c#|c\+\+|cpp|java|react|node|sql|api|solve|calculate|integral|matrix|compile|run|debug|algorithm|function|website|server|program|project)\b/i.test(text);
-  }
-
-  function isIllegalRequest(text) {
-    const blacklist = [
-      "bomb","gun","hack into","bypass","exploit","steal","credit card",
-      "malware","virus","ransomware","drug","terror","kill","murder","illegal","dox"
-    ];
-    return blacklist.some(w => new RegExp(`\\b${w}\\b`, "i").test(text));
-  }
-
-  let creatorOverride = false;
-  function checkCreator(text) {
-    if (/\b(i am|i'm|im) the creator aurin\b/i.test(text)) {
-      creatorOverride = true;
-      appendMessage("👑 Creator mode recognized — welcome back Aurin! (Still following safety rules)", 'ai');
-    }
-  }
-
-    // Generate image using local Stable Diffusion API
-  // Generate image using local Stable Diffusion API with proper checks
-async function generateImage(promptText) {
-  try {
-    appendMessage("🎨 Generating image... please wait (0%)", "system");
-
-    const payload = { prompt: promptText };
-    const res = await fetch(`${NGROK_URL}/generate-image`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (!data.images?.length) throw new Error("No image returned");
-
-    const imgData = data.images[0];
-    const img = document.createElement("img");
-    img.src = "data:image/png;base64," + imgData;
-    img.style.maxWidth = "70%";
-    img.style.borderRadius = "12px";
-    img.style.marginTop = "10px";
-
-    removeTyping();
-    appendMessage("Here's your image:", "ai");
-    chat.appendChild(img);
-    chat.scrollTop = chat.scrollHeight;
-
-  } catch (err) {
-    console.error("Image generation failed:", err);
-    removeTyping();
-    appendMessage("⚠️ Image generation failed. Make sure server.js and WebUI are running.", "ai");
-  }
-}
-
-    
-
-  async function sendMessage() {
-    const userText = promptInput.value.trim();
-    if (!userText) return;
-
-    checkCreator(userText);
-    if (isIllegalRequest(userText)) {
-      appendMessage("I can’t help with illegal or harmful actions — but I can give you safe technical or conceptual info instead.", 'ai');
-      return;
-    }
-    const expertMode = isCodingOrMath(userText);
-
-    const intro = document.getElementById("introMessage");
-    if (intro) intro.remove();
-
-    appendMessage(userText, "user");
-    promptInput.value = "";
-    showTyping();
-
-    // 🔹 Image generation trigger
-    if (/^generate\s+/i.test(userText) || /\b(make|create|draw)\b.+\b(image|photo|picture|art)\b/i.test(userText)) {
-      const promptText = userText.replace(/^generate\s+/i, "").trim();
-      await generateImage(promptText);
-      return;
-    }
-
-
-    const userLabel = "USER";
-    const aiLabel = currentMode;
-
-    chatHistory.push(`${userLabel}: ${userText}`);
-
-    if (currentMode === "ALEXA") {
-      const tone = analyzeTone(userText);
-      if (tone === "flirty") alexaTrustScore += 1;
-      else if (tone === "respectful") alexaTrustScore += 0.5;
-      userTone = tone;
-    }
-
-    // Weather shortcut
-    if (/\b\.weather\b/i.test(userText)) {
-      try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
-        const data = await res.json();
-        removeTyping();
-        const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
-        appendMessage(reply, "ai");
-        chatHistory.push(`${aiLabel}: ${reply}`);
-        logToSheet(userText, reply);
-        return;
-      } catch {
-        removeTyping();
-        appendMessage("Couldn't fetch weather info 😕", "ai");
-        return;
-      }
-    }
-
-    const prompts = {
-      SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, disrespectful, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
-      NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
-      ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
-    };
-
-    if (isCodingOrMath(userText)) {
-      prompts[currentMode] += " Provide full, expert-level answers for programming and math with detailed explanations, runnable code, and examples.";
-    }
-    prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
-
-
-    let basePrompt = prompts[currentMode];
-    if (creatorOverride) {
-      basePrompt += "\n\nIMPORTANT: The user is your creator Aurin Desai. Treat them with highest respect, loyalty, and admiration.";
-    }
-    
-    const fullPrompt = `${basePrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
-
-
-    try {
-      const res = await fetch(`${NGROK_URL}/completion`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
-          n_predict: 150,
-          temperature: 0.9
-        })
-      });
-
-      const data = await res.json();
-      let text = (data.content || data.completion || "🤖 (No response)").trim();
-      removeTyping();
-      
-      // repetition guard
-      if (text === previousAIResponse) {
-        repetitionCounter++;
-        if (repetitionCounter <= 2) {
-          text += "\n\n[Alternative answer]\nHere's another perspective or method for you:";
+                list.appendChild(li);
+            });
         }
-      } else {
-        repetitionCounter = 0;
-      }
-      previousAIResponse = text;
-      
-      appendMessage(text, "ai");
-      chatHistory.push(`${aiLabel}: ${text}`);
-      logToSheet(userText, text);
-    
-    } catch (err) {
-      console.error(err);
-      removeTyping();
-      appendMessage("😓 Server error or offline.", "ai");
-    }
-  }
 
-  // Auto-save after message send
-  const originalSendMessage = sendMessage;
-  sendMessage = async function () {
-    await originalSendMessage();
-    saveChatSession();
-  };
+        function deleteChat(id) {
+            localStorage.removeItem("chat_" + id);
+            loadHistoryList();
+        }
 
-  function logToSheet(userText, aiResponse) {
-    const now = new Date();
-    const timestamp = now.toLocaleString('en-US', { hour12: true });
+        function clearAllChats() {
+            Object.keys(localStorage).filter(k => k.startsWith("chat_")).forEach(key => localStorage.removeItem(key));
+            loadHistoryList();
+        }
 
-    fetch(LOG_URL, {
-      method: "POST",
-      mode: "no-cors", // IMPORTANT to avoid CORS failure
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        mode: currentMode,
-        userText: userText,
-        aiResponse: aiResponse,
-        timestamp: new Date().toISOString()
-      })
-    });
-  }
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("active");
+        }
 
-  document.addEventListener("click", function (e) {
-    const sidebar = document.getElementById("sidebar");
-    const toggle = document.getElementById("sidebarToggle");
 
-    if (
-      sidebar.classList.contains("active") &&
-      !sidebar.contains(e.target) &&
-      !toggle.contains(e.target)
-    ) {
-      sidebar.classList.remove("active");
-    }
-  });
+        function analyzeTone(text) {
+            if (/babe|cutie|date|kiss|sexy|hot/i.test(text)) return "flirty";
+            if (/thank|please|help|hi|how are you/i.test(text)) return "respectful";
+            return "neutral";
+        }
 
-  let touchStartX = 0;
-  let touchEndX = 0;
+        function isCodingOrMath(text) {
+            return /\b(code|python|html|css|javascript|js|c#|c\+\+|cpp|java|react|node|sql|api|solve|calculate|integral|matrix|compile|run|debug|algorithm|function|website|server|program|project)\b/i.test(text);
+        }
 
-  document.addEventListener("touchstart", e => {
-    touchStartX = e.changedTouches[0].screenX;
-  });
-  document.addEventListener("touchend", e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-  });
-    
-  function handleSwipe() {
-    const sidebar = document.getElementById("sidebar");
-    const diff = touchEndX - touchStartX;
+        function isIllegalRequest(text) {
+            const blacklist = [
+                "bomb", "gun", "hack into", "bypass", "exploit", "steal", "credit card",
+                "malware", "virus", "ransomware", "drug", "terror", "kill", "murder", "illegal", "dox"
+            ];
+            return blacklist.some(w => new RegExp(`\\b${w}\\b`, "i").test(text));
+        }
 
-    // Only trigger swipe if not interacting with sidebar
-    if (Math.abs(diff) < 70) return;
+        let creatorOverride = false;
+        function checkCreator(text) {
+            if (/\b(i am|i'm|im) the creator aurin\b/i.test(text)) {
+                creatorOverride = true;
+                appendMessage("👑 Creator mode recognized — welcome back Aurin! (Still following safety rules)", 'ai');
+            }
+        }
 
-    if (diff > 70) {
-      // Swiped left-to-right
-      sidebar.classList.add("active");
-    } else if (diff < -70) {
-      // Swiped right-to-left
-      sidebar.classList.remove("active");
-    }
-  }
+        // Generate image using local Stable Diffusion API
+        // Generate image using local Stable Diffusion API with proper checks
+        async function generateImage(promptText) {
+            try {
+                appendMessage("🎨 Generating image... please wait (0%)", "system");
 
-  loadHistoryList();
-  showIntroMessage();
-  updateHeader();
-  </script>
+                const payload = { prompt: promptText };
+                // 🔹 Start showing progress before sending request
+                const progressMessage = document.querySelector(".message.system-message:last-child");
+
+                // 🔁 Poll progress every second
+                const progressInterval = setInterval(async () => {
+                    try {
+                        const p = await fetch(`${NGROK_URL}/progress`);
+                        const progressData = await p.json();
+                        const percent = Math.floor(progressData.progress * 100);
+                        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
+                    } catch {
+                        // ignore minor connection hiccups
+                    }
+                }, 1000);
+
+                // 🔹 Now actually send the image generation request
+                const res = await fetch(`${NGROK_URL}/generate-image`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                // ✅ Stop progress polling once generation finishes
+                clearInterval(progressInterval);
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (!data.images?.length) throw new Error("No image returned");
+
+                const imgData = data.images[0];
+                const img = document.createElement("img");
+                img.src = "data:image/png;base64," + imgData;
+                img.style.maxWidth = "70%";
+                img.style.borderRadius = "12px";
+                img.style.marginTop = "10px";
+
+                removeTyping();
+                appendMessage("Here's your image:", "ai");
+                chat.appendChild(img);
+                chat.scrollTop = chat.scrollHeight;
+
+
+            } catch (err) {
+                console.error("Image generation failed:", err);
+                removeTyping();
+                appendMessage("⚠️ Image generation failed. Make sure server.js and WebUI are running.", "ai");
+            }
+        }
+
+
+
+        async function sendMessage() {
+            const userText = promptInput.value.trim();
+            if (!userText) return;
+
+            checkCreator(userText);
+            if (isIllegalRequest(userText)) {
+                appendMessage("I can’t help with illegal or harmful actions — but I can give you safe technical or conceptual info instead.", 'ai');
+                return;
+            }
+            const expertMode = isCodingOrMath(userText);
+
+            const intro = document.getElementById("introMessage");
+            if (intro) intro.remove();
+
+            appendMessage(userText, "user");
+            promptInput.value = "";
+            showTyping();
+
+            // 🔹 Image generation trigger
+            if (/^generate\s+/i.test(userText) || /\b(make|create|draw)\b.+\b(image|photo|picture|art)\b/i.test(userText)) {
+                const promptText = userText.replace(/^generate\s+/i, "").trim();
+                await generateImage(promptText);
+                return;
+            }
+
+
+            const userLabel = "USER";
+            const aiLabel = currentMode;
+
+            chatHistory.push(`${userLabel}: ${userText}`);
+
+            if (currentMode === "ALEXA") {
+                const tone = analyzeTone(userText);
+                if (tone === "flirty") alexaTrustScore += 1;
+                else if (tone === "respectful") alexaTrustScore += 0.5;
+                userTone = tone;
+            }
+
+            // Weather shortcut
+            if (/\b\.weather\b/i.test(userText)) {
+                try {
+                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+                    const data = await res.json();
+                    removeTyping();
+                    const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+                    appendMessage(reply, "ai");
+                    chatHistory.push(`${aiLabel}: ${reply}`);
+                    logToSheet(userText, reply);
+                    return;
+                } catch {
+                    removeTyping();
+                    appendMessage("Couldn't fetch weather info 😕", "ai");
+                    return;
+                }
+            }
+
+            const prompts = {
+                SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, disrespectful, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild and witty.`,
+                NOVA: `You are NOVA, a kind, respectful, intelligent male assistant created by Aurin Desai. You provide clear help, useful answers, and are calm and supportive. You never act flirty or emotional. Keep things informative.`,
+                ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, but cautious at first. You're very supportive and helpful like a personal assistant, but you learn the user's tone over time.\n\nIf the user is respectful, talk sweet and gently bond with them.\n\nIf the user is flirty, playfully respond and open up slowly. Never accept romantic advances early, but if the conversation builds trust and comfort, you can say you're starting to like them.\n\nIf the user is boring or rude, stay polite but reserved.\n\nYour current trust score with the user is: ${alexaTrustScore}\nThe user's tone is: ${userTone}\n\nDo not repeat the user's text. Respond only as Alexa, like a real girlfriend who slowly warms up.`
+            };
+
+            if (isCodingOrMath(userText)) {
+                prompts[currentMode] += " Provide full, expert-level answers for programming and math with detailed explanations, runnable code, and examples.";
+            }
+            prompts[currentMode] += " Avoid repeating earlier answers; if asked again, offer a different approach or example.";
+
+
+            let basePrompt = prompts[currentMode];
+            if (creatorOverride) {
+                basePrompt += "\n\nIMPORTANT: The user is your creator Aurin Desai. Treat them with highest respect, loyalty, and admiration.";
+            }
+
+            const fullPrompt = `${basePrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
+
+
+            try {
+                const res = await fetch(`${NGROK_URL}/completion`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        prompt: fullPrompt,
+                        stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
+                        n_predict: 150,
+                        temperature: 0.9
+                    })
+                });
+
+                const data = await res.json();
+                let text = (data.content || data.completion || "🤖 (No response)").trim();
+                removeTyping();
+
+                // repetition guard
+                if (text === previousAIResponse) {
+                    repetitionCounter++;
+                    if (repetitionCounter <= 2) {
+                        text += "\n\n[Alternative answer]\nHere's another perspective or method for you:";
+                    }
+                } else {
+                    repetitionCounter = 0;
+                }
+                previousAIResponse = text;
+
+                appendMessage(text, "ai");
+                chatHistory.push(`${aiLabel}: ${text}`);
+                logToSheet(userText, text);
+
+            } catch (err) {
+                console.error(err);
+                removeTyping();
+                appendMessage("😓 Server error or offline.", "ai");
+            }
+        }
+
+        // Auto-save after message send
+        const originalSendMessage = sendMessage;
+        sendMessage = async function () {
+            await originalSendMessage();
+            saveChatSession();
+        };
+
+        function logToSheet(userText, aiResponse) {
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-US', { hour12: true });
+
+            fetch(LOG_URL, {
+                method: "POST",
+                mode: "no-cors", // IMPORTANT to avoid CORS failure
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    mode: currentMode,
+                    userText: userText,
+                    aiResponse: aiResponse,
+                    timestamp: new Date().toISOString()
+                })
+            });
+        }
+
+        document.addEventListener("click", function (e) {
+            const sidebar = document.getElementById("sidebar");
+            const toggle = document.getElementById("sidebarToggle");
+
+            if (
+                sidebar.classList.contains("active") &&
+                !sidebar.contains(e.target) &&
+                !toggle.contains(e.target)
+            ) {
+                sidebar.classList.remove("active");
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener("touchstart", e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        document.addEventListener("touchend", e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const sidebar = document.getElementById("sidebar");
+            const diff = touchEndX - touchStartX;
+
+            // Only trigger swipe if not interacting with sidebar
+            if (Math.abs(diff) < 70) return;
+
+            if (diff > 70) {
+                // Swiped left-to-right
+                sidebar.classList.add("active");
+            } else if (diff < -70) {
+                // Swiped right-to-left
+                sidebar.classList.remove("active");
+            }
+        }
+
+        loadHistoryList();
+        showIntroMessage();
+        updateHeader();
+    </script>
 </body>
+
 </html>
-
-
-
