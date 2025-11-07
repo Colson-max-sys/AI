@@ -343,7 +343,7 @@
     </div>
 
     <script>
-        const NGROK_URL = "https://69d0f62e0a93.ngrok-free.app";
+        const NGROK_URL = "https://e42c0bb5888f.ngrok-free.app";
         const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
         const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -514,33 +514,30 @@
             try {
                 appendMessage("🎨 Generating image... please wait (0%)", "system");
 
-                const payload = { prompt: promptText };
-                // 🔹 Start showing progress before sending request
                 const progressMessage = document.querySelector(".message.system-message:last-child");
 
-                // 🔁 Poll progress every 2s while image is being created
+                // 🔹 Start polling before sending the image request
+                let generationDone = false;
                 const progressInterval = setInterval(async () => {
+                    if (generationDone) return; // stop when done
                     try {
-                        const p = await fetch(`${NGROK_URL}/progress`, { cache: "no-store" });
+                        const p = await fetch(`${NGROK_URL}/progress`);
+                        if (!p.ok) return;
                         const progressData = await p.json();
                         const percent = Math.floor((progressData.progress || 0) * 100);
-                        const eta = Math.max(0, progressData.eta_relative?.toFixed(1) || 0);
+                        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
+                    } catch (_) { }
+                }, 1200);
 
-                        progressMessage.textContent = `🎨 Generating image... ${percent}% done (ETA: ${eta}s)`;
-                    } catch (e) {
-                        console.warn("Progress fetch failed:", e.message);
-                    }
-                }, 2000);
-
-
-                // 🔹 Now actually send the image generation request
+                // 🔹 Send image generation request through your proxy
+                const payload = { prompt: promptText };
                 const res = await fetch(`${NGROK_URL}/generate-image`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                // ✅ Stop progress polling once generation finishes
+                generationDone = true;
                 clearInterval(progressInterval);
 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -548,6 +545,7 @@
 
                 if (!data.images?.length) throw new Error("No image returned");
 
+                // 🔹 Display final image
                 const imgData = data.images[0];
                 const img = document.createElement("img");
                 img.src = "data:image/png;base64," + imgData;
@@ -559,14 +557,13 @@
                 appendMessage("Here's your image:", "ai");
                 chat.appendChild(img);
                 chat.scrollTop = chat.scrollHeight;
-
-
             } catch (err) {
                 console.error("Image generation failed:", err);
                 removeTyping();
                 appendMessage("⚠️ Image generation failed. Make sure server.js and WebUI are running.", "ai");
             }
         }
+
 
 
 
