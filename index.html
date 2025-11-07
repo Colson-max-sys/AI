@@ -343,7 +343,7 @@
     </div>
 
     <script>
-        const NGROK_URL = "https://306025e531c1.ngrok-free.app";
+        const NGROK_URL = "https://69d0f62e0a93.ngrok-free.app";
         const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
         const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -518,17 +518,20 @@
                 // 🔹 Start showing progress before sending request
                 const progressMessage = document.querySelector(".message.system-message:last-child");
 
-                // 🔁 Poll progress every second
+                // 🔁 Poll progress every 2s while image is being created
                 const progressInterval = setInterval(async () => {
                     try {
-                        const p = await fetch(`${NGROK_URL}/progress`);
+                        const p = await fetch(`${NGROK_URL}/progress`, { cache: "no-store" });
                         const progressData = await p.json();
-                        const percent = Math.floor(progressData.progress * 100);
-                        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
-                    } catch {
-                        // ignore minor connection hiccups
+                        const percent = Math.floor((progressData.progress || 0) * 100);
+                        const eta = Math.max(0, progressData.eta_relative?.toFixed(1) || 0);
+
+                        progressMessage.textContent = `🎨 Generating image... ${percent}% done (ETA: ${eta}s)`;
+                    } catch (e) {
+                        console.warn("Progress fetch failed:", e.message);
                     }
-                }, 1000);
+                }, 2000);
+
 
                 // 🔹 Now actually send the image generation request
                 const res = await fetch(`${NGROK_URL}/generate-image`, {
