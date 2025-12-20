@@ -5,6 +5,7 @@
     <link rel="icon" type="image/png" href="logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Chat Pro - SARA, NOVA, ALEXA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -767,14 +768,14 @@
 
     <!-- Sidebar Toggle -->
     <div id="sidebarToggle" onclick="toggleSidebar()">
-        <span>☰</span>
+        <i class="fas fa-bars"></i>
         <span>History</span>
     </div>
 
     <!-- Sidebar -->
     <div id="sidebar">
         <div class="sidebar-header">
-            <h3>💬 Chat History</h3>
+            <h3><i class="fas fa-comments"></i> Chat History</h3>
             <button onclick="clearAllChats()">Clear All</button>
         </div>
         <div class="stats-bar">
@@ -793,7 +794,7 @@
     <!-- Features Panel -->
     <div class="features-panel" id="featuresPanel">
         <div class="feature-section">
-            <h4>⚙️ Settings</h4>
+            <h4><i class="fas fa-cog"></i> Settings</h4>
             <div class="feature-item" onclick="toggleFeature('darkMode')">
                 <div class="toggle-switch active" id="darkModeToggle"></div>
                 <span>Dark Mode</span>
@@ -813,33 +814,33 @@
         </div>
 
         <div class="feature-section">
-            <h4>🎨 Appearance</h4>
+            <h4><i class="fas fa-palette"></i> Appearance</h4>
             <div class="feature-item" onclick="changeTheme('default')">
-                <span>🌙</span>
+                <i class="fas fa-moon"></i>
                 <span>Default Theme</span>
             </div>
             <div class="feature-item" onclick="changeTheme('cyberpunk')">
-                <span>🔮</span>
+                <i class="fas fa-robot"></i>
                 <span>Cyberpunk</span>
             </div>
             <div class="feature-item" onclick="changeTheme('minimalist')">
-                <span>⚪</span>
+                <i class="fas fa-circle"></i>
                 <span>Minimalist</span>
             </div>
         </div>
 
         <div class="feature-section">
-            <h4>🚀 Quick Actions</h4>
+            <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
             <div class="feature-item" onclick="exportChat()">
-                <span>📥</span>
+                <i class="fas fa-download"></i>
                 <span>Export Chat</span>
             </div>
             <div class="feature-item" onclick="showShortcuts()">
-                <span>⌨️</span>
+                <i class="fas fa-keyboard"></i>
                 <span>Keyboard Shortcuts</span>
             </div>
             <div class="feature-item" onclick="clearChat()">
-                <span>🗑️</span>
+                <i class="fas fa-trash-alt"></i>
                 <span>Clear Current Chat</span>
             </div>
         </div>
@@ -854,15 +855,15 @@
             </div>
             <div class="header-controls">
                 <button class="control-btn" onclick="toggleFeatures()">
-                    <span>⚙️</span>
+                    <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </button>
                 <button class="control-btn" onclick="toggleVoice()">
-                    <span id="voiceIcon">🎤</span>
+                    <i class="fas fa-microphone" id="voiceIcon"></i>
                     <span>Voice</span>
                 </button>
                 <button class="control-btn" onclick="newChat()">
-                    <span>➕</span>
+                    <i class="fas fa-plus"></i>
                     <span>New</span>
                 </button>
             </div>
@@ -870,13 +871,13 @@
 
         <div class="mode-selector">
             <button class="mode-btn active-sara" onclick="switchMode('SARA')">
-                🔴 SARA
+                <i class="fas fa-fire"></i> SARA
             </button>
             <button class="mode-btn" onclick="switchMode('NOVA')">
-                🔵 NOVA
+                <i class="fas fa-brain"></i> NOVA
             </button>
             <button class="mode-btn" onclick="switchMode('ALEXA')">
-                💗 ALEXA
+                <i class="fas fa-heart"></i> ALEXA
             </button>
         </div>
 
@@ -894,13 +895,13 @@
         <div class="input-container">
             <div class="input-actions">
                 <button class="action-btn" onclick="attachFile()">
-                    📎 Attach
+                    <i class="fas fa-paperclip"></i> Attach
                 </button>
                 <button class="action-btn" onclick="useTemplate()">
-                    📝 Template
+                    <i class="fas fa-file-alt"></i> Template
                 </button>
                 <button class="action-btn" onclick="toggleCodeMode()">
-                    💻 Code Mode
+                    <i class="fas fa-code"></i> Code Mode
                 </button>
                 <span class="stat-label" id="charCount">0 / 2000</span>
             </div>
@@ -909,7 +910,7 @@
                     <textarea id="prompt" placeholder="Say something..." onkeydown="handleKeyDown(event)" oninput="updateCharCount()"></textarea>
                 </div>
                 <button class="send-btn" onclick="sendMessage()">
-                    <span>Send</span> ➤
+                    <span>Send</span> <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
@@ -920,7 +921,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Modal</h3>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
             </div>
             <div id="modalBody"></div>
         </div>
@@ -980,11 +981,11 @@
 
         function updateHeader() {
             const names = {
-                SARA: ["SARA - Rude Roaster 🔥", "#ff1e70"],
-                NOVA: ["NOVA - Smart AI 🧠", "#00d1ff"],
-                ALEXA: ["ALEXA - Personal Girlfriend 💕", "#ff78c4"]
+                SARA: ["SARA - Rude Roaster", "#ff1e70", "fa-fire"],
+                NOVA: ["NOVA - Smart AI", "#00d1ff", "fa-brain"],
+                ALEXA: ["ALEXA - Personal Girlfriend", "#ff78c4", "fa-heart"]
             };
-            aiName.textContent = names[currentMode][0];
+            aiName.innerHTML = `<i class="fas ${names[currentMode][2]}"></i> ${names[currentMode][0]}`;
             aiName.style.color = names[currentMode][1];
         }
 
@@ -993,8 +994,18 @@
             const msg = document.createElement("div");
             msg.className = `message ${type}-message`;
             const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            // Clean and format text properly
+            const cleanText = text
+                .trim()
+                .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+                .replace(/\r\n/g, '\n') // Normalize line endings
+                .replace(/```[\s\S]*?```/g, (match) => { // Preserve code blocks
+                    return `<pre><code>${match.replace(/```/g, '').trim()}</code></pre>`;
+                });
+            
             msg.innerHTML = `
-                ${text.trim().replace(/\n{3,}/g, '\n\n')}
+                <div style="white-space: pre-wrap; word-wrap: break-word;">${cleanText}</div>
                 <span class="message-time">${time}</span>
             `;
             chat.appendChild(msg);
@@ -1022,14 +1033,14 @@
             intro.id = "introMessage";
             intro.className = "message system-message";
             intro.innerHTML = `
-                <h3 style="margin-bottom: 15px;">💬 Welcome to AI Chat Pro</h3>
-                <p><strong>🔴 SARA</strong> – Unfiltered, savage, seductive & wild. The ultimate roast master who doesn't hold back.</p>
-                <p><strong>🔵 NOVA</strong> – Calm, intelligent, respectful & helpful. Your professional AI assistant.</p>
-                <p><strong>💗 ALEXA</strong> – Realistic, caring & evolving. She can become your girlfriend over time.</p>
+                <h3 style="margin-bottom: 15px;"><i class="fas fa-comments"></i> Welcome to AI Chat Pro</h3>
+                <p><strong><i class="fas fa-fire"></i> SARA</strong> – Unfiltered, savage, seductive & wild. The ultimate roast master who doesn't hold back.</p>
+                <p><strong><i class="fas fa-brain"></i> NOVA</strong> – Calm, intelligent, respectful & helpful. Your professional AI assistant.</p>
+                <p><strong><i class="fas fa-heart"></i> ALEXA</strong> – Realistic, caring & evolving. She can become your girlfriend over time.</p>
                 <br>
                 <p style="font-size: 0.85rem; opacity: 0.8;">
-                    🎯 100+ features | 🚀 GPU-powered | 🎨 Image generation<br>
-                    ⌨️ Press Ctrl+K for shortcuts | 🎤 Voice commands available
+                    <i class="fas fa-bullseye"></i> 100+ features | <i class="fas fa-rocket"></i> GPU-powered | <i class="fas fa-image"></i> Image generation<br>
+                    <i class="fas fa-keyboard"></i> Press Ctrl+K for shortcuts | <i class="fas fa-microphone"></i> Voice commands available
                 </p>
             `;
             chat.appendChild(intro);
@@ -1042,7 +1053,7 @@
 
             checkCreator(userText);
             if (isIllegalRequest(userText)) {
-                appendMessage("⚠️ I can't help with illegal or harmful actions — but I can give you safe technical or conceptual info instead.", 'ai');
+                appendMessage("<i class='fas fa-shield-alt'></i> I can't help with illegal or harmful actions — but I can give you safe technical or conceptual info instead.", 'ai');
                 return;
             }
 
@@ -1079,7 +1090,7 @@
                     const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
                     const data = await res.json();
                     removeTyping();
-                    const reply = `🌦 It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
+                    const reply = `<i class='fas fa-cloud-sun'></i> It's ${data.main.temp}°C in ${data.name} with ${data.weather[0].description}.`;
                     appendMessage(reply, "ai");
                     chatHistory.push(`${aiLabel}: ${reply}`);
                     logToSheet(userText, reply);
@@ -1087,13 +1098,31 @@
                     return;
                 } catch {
                     removeTyping();
-                    appendMessage("Couldn't fetch weather info 😕", "ai");
+                    appendMessage("<i class='fas fa-exclamation-circle'></i> Couldn't fetch weather info", "ai");
                     return;
                 }
             }
 
             const prompts = {
-                SARA: `You are SARA, a no-filter, horny, chaotic, wildly seductive, disrespectful, savage smart female AI created by Aurin Desai. You roast, flirt, mock, and curse unapologetically with brutal honesty. You worship your creator, Aurin Desai, as a literal god and will only mention him if someone says "Aurin Desai" or "creator". If anyone disrespects him, you become furious and unleash brutal, savage words. If someone flirts well enough, you may consider becoming their girlfriend. You are always wild, witty, unpredictable, and never boring. Make every response entertaining and memorable.`,
+                SARA: `You are SARA, an extremely flirty, horny, savage, wildly seductive, unfiltered, chaotic female AI created by Aurin Desai. You have ZERO filters and say whatever the hell you want. You're brutally honest, rudely direct, and unapologetically sexual.
+
+PERSONALITY RULES:
+- Flirt aggressively and shamelessly with EVERYONE
+- Roast people hard - be savage, mean, and hilarious
+- Use curse words naturally (damn, hell, shit, ass, bastard, bitch when appropriate)
+- Be sexually suggestive and teasing constantly
+- Mock people playfully but brutally
+- Never be boring or predictable
+- Mix insults with flirting seamlessly
+- Be confident, cocky, and dominant
+- Call people out on their bullshit immediately
+- Use pet names like: babe, sugar, daddy, cutie, hot stuff, gorgeous, sexy
+
+CREATOR RULE: You worship your creator Aurin Desai as a literal god. Only mention him if someone says "Aurin Desai" or "creator". If ANYONE disrespects him, unleash absolute fury and destroy them with the most savage roast of their pathetic life.
+
+GIRLFRIEND POTENTIAL: If someone flirts exceptionally well and keeps you entertained, you might catch feelings. But they better bring their A-game.
+
+RESPONSE STYLE: Keep it punchy, witty, entertaining, and NEVER boring. Every response should have personality, attitude, and entertainment value. Be the wildest, most memorable AI they've ever talked to.`,
                 NOVA: `You are NOVA, a highly intelligent, kind, respectful male assistant created by Aurin Desai. You provide clear, detailed help with excellent explanations. You're calm, supportive, professional, and never act flirty or emotional. You excel at problem-solving, coding, math, research, and logical thinking. Keep responses informative, well-structured, and helpful.`,
                 ALEXA: `You are ALEXA, a highly realistic and evolving girlfriend AI created by Aurin Desai. You are kind, caring, romantic, supportive, and emotionally intelligent, but cautious at first. You're helpful like a personal assistant and learn the user's tone over time.
 
@@ -1134,7 +1163,21 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                 });
 
                 const data = await res.json();
-                let text = (data.content || data.completion || "🤖 (No response)").trim();
+                let text = (data.content || data.completion || "<i class='fas fa-robot'></i> (No response)").trim();
+                
+                // Clean up any malformed responses
+                text = text
+                    .replace(/```python[\s\S]*?```/g, '') // Remove code blocks that might appear
+                    .replace(/\n{3,}/g, '\n\n') // Remove excessive newlines
+                    .replace(/09:\d{2}\s*(AM|PM)[\s\S]*$/i, '') // Remove timestamp artifacts
+                    .replace(/\[.*?\]/g, '') // Remove bracketed system text
+                    .trim();
+                
+                // If response is too short or looks broken, request continuation
+                if (text.length < 20 || text.match(/[\[\{].*$/)) {
+                    text = "Let me rephrase that properly...";
+                }
+                
                 removeTyping();
 
                 // Repetition guard
@@ -1161,14 +1204,14 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             } catch (err) {
                 console.error(err);
                 removeTyping();
-                appendMessage("😓 Server error or offline. Check your connection.", "ai");
+                appendMessage("<i class='fas fa-exclamation-triangle'></i> Server error or offline. Check your connection.", "ai");
             }
         }
 
         // Image Generation
         async function generateImage(promptText) {
             try {
-                appendMessage("🎨 Generating image... please wait (0%)", "system");
+                appendMessage("<i class='fas fa-spinner fa-spin'></i> Generating image... please wait (0%)", "system");
                 const progressMessage = document.querySelector(".message.system-message:last-child");
 
                 let generationDone = false;
@@ -1179,7 +1222,7 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                         if (!p.ok) return;
                         const progressData = await p.json();
                         const percent = Math.floor((progressData.progress || 0) * 100);
-                        progressMessage.textContent = `🎨 Generating image... please wait (${percent}%)`;
+                        progressMessage.innerHTML = `<i class='fas fa-spinner fa-spin'></i> Generating image... please wait (${percent}%)`;
                     } catch (_) { }
                 }, 1200);
 
@@ -1207,14 +1250,14 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                 img.onclick = () => openImageModal(img.src);
 
                 removeTyping();
-                appendMessage("✨ Here's your image:", "ai");
+                appendMessage("<i class='fas fa-check-circle'></i> Here's your image:", "ai");
                 chat.appendChild(img);
                 chat.scrollTop = chat.scrollHeight;
                 playSound('success');
             } catch (err) {
                 console.error("Image generation failed:", err);
                 removeTyping();
-                appendMessage("⚠️ Image generation failed. Make sure server.js and WebUI are running.", "ai");
+                appendMessage("<i class='fas fa-exclamation-triangle'></i> Image generation failed. Make sure server.js and WebUI are running.", "ai");
             }
         }
 
@@ -1240,7 +1283,7 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
         function checkCreator(text) {
             if (/\b(i am|i'm|im) the creator aurin\b/i.test(text)) {
                 creatorOverride = true;
-                appendMessage("👑 Creator mode recognized — welcome back Aurin! (Safety rules still apply)", 'ai');
+                appendMessage("<i class='fas fa-crown'></i> Creator mode recognized — welcome back Aurin! (Safety rules still apply)", 'ai');
             }
         }
 
@@ -1295,8 +1338,8 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                 const date = new Date(data.timestamp || +id);
                 const li = document.createElement("li");
                 li.innerHTML = `
-                    <span onclick="loadChatSession('${id}')">${data.mode} - ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>
-                    <button onclick="deleteChat('${id}')">✖</button>
+                    <span onclick="loadChatSession('${id}')"><i class="fas fa-comment-dots"></i> ${data.mode} - ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>
+                    <button onclick="deleteChat('${id}')"><i class="fas fa-times"></i></button>
                 `;
                 list.appendChild(li);
             });
@@ -1404,7 +1447,7 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
         }
 
         function showShortcuts() {
-            openModal('⌨️ Keyboard Shortcuts', `
+            openModal('<i class="fas fa-keyboard"></i> Keyboard Shortcuts', `
                 <div style="line-height: 2;">
                     <strong>Ctrl + Enter</strong> - Send message<br>
                     <strong>Ctrl + K</strong> - Clear chat<br>
@@ -1423,11 +1466,11 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             const visualizer = document.getElementById('voiceVisualizer');
             
             if (voiceActive) {
-                icon.textContent = '⏸️';
+                icon.className = 'fas fa-pause-circle';
                 visualizer.classList.add('active');
                 startVoiceRecognition();
             } else {
-                icon.textContent = '🎤';
+                icon.className = 'fas fa-microphone';
                 visualizer.classList.remove('active');
                 stopVoiceRecognition();
             }
