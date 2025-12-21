@@ -344,6 +344,92 @@
             position: relative;
         }
 
+        .message-actions {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            display: none;
+            gap: 5px;
+            background: var(--bg-secondary);
+            padding: 5px 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .message:hover .message-actions {
+            display: flex;
+        }
+
+        .message-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .message-action-btn:hover {
+            color: var(--nova-color);
+            transform: scale(1.1);
+        }
+
+        .bookmarked {
+            border-left: 3px solid var(--warning-color);
+        }
+
+        .quick-reply-container {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            overflow-x: auto;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .quick-reply-btn:hover {
+            background: var(--nova-color);
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        .message-rating {
+            margin-top: 8px;
+            display: flex;
+            gap: 5px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .rating-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+
+        .rating-btn.active {
+            color: var(--warning-color);
+            opacity: 1;
+        }
+
         @keyframes fadeInUp {
             to {
                 opacity: 1;
@@ -542,6 +628,7 @@
             margin-bottom: 8px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 10px;
             font-size: 0.85rem;
             transition: all 0.3s;
@@ -551,6 +638,13 @@
         .feature-item:hover {
             background: #333;
             transform: translateX(-5px);
+        }
+
+        .feature-item-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .toggle-switch {
@@ -1084,21 +1178,65 @@
     <div class="features-panel" id="featuresPanel">
         <div class="feature-section">
             <h4><i class="fas fa-cog"></i> Settings</h4>
-            <div class="feature-item" onclick="toggleFeature('darkMode')">
-                <div class="toggle-switch active" id="darkModeToggle"></div>
-                <span>Dark Mode</span>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('darkMode')">
+                    <span>Dark Mode</span>
+                </div>
+                <div class="toggle-switch active" id="darkModeToggle" onclick="toggleFeature('darkMode')"></div>
             </div>
-            <div class="feature-item" onclick="toggleFeature('autoSave')">
-                <div class="toggle-switch active" id="autoSaveToggle"></div>
-                <span>Auto-Save</span>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('autoSave')">
+                    <span>Auto-Save</span>
+                </div>
+                <div class="toggle-switch active" id="autoSaveToggle" onclick="toggleFeature('autoSave')"></div>
             </div>
-            <div class="feature-item" onclick="toggleFeature('soundEffects')">
-                <div class="toggle-switch" id="soundEffectsToggle"></div>
-                <span>Sound Effects</span>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('soundEffects')">
+                    <span>Sound Effects</span>
+                </div>
+                <div class="toggle-switch" id="soundEffectsToggle" onclick="toggleFeature('soundEffects')"></div>
             </div>
-            <div class="feature-item" onclick="toggleFeature('notifications')">
-                <div class="toggle-switch" id="notificationsToggle"></div>
-                <span>Notifications</span>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('notifications')">
+                    <span>Notifications</span>
+                </div>
+                <div class="toggle-switch" id="notificationsToggle" onclick="toggleFeature('notifications')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('typingIndicator')">
+                    <span>Typing Indicator</span>
+                </div>
+                <div class="toggle-switch active" id="typingIndicatorToggle" onclick="toggleFeature('typingIndicator')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('readReceipts')">
+                    <span>Read Receipts</span>
+                </div>
+                <div class="toggle-switch active" id="readReceiptsToggle" onclick="toggleFeature('readReceipts')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('autoComplete')">
+                    <span>Auto Complete</span>
+                </div>
+                <div class="toggle-switch active" id="autoCompleteToggle" onclick="toggleFeature('autoComplete')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('quickReplies')">
+                    <span>Quick Replies</span>
+                </div>
+                <div class="toggle-switch active" id="quickRepliesToggle" onclick="toggleFeature('quickReplies')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('voiceOutput')">
+                    <span>Voice Output (TTS)</span>
+                </div>
+                <div class="toggle-switch" id="voiceOutputToggle" onclick="toggleFeature('voiceOutput')"></div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-item-label" onclick="toggleFeature('focusMode')">
+                    <span>Focus Mode</span>
+                </div>
+                <div class="toggle-switch" id="focusModeToggle" onclick="toggleFeature('focusMode')"></div>
             </div>
         </div>
 
@@ -1116,6 +1254,22 @@
                 <i class="fas fa-circle"></i>
                 <span>Minimalist</span>
             </div>
+            <div class="feature-item" onclick="changeFontSize('small')">
+                <i class="fas fa-font"></i>
+                <span>Small Text</span>
+            </div>
+            <div class="feature-item" onclick="changeFontSize('medium')">
+                <i class="fas fa-font"></i>
+                <span>Medium Text</span>
+            </div>
+            <div class="feature-item" onclick="changeFontSize('large')">
+                <i class="fas fa-font"></i>
+                <span>Large Text</span>
+            </div>
+            <div class="feature-item" onclick="toggleCompactMode()">
+                <i class="fas fa-compress"></i>
+                <span>Compact Mode</span>
+            </div>
         </div>
 
         <div class="feature-section">
@@ -1124,13 +1278,73 @@
                 <i class="fas fa-download"></i>
                 <span>Export Chat</span>
             </div>
+            <div class="feature-item" onclick="exportAsJSON()">
+                <i class="fas fa-file-code"></i>
+                <span>Export as JSON</span>
+            </div>
+            <div class="feature-item" onclick="exportAsPDF()">
+                <i class="fas fa-file-pdf"></i>
+                <span>Export as PDF</span>
+            </div>
+            <div class="feature-item" onclick="shareChat()">
+                <i class="fas fa-share-alt"></i>
+                <span>Share Chat</span>
+            </div>
+            <div class="feature-item" onclick="printChat()">
+                <i class="fas fa-print"></i>
+                <span>Print Chat</span>
+            </div>
             <div class="feature-item" onclick="showShortcuts()">
                 <i class="fas fa-keyboard"></i>
                 <span>Keyboard Shortcuts</span>
             </div>
+            <div class="feature-item" onclick="showStats()">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistics</span>
+            </div>
+            <div class="feature-item" onclick="showInsights()">
+                <i class="fas fa-lightbulb"></i>
+                <span>AI Insights</span>
+            </div>
+            <div class="feature-item" onclick="searchMessages()">
+                <i class="fas fa-search"></i>
+                <span>Search Messages</span>
+            </div>
+            <div class="feature-item" onclick="viewBookmarks()">
+                <i class="fas fa-bookmark"></i>
+                <span>View Bookmarks</span>
+            </div>
             <div class="feature-item" onclick="clearChat()">
                 <i class="fas fa-trash-alt"></i>
                 <span>Clear Current Chat</span>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h4><i class="fas fa-magic"></i> Advanced</h4>
+            <div class="feature-item" onclick="showCustomPrompts()">
+                <i class="fas fa-file-alt"></i>
+                <span>Custom Prompts</span>
+            </div>
+            <div class="feature-item" onclick="toggleTranslate()">
+                <i class="fas fa-language"></i>
+                <span>Auto Translate</span>
+            </div>
+            <div class="feature-item" onclick="summarizeChat()">
+                <i class="fas fa-compress-alt"></i>
+                <span>Summarize Chat</span>
+            </div>
+            <div class="feature-item" onclick="extractCode()">
+                <i class="fas fa-code"></i>
+                <span>Extract All Code</span>
+            </div>
+            <div class="feature-item" onclick="changeTypingSpeed()">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Typing Speed</span>
+            </div>
+            <div class="feature-item" onclick="resetSettings()">
+                <i class="fas fa-undo"></i>
+                <span>Reset Settings</span>
             </div>
         </div>
     </div>
@@ -1217,7 +1431,7 @@
     </div>
 
     <script>
-        const NGROK_URL = "https://161174ee5ec1.ngrok-free.app";
+        const NGROK_URL = "https://b380a3d3e2e2.ngrok-free.app";
         const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
         const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -1237,12 +1451,55 @@
         let voiceActive = false;
         let messageCount = 0;
         let totalChats = 0;
+        let typingSpeed = 50;
+        let autoScroll = true;
+        let compactMode = false;
+        let readAloud = false;
+        let autoTranslate = false;
+        let targetLanguage = 'en';
+        let fontSize = 'medium';
+        let messageReactions = {};
+        let bookmarkedMessages = [];
+        let searchHistory = [];
+        let customPrompts = [];
+        let responseTime = [];
+        let wordCount = 0;
+        let sessionStartTime = Date.now();
+        let lastActiveTime = Date.now();
+        let streakDays = parseInt(localStorage.getItem('streakDays') || '0');
+        let totalSessions = parseInt(localStorage.getItem('totalSessions') || '0');
+        let favoriteMode = localStorage.getItem('favoriteMode') || 'SARA';
+        let messageRating = {};
+        let codeSnippets = [];
+        let conversationInsights = {
+            questionsAsked: 0,
+            codeGenerated: 0,
+            imagesCreated: 0,
+            helpfulResponses: 0
+        };
         let features = {
             darkMode: true,
             autoSave: true,
             soundEffects: false,
             notifications: false,
-            codeMode: false
+            codeMode: false,
+            autoComplete: true,
+            spellCheck: true,
+            wordSuggestions: false,
+            typingIndicator: true,
+            readReceipts: true,
+            messagePreview: true,
+            quickReplies: true,
+            contextMemory: true,
+            smartSuggestions: true,
+            autoFormat: true,
+            linkPreview: false,
+            emojiPicker: false,
+            voiceOutput: false,
+            continuousVoice: false,
+            privateMode: false,
+            focusMode: false,
+            zenMode: false
         };
 
         // Initialize
@@ -1582,7 +1839,7 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             if (creatorOverride) return true;
 
             // Check if user claims to be Aurin
-            if (/\b(i am|i'm|im|this is)\s+(the\s+)?creator|i am|i'm|im)\s+aurin\b/i.test(text)) {
+            if (/\b(i am|i'm|im|this is)\s+(the\s+)?(creator|aurin)\b/i.test(text)) {
                 awaitingPassword = true;
                 appendMessage("<i class='fas fa-lock'></i> <strong>Creator Verification Required</strong><br><br>To verify your identity as Aurin Desai, please provide the creator password.", 'ai');
                 return false;
@@ -1820,27 +2077,47 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
         }
 
         function startVoiceRecognition() {
-            if ('webkitSpeechRecognition' in window) {
-                const recognition = new webkitSpeechRecognition();
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
+                recognition.lang = 'en-US';
                 
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     promptInput.value = transcript;
                     updateCharCount();
+                    playSound('receive');
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    showNotification('Voice recognition error: ' + event.error);
+                    voiceActive = false;
+                    document.getElementById('voiceIcon').className = 'fas fa-microphone';
+                    document.getElementById('voiceVisualizer').classList.remove('active');
+                };
+                
+                recognition.onend = () => {
+                    if (voiceActive) {
+                        recognition.start(); // Restart if still active
+                    }
                 };
                 
                 recognition.start();
                 window.voiceRecognition = recognition;
             } else {
                 showNotification('Voice recognition not supported in this browser');
+                voiceActive = false;
+                document.getElementById('voiceIcon').className = 'fas fa-microphone';
             }
         }
 
         function stopVoiceRecognition() {
             if (window.voiceRecognition) {
                 window.voiceRecognition.stop();
+                window.voiceRecognition = null;
             }
         }
 
@@ -1857,8 +2134,219 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             showNotification('Chat exported successfully');
         }
 
+        function exportAsJSON() {
+            const data = {
+                mode: currentMode,
+                history: chatHistory,
+                timestamp: new Date().toISOString(),
+                stats: { messageCount, wordCount, sessionStartTime },
+                insights: conversationInsights
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chat_data_${Date.now()}.json`;
+            a.click();
+            showNotification('Exported as JSON');
+        }
+
+        function exportAsPDF() {
+            showNotification('PDF export feature - use browser Print to PDF');
+            printChat();
+        }
+
+        function shareChat() {
+            const summary = `Chat with ${currentMode} - ${messageCount} messages`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'AI Chat Session',
+                    text: summary,
+                    url: window.location.href
+                });
+            } else {
+                showNotification('Share not supported on this browser');
+            }
+        }
+
+        function printChat() {
+            window.print();
+        }
+
+        function showStats() {
+            const sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000 / 60);
+            const avgResponseTime = responseTime.length ? 
+                (responseTime.reduce((a,b) => a+b, 0) / responseTime.length / 1000).toFixed(2) : 0;
+            
+            openModal('<i class="fas fa-chart-bar"></i> Session Statistics', `
+                <div style="line-height: 2.2;">
+                    <strong>📊 Current Session</strong><br>
+                    Messages: ${messageCount}<br>
+                    Words Typed: ${wordCount}<br>
+                    Session Time: ${sessionTime} minutes<br>
+                    Current Mode: ${currentMode}<br>
+                    Avg Response: ${avgResponseTime}s<br><br>
+                    
+                    <strong>🎯 All Time</strong><br>
+                    Total Chats: ${totalChats}<br>
+                    Total Sessions: ${totalSessions}<br>
+                    Streak Days: ${streakDays}<br>
+                    Favorite Mode: ${favoriteMode}<br><br>
+                    
+                    <strong>💡 Insights</strong><br>
+                    Questions Asked: ${conversationInsights.questionsAsked}<br>
+                    Code Generated: ${conversationInsights.codeGenerated}<br>
+                    Images Created: ${conversationInsights.imagesCreated}<br>
+                    Helpful Responses: ${conversationInsights.helpfulResponses}
+                </div>
+            `);
+        }
+
+        function showInsights() {
+            const tips = [
+                "💡 Try using voice input for hands-free chatting",
+                "🎯 Use quick replies to speed up conversations",
+                "📌 Bookmark important messages for later reference",
+                "⌨️ Press Ctrl+K to clear chat quickly",
+                "🔍 Search through your messages with Ctrl+F",
+                "📤 Export chats in multiple formats",
+                "🎨 Customize appearance in settings",
+                "🔊 Enable voice output for audio responses"
+            ];
+            const randomTips = tips.sort(() => 0.5 - Math.random()).slice(0, 4);
+            
+            openModal('<i class="fas fa-lightbulb"></i> AI Insights & Tips', `
+                <div style="line-height: 2;">
+                    ${randomTips.map(tip => `${tip}<br>`).join('')}
+                    <br>
+                    <strong>🚀 Pro Tip:</strong> ${currentMode === 'SARA' ? 
+                        'SARA loves witty banter and challenges!' : 
+                        currentMode === 'NOVA' ? 
+                        'NOVA excels at complex technical explanations!' : 
+                        'ALEXA responds better to respectful, engaging conversations!'}
+                </div>
+            `);
+        }
+
+        function searchMessages() {
+            const query = prompt('Search messages:');
+            if (!query) return;
+            
+            const messages = document.querySelectorAll('.message');
+            let found = 0;
+            
+            messages.forEach(msg => {
+                msg.style.opacity = '0.3';
+                if (msg.textContent.toLowerCase().includes(query.toLowerCase())) {
+                    msg.style.opacity = '1';
+                    msg.style.background = 'rgba(0, 209, 255, 0.2)';
+                    found++;
+                }
+            });
+            
+            showNotification(`Found ${found} matching messages`);
+            searchHistory.push(query);
+        }
+
+        function viewBookmarks() {
+            if (bookmarkedMessages.length === 0) {
+                showNotification('No bookmarked messages yet');
+                return;
+            }
+            
+            const bookmarksList = bookmarkedMessages.map((b, i) => 
+                `<div style="padding: 10px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 8px;">
+                    <strong>${i+1}.</strong> ${b.text.substring(0, 100)}...
+                    <br><small>${new Date(b.timestamp).toLocaleString()}</small>
+                </div>`
+            ).join('');
+            
+            openModal('<i class="fas fa-bookmark"></i> Bookmarked Messages', bookmarksList);
+        }
+
+        function showCustomPrompts() {
+            const promptList = customPrompts.length > 0 ? 
+                customPrompts.map((p, i) => `<div>${i+1}. ${p}</div>`).join('') :
+                'No custom prompts saved yet.<br><br>Create custom prompts to reuse common questions!';
+            
+            openModal('<i class="fas fa-file-alt"></i> Custom Prompts', promptList);
+        }
+
+        function toggleTranslate() {
+            autoTranslate = !autoTranslate;
+            if (autoTranslate) {
+                targetLanguage = prompt('Enter target language code (e.g., es, fr, de):') || 'en';
+                showNotification(`Auto-translate enabled: ${targetLanguage}`);
+            } else {
+                showNotification('Auto-translate disabled');
+            }
+        }
+
+        function summarizeChat() {
+            const summary = `Chat Summary:\n• Mode: ${currentMode}\n• Messages: ${messageCount}\n• Duration: ${Math.floor((Date.now() - sessionStartTime) / 60000)} min\n• Topics: General conversation`;
+            openModal('<i class="fas fa-compress-alt"></i> Chat Summary', `<pre>${summary}</pre>`);
+        }
+
+        function extractCode() {
+            if (codeSnippets.length === 0) {
+                showNotification('No code snippets found in this chat');
+                return;
+            }
+            
+            const allCode = codeSnippets.join('\n\n---\n\n');
+            const blob = new Blob([allCode], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `code_snippets_${Date.now()}.txt`;
+            a.click();
+            showNotification(`Extracted ${codeSnippets.length} code snippets`);
+        }
+
+        function changeTypingSpeed() {
+            const speed = prompt('Enter typing speed (10-100ms):', typingSpeed);
+            if (speed && !isNaN(speed)) {
+                typingSpeed = parseInt(speed);
+                showNotification(`Typing speed set to ${typingSpeed}ms`);
+            }
+        }
+
+        function changeFontSize(size) {
+            fontSize = size;
+            const sizes = { small: '0.85rem', medium: '1rem', large: '1.15rem' };
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.style.fontSize = sizes[size];
+            });
+            showNotification(`Font size: ${size}`);
+        }
+
+        function toggleCompactMode() {
+            compactMode = !compactMode;
+            chat.style.padding = compactMode ? '10px' : '30px 20px';
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.style.padding = compactMode ? '8px 12px' : '14px 18px';
+            });
+            showNotification(`Compact mode ${compactMode ? 'enabled' : 'disabled'}`);
+        }
+
+        function resetSettings() {
+            if (confirm('Reset all settings to default?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         function attachFile() {
-            showNotification('File attachment feature coming soon!');
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,.pdf,.txt,.doc,.docx';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    showNotification(`File selected: ${file.name} (Processing not yet implemented)`);
+                }
+            };
+            input.click();
         }
 
         function useTemplate() {
@@ -1866,7 +2354,11 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                 "Help me write code for...",
                 "Explain how...",
                 "What's the difference between...",
-                "Can you help me with..."
+                "Can you help me with...",
+                "Create a plan for...",
+                "Summarize this...",
+                "Debug this code...",
+                "Write a story about..."
             ];
             const template = templates[Math.floor(Math.random() * templates.length)];
             promptInput.value = template;
@@ -1875,7 +2367,9 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
 
         function toggleCodeMode() {
             features.codeMode = !features.codeMode;
-            showNotification(features.codeMode ? 'Code mode enabled' : 'Code mode disabled');
+            showNotification(features.codeMode ? 
+                '💻 Code mode enabled - Technical responses prioritized' : 
+                'Code mode disabled');
         }
 
         // Sound Effects
