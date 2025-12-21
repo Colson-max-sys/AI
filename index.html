@@ -18,14 +18,18 @@
             --nova-color: #00d1ff;
             --alexa-color: #ff78c4;
             --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #2a2a2a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1e1e1e;
+            --bg-hover: #252525;
             --text-primary: #ffffff;
             --text-secondary: #b0b0b0;
-            --border-color: #333;
+            --border-color: #2a2a2a;
             --success-color: #00ff88;
             --warning-color: #ffaa00;
             --error-color: #ff4444;
+            --shadow-light: rgba(0, 0, 0, 0.2);
+            --shadow-medium: rgba(0, 0, 0, 0.4);
+            --shadow-heavy: rgba(0, 0, 0, 0.6);
         }
 
         html, body {
@@ -196,15 +200,16 @@
 
         /* Header */
         header {
-            background: rgba(20, 20, 20, 0.95);
+            background: rgba(15, 15, 15, 0.98);
             backdrop-filter: blur(20px);
-            padding: 20px;
+            padding: 18px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 24px var(--shadow-heavy);
             position: relative;
+            z-index: 100;
         }
 
         .header-left {
@@ -214,24 +219,25 @@
         }
 
         #aiName {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             letter-spacing: -0.5px;
             transition: all 0.3s;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: var(--success-color);
-            box-shadow: 0 0 10px var(--success-color);
+            box-shadow: 0 0 12px var(--success-color);
             animation: pulse 2s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.95); }
         }
 
         .header-controls {
@@ -244,40 +250,55 @@
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px var(--shadow-light);
         }
 
         .control-btn:hover {
-            background: #333;
+            background: var(--bg-hover);
             border-color: var(--nova-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
         }
 
         /* Mode Selector */
         .mode-selector {
             display: flex;
-            gap: 10px;
-            padding: 10px 0;
+            gap: 12px;
+            padding: 16px 24px;
+            background: rgba(15, 15, 15, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            justify-content: center;
         }
 
         .mode-btn {
-            padding: 10px 20px;
-            border: 2px solid transparent;
-            border-radius: 10px;
+            padding: 12px 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
             background: var(--bg-tertiary);
             color: var(--text-primary);
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .mode-btn::before {
@@ -288,7 +309,12 @@
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
+            transition: left 0.6s;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px var(--shadow-medium);
         }
 
         .mode-btn:hover::before {
@@ -296,22 +322,25 @@
         }
 
         .mode-btn.active-sara {
-            background: var(--sara-color);
+            background: linear-gradient(135deg, var(--sara-color), #cc0050);
             border-color: var(--sara-color);
-            box-shadow: 0 0 20px rgba(255, 30, 112, 0.5);
+            box-shadow: 0 6px 20px rgba(255, 30, 112, 0.4);
+            transform: translateY(-2px);
         }
 
         .mode-btn.active-nova {
-            background: var(--nova-color);
+            background: linear-gradient(135deg, var(--nova-color), #0099cc);
             border-color: var(--nova-color);
             color: #000;
-            box-shadow: 0 0 20px rgba(0, 209, 255, 0.5);
+            box-shadow: 0 6px 20px rgba(0, 209, 255, 0.4);
+            transform: translateY(-2px);
         }
 
         .mode-btn.active-alexa {
-            background: var(--alexa-color);
+            background: linear-gradient(135deg, var(--alexa-color), #ff4d9e);
             border-color: var(--alexa-color);
-            box-shadow: 0 0 20px rgba(255, 120, 196, 0.5);
+            box-shadow: 0 6px 20px rgba(255, 120, 196, 0.4);
+            transform: translateY(-2px);
         }
 
         /* Chat Box */
@@ -320,6 +349,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            padding-bottom: 32px; /* Space for status bar */
         }
 
         .chat-box {
@@ -430,6 +460,94 @@
             opacity: 1;
         }
 
+        /* Status Bar */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            z-index: 99;
+        }
+
+        .status-bar-left, .status-bar-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        .status-dot.warning {
+            background: var(--warning-color);
+        }
+
+        .status-dot.error {
+            background: var(--error-color);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--nova-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @keyframes fadeInUp {
             to {
                 opacity: 1;
@@ -497,13 +615,14 @@
 
         /* Input Container */
         .input-container {
-            padding: 20px;
-            background: rgba(20, 20, 20, 0.95);
+            padding: 20px 24px;
+            background: rgba(15, 15, 15, 0.98);
             backdrop-filter: blur(20px);
             border-top: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             gap: 12px;
+            box-shadow: 0 -4px 24px var(--shadow-heavy);
         }
 
         .input-wrapper {
@@ -521,71 +640,91 @@
 
         #prompt {
             width: 100%;
-            padding: 14px 18px;
+            padding: 16px 20px;
             font-size: 1rem;
-            border-radius: 12px;
+            border-radius: 14px;
             border: 2px solid var(--border-color);
             background: var(--bg-secondary);
             color: var(--text-primary);
             resize: none;
-            min-height: 50px;
-            max-height: 150px;
+            min-height: 56px;
+            max-height: 180px;
             font-family: inherit;
             transition: all 0.3s;
+            box-shadow: inset 0 2px 4px var(--shadow-light);
         }
 
         #prompt:focus {
             outline: none;
             border-color: var(--nova-color);
-            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+            box-shadow: 0 0 0 4px rgba(0, 209, 255, 0.1), inset 0 2px 4px var(--shadow-light);
+            background: var(--bg-tertiary);
         }
 
         .input-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .action-btn {
-            padding: 8px 14px;
+            padding: 8px 16px;
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             color: var(--text-secondary);
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 6px;
+            font-weight: 500;
         }
 
         .action-btn:hover {
-            background: #333;
+            background: var(--bg-hover);
             color: var(--text-primary);
             border-color: var(--nova-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
         }
 
         .send-btn {
-            padding: 14px 28px;
+            padding: 16px 32px;
             background: linear-gradient(135deg, var(--nova-color) 0%, #0099cc 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: 700;
             color: #000;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 209, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 209, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
         }
 
         .send-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 209, 255, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 209, 255, 0.5);
         }
 
         .send-btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Features Panel */
@@ -1042,6 +1181,27 @@
             .system-message h3 {
                 font-size: 1rem;
             }
+
+            .status-bar {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+
+            .status-bar-left, .status-bar-right {
+                gap: 10px;
+            }
+
+            .status-item {
+                gap: 4px;
+            }
+
+            .status-item span {
+                display: none;
+            }
+
+            .status-item i {
+                display: inline;
+            }
         }
 
         @media screen and (max-width: 360px) {
@@ -1419,6 +1579,38 @@
         </div>
     </div>
 
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-bar-left">
+            <div class="status-item tooltip" data-tooltip="Server Status">
+                <div class="status-dot" id="serverStatus"></div>
+                <span>Connected</span>
+            </div>
+            <div class="status-item tooltip" data-tooltip="GPU Acceleration">
+                <i class="fas fa-microchip"></i>
+                <span>GPU Active</span>
+            </div>
+            <div class="status-item" id="modelInfo">
+                <i class="fas fa-brain"></i>
+                <span>Hermes 2 Mistral 7B</span>
+            </div>
+        </div>
+        <div class="status-bar-right">
+            <div class="status-item">
+                <i class="fas fa-clock"></i>
+                <span id="sessionTime">0:00</span>
+            </div>
+            <div class="status-item">
+                <i class="fas fa-comments"></i>
+                <span><span id="messageCountStatus">0</span> msgs</span>
+            </div>
+            <div class="status-item tooltip" data-tooltip="Average Response Time">
+                <i class="fas fa-tachometer-alt"></i>
+                <span id="avgResponseTime">0ms</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal -->
     <div class="modal" id="modal">
         <div class="modal-content">
@@ -1703,6 +1895,8 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             const fullPrompt = `${basePrompt}\n\n${chatHistory.join("\n")}\n${aiLabel}:`;
 
             try {
+                const startTime = Date.now();
+                
                 const res = await fetch(`${NGROK_URL}/completion`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1715,6 +1909,9 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
                         top_k: 40
                     })
                 });
+
+                const responseTimeMs = Date.now() - startTime;
+                responseTime.push(responseTimeMs);
 
                 const data = await res.json();
                 let text = (data.content || data.completion || "<i class='fas fa-robot'></i> (No response)").trim();
@@ -1985,11 +2182,15 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
 
         // UI Functions
         function toggleSidebar() {
-            document.getElementById("sidebar").classList.toggle("active");
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("active");
+            playSound('click');
         }
 
         function toggleFeatures() {
-            document.getElementById("featuresPanel").classList.toggle("active");
+            const panel = document.getElementById("featuresPanel");
+            panel.classList.toggle("active");
+            playSound('click');
         }
 
         function toggleFeature(feature) {
@@ -2023,17 +2224,57 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
 
         function updateCharCount() {
             const count = promptInput.value.length;
-            document.getElementById('charCount').textContent = `${count} / 2000`;
+            const counter = document.getElementById('charCount');
+            counter.textContent = `${count} / 2000`;
+            
+            if (count > 1800) {
+                counter.style.color = 'var(--error-color)';
+            } else if (count > 1500) {
+                counter.style.color = 'var(--warning-color)';
+            } else {
+                counter.style.color = 'var(--text-secondary)';
+            }
         }
 
         function updateStats() {
             document.getElementById('totalChats').textContent = totalChats;
             document.getElementById('totalMessages').textContent = messageCount;
+            document.getElementById('messageCountStatus').textContent = messageCount;
+            
+            // Update avg response time
+            if (responseTime.length > 0) {
+                const avg = Math.round(responseTime.reduce((a,b) => a+b, 0) / responseTime.length);
+                document.getElementById('avgResponseTime').textContent = avg + 'ms';
+            }
+        }
+
+        function updateSessionTimer() {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('sessionTime').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function checkServerStatus() {
+            fetch(`${NGROK_URL}/health`)
+                .then(res => {
+                    if (res.ok) {
+                        document.getElementById('serverStatus').className = 'status-dot';
+                        document.querySelector('.status-bar-left .status-item span').textContent = 'Connected';
+                    } else {
+                        throw new Error('Server error');
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('serverStatus').className = 'status-dot error';
+                    document.querySelector('.status-bar-left .status-item span').textContent = 'Disconnected';
+                });
         }
 
         // Modal Functions
         function openModal(title, content) {
-            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalTitle').innerHTML = title;
             document.getElementById('modalBody').innerHTML = content;
             document.getElementById('modal').classList.add('active');
         }
@@ -2043,7 +2284,17 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
         }
 
         function openImageModal(src) {
-            openModal('Generated Image', `<img src="${src}" style="width: 100%; border-radius: 12px;">`);
+            openModal('<i class="fas fa-image"></i> Generated Image', 
+                `<img src="${src}" style="width: 100%; border-radius: 12px; cursor: pointer;" onclick="downloadImage('${src}')">`
+            );
+        }
+
+        function downloadImage(src) {
+            const a = document.createElement('a');
+            a.href = src;
+            a.download = `generated_image_${Date.now()}.png`;
+            a.click();
+            showNotification('Image downloaded');
         }
 
         function showShortcuts() {
@@ -2343,7 +2594,13 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    showNotification(`File selected: ${file.name} (Processing not yet implemented)`);
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        showNotification(`File loaded: ${file.name}`);
+                        playSound('success');
+                        // File content available in event.target.result
+                    };
+                    reader.readAsText(file);
                 }
             };
             input.click();
@@ -2351,25 +2608,45 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
 
         function useTemplate() {
             const templates = [
-                "Help me write code for...",
-                "Explain how...",
-                "What's the difference between...",
-                "Can you help me with...",
-                "Create a plan for...",
-                "Summarize this...",
-                "Debug this code...",
-                "Write a story about..."
+                "Help me write code for",
+                "Explain how",
+                "What's the difference between",
+                "Can you help me with",
+                "Create a plan for",
+                "Summarize this",
+                "Debug this code",
+                "Write a story about"
             ];
-            const template = templates[Math.floor(Math.random() * templates.length)];
-            promptInput.value = template;
+            
+            openModal('<i class="fas fa-file-alt"></i> Choose a Template', `
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${templates.map(t => 
+                        `<button class="quick-reply-btn" onclick="useTemplateText('${t}')" style="width: 100%; justify-content: flex-start;">
+                            <i class="fas fa-angle-right"></i> ${t}...
+                        </button>`
+                    ).join('')}
+                </div>
+            `);
+        }
+
+        function useTemplateText(text) {
+            promptInput.value = text + ' ';
             promptInput.focus();
+            closeModal();
+            updateCharCount();
         }
 
         function toggleCodeMode() {
             features.codeMode = !features.codeMode;
+            const btn = event.target.closest('.action-btn');
+            if (btn) {
+                btn.style.background = features.codeMode ? 'var(--nova-color)' : 'var(--bg-tertiary)';
+                btn.style.color = features.codeMode ? '#000' : 'var(--text-secondary)';
+            }
             showNotification(features.codeMode ? 
-                '💻 Code mode enabled - Technical responses prioritized' : 
+                '<i class="fas fa-code"></i> Code mode enabled - Technical responses prioritized' : 
                 'Code mode disabled');
+            playSound('click');
         }
 
         // Sound Effects
@@ -2495,7 +2772,36 @@ Respond naturally like a real girlfriend who slowly warms up. Be emotionally pre
         }
 
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', () => {
+            init();
+            
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) changeTheme(savedTheme);
+            
+            // Load saved font size
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) changeFontSize(savedFontSize);
+            
+            // Load compact mode
+            const savedCompact = localStorage.getItem('compactMode');
+            if (savedCompact === 'true') toggleCompactMode();
+            
+            // Add input listener for auto-save trigger
+            promptInput.addEventListener('input', () => {
+                lastActiveTime = Date.now();
+            });
+            
+            // Update session timer every second
+            setInterval(updateSessionTimer, 1000);
+            
+            // Check server status every 10 seconds
+            setInterval(checkServerStatus, 10000);
+            checkServerStatus();
+            
+            // Focus input on load
+            promptInput.focus();
+        });
     </script>
 </body>
 </html>
