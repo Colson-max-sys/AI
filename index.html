@@ -930,12 +930,20 @@ code { font-family: var(--mono); font-size: 0.82rem; color: var(--nova); }
   .hbtn { padding: 8px 11px; }
 }
 @media (max-width: 768px) {
-  header { padding: 10px 12px 10px 68px; gap: 10px; flex-wrap: wrap; }
-  .brand-name { font-size: 0.88rem; }
+  header { padding: 10px 12px 10px 68px; gap: 8px; }
+  .brand-name { font-size: 0.86rem; }
   .brand-sub { display: none; }
-  .modebar { padding: 8px 12px; gap: 6px; }
-  .mtab { padding: 8px 15px; font-size: 0.78rem; }
-  .mtab .mode-ico { width: 24px; height: 24px; font-size: 0.7rem; }
+  /* Modebar: scroll horizontally so tabs never overlap */
+  .modebar {
+    padding: 8px 10px; gap: 6px;
+    justify-content: flex-start;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .modebar::-webkit-scrollbar { display: none; }
+  .mtab { padding: 8px 14px; font-size: 0.78rem; flex-shrink: 0; }
+  .mtab .mode-ico { width: 24px; height: 24px; font-size: 0.68rem; }
   #chatScroll { padding: 14px 12px; }
   .bwrap { max-width: 86%; }
   .inputzone { padding: 9px 12px 14px; }
@@ -945,13 +953,23 @@ code { font-family: var(--mono); font-size: 0.82rem; color: var(--nova); }
   .stbar > div:last-child .si:nth-child(n+3) { display: none; }
 }
 @media (max-width: 480px) {
-  .mtab .label { display: none; }
-  .mtab { padding: 8px 13px; }
+  header { padding: 9px 10px 9px 62px; gap: 6px; }
+  .hdr-brand { gap: 8px; }
+  .brand-name { font-size: 0.82rem; }
+  .onl-wrap { display: none; }
+  /* On very small screens keep the labels but shrink tabs more */
+  .modebar { padding: 7px 8px; gap: 5px; }
+  .mtab { padding: 7px 12px; font-size: 0.74rem; }
+  .mtab .mode-ico { width: 22px; height: 22px; font-size: 0.65rem; border-radius: 7px; }
   .bubble.sys-b { padding: 16px 18px; font-size: 0.82rem; }
   .bwrap { max-width: 90%; }
   .stbar > div:last-child { display: none; }
-  header { padding: 9px 10px 9px 62px; }
-  .onl-wrap { display: none; }
+}
+@media (max-width: 360px) {
+  /* Absolute smallest screens — icon only tabs */
+  .mtab .label { display: none; }
+  .mtab { padding: 8px 13px; }
+  .modebar { justify-content: center; }
 }
 @media (max-height: 500px) and (orientation: landscape) {
   header { padding: 7px 12px 7px 66px; }
@@ -2488,24 +2506,111 @@ function showInsights() {
 }
 
 function attachFile() {
-  const i = document.createElement('input'); i.type = 'file';
-  i.accept = 'image/*,.pdf,.txt,.doc,.docx,.py,.js,.html,.css,.json';
-  i.onchange = e => {
-    const f = e.target.files[0]; if (!f) return;
-    const fr = new FileReader();
-    fr.onload = ev => {
-      if (f.type.startsWith('text') || f.name.match(/\.(py|js|html|css|json|txt|md)$/i)) {
-        const content = ev.target.result;
-        document.getElementById('prompt').value = `[File: ${f.name}]\n\`\`\`\n${content.slice(0,2000)}\n\`\`\`\n\nPlease help me with this file.`;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*,.pdf,.txt,.md,.py,.js,.ts,.html,.css,.json,.csv,.xml,.yaml,.yml,.sh,.c,.cpp,.java,.rb,.go,.php,.sql,.env';
+  inp.onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+
+    const MAX_TEXT = 6000; // chars to send to AI
+    const isText = f.type.startsWith('text') || f.name.match(/\.(py|js|ts|html|css|json|txt|md|csv|xml|yaml|yml|sh|c|cpp|java|rb|go|php|sql|env|config|ini|log)$/i);
+    const isImage = f.type.startsWith('image/');
+
+    toast(`📎 Reading ${f.name}...`, 'var(--info)');
+
+    if (isText) {
+      // --- TEXT / CODE FILE ---
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const raw = ev.target.result;
+        const ext = f.name.split('.').pop().toLowerCase();
+        const preview = raw.slice(0, MAX_TEXT);
+        const truncated = raw.length > MAX_TEXT;
+        const prompt = document.getElementById('prompt');
+        prompt.value =
+          `📎 **File attached: \`${f.name}\`** (${(f.size/1024).toFixed(1)} KB)\n\n` +
+          `\`\`\`${ext}\n${preview}${truncated ? '\n\n// ... [truncated — file too large, showing first ' + MAX_TEXT + ' chars]' : ''}\n\`\`\`\n\n` +
+          `Please read and help me with this file.`;
         onInput();
-        toast(`📎 ${f.name} loaded — send to analyze`, 'var(--nova)');
-      } else {
-        toast(`📎 File loaded: ${f.name}`, 'var(--ok)');
-      }
-    };
-    f.type.startsWith('text') || f.name.match(/\.(py|js|html|css|json|txt|md)$/i) ? fr.readAsText(f) : fr.readAsDataURL(f);
+        // Auto-send immediately
+        sendMsg();
+      };
+      reader.readAsText(f);
+
+    } else if (isImage) {
+      // --- IMAGE FILE --- convert to base64 and describe via AI
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const b64 = ev.target.result; // data:image/...;base64,...
+        // Show image preview in chat
+        const sc = document.getElementById('chatScroll');
+        const row = document.createElement('div');
+        row.className = 'mrow usr';
+        row.style.animation = 'msgIn 0.42s var(--spring) both';
+        const t = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        row.innerHTML = `
+          <div class="av usr-av"><i class="fas fa-user"></i></div>
+          <div class="bwrap" style="align-items:flex-end">
+            <div class="bubble usr-b" style="padding:8px">
+              <img src="${b64}" style="max-width:220px;max-height:200px;border-radius:12px;display:block;cursor:zoom-in" onclick="openImgM('${b64}')" title="Click to enlarge">
+              <div style="font-size:0.72rem;margin-top:6px;opacity:0.8">📎 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div>
+            </div>
+            <div class="mmeta"><span>${t}</span></div>
+          </div>`;
+        sc.appendChild(row);
+        if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
+        msgCnt++; updateStats();
+
+        // Push to hist and send AI description request
+        hist.push(`USER: [Attached image: ${f.name}] Please describe and analyze this image.`);
+        const sysP = buildPrompt();
+        const fullP = `${sysP}\n\n${hist.join('\n')}\n${MODE}:`;
+        if (CFG.typing) addTyping();
+        // Since llama.cpp local model doesn't support vision natively,
+        // we send a smart fallback that tells AI about the image
+        fetch(`${NGROK_URL}/completion`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: fullP,
+            stop: ['\nUSER:','\nSARA:','\nNOVA:','\nALEXA:'],
+            n_predict: nPredict,
+            temperature: temperature,
+            top_p: 0.95, top_k: 40, repeat_penalty: 1.15
+          })
+        }).then(r => r.json()).then(data => {
+          const rep = (data.content || data.completion || '').trim() || `I can see you've shared an image: **${f.name}**. My current model doesn't support vision/image analysis. Try asking NOVA to describe what you'd like help with instead!`;
+          rmTyping();
+          const aiRow = addBubble(rep, 'ai', rep);
+          if (CFG.quickReplies) addQRs(aiRow);
+          hist.push(MODE + ': ' + rep);
+          logIt('[image: ' + f.name + ']', rep); save(); sound('receive');
+          if (CFG.tts) speak(rep);
+        }).catch(() => {
+          rmTyping();
+          addBubble(`📸 Image received: **${f.name}**\n\nNote: My underlying model (llama.cpp) doesn't support image vision. I can see the file was attached! Ask me about the image contents by describing it in text.`, 'ai', null);
+        });
+      };
+      reader.readAsDataURL(f);
+
+    } else {
+      // --- OTHER BINARY FILE (PDF etc) ---
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const b64 = ev.target.result;
+        const prompt = document.getElementById('prompt');
+        prompt.value =
+          `📎 **File attached: \`${f.name}\`** (${f.type || 'binary'}, ${(f.size/1024).toFixed(1)} KB)\n\n` +
+          `This is a binary/PDF file. Here's the base64 start: \`${b64.slice(0, 100)}...\`\n\n` +
+          `Please acknowledge you received this file and tell me how to best analyze it.`;
+        onInput();
+        sendMsg();
+      };
+      reader.readAsDataURL(f);
+    }
   };
-  i.click();
+  inp.click();
 }
 
 function useTemplate() {
