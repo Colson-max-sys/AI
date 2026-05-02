@@ -2964,7 +2964,7 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://76ca-103-129-109-94.ngrok-free.app";
+    const NGROK_URL = "https://9f72-103-129-109-94.ngrok-free.app";
     const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -3514,21 +3514,23 @@
 
         // ── STREAMING ──────────────────────────────────────────────
         rmTyping();
+        await new Promise(r => setTimeout(r, 30)); // small tick to let DOM settle
         const sc = document.getElementById("chatScroll");
 
         // Create the streaming bubble
         const streamRow = document.createElement("div");
         streamRow.className = "mrow ai";
         if (!CFG.bubbleAnim) streamRow.style.animation = "none";
+        const streamRbId = "rb-" + (msgCnt + 1);
         streamRow.innerHTML = `
-      <div class="av ai-av"><i class="fas ${MC[MODE].icon}"></i></div>
-      <div class="bwrap">
-        <div class="bubble ai-b stream-bubble" id="streamBubble">
-          <span class="stream-cursor">▋</span>
-        </div>
-        <div class="mmeta"></div>
-        <div class="reaction-bar" id="rb-${msgCnt}"></div>
-      </div>`;
+          <div class="av ai-av"><i class="fas ${MC[MODE].icon}"></i></div>
+          <div class="bwrap">
+            <div class="bubble ai-b stream-bubble" id="streamBubble">
+              <span class="stream-cursor">▋</span>
+            </div>
+            <div class="mmeta"></div>
+            <div class="reaction-bar" id="${streamRbId}"></div>
+          </div>`;
         sc.appendChild(streamRow);
         if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
 
@@ -3636,7 +3638,7 @@
 
         if (CFG.quickReplies) addQRs(streamRow);
         hist.push(MODE + ": " + rep);
-        msgCnt++; totalEver++;
+        totalEver++;
         localStorage.setItem("totalMsgs", totalEver);
         updateWordFreq(rep);
         updateStats();
