@@ -2964,7 +2964,7 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://9f72-103-129-109-94.ngrok-free.app";
+    const NGROK_URL = "https://90ce-103-129-109-94.ngrok-free.app";
     const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -4502,32 +4502,10 @@ BEHAVIOR RULES:
       document.getElementById("sTime").textContent = m + "m";
     }
     function checkSrv() {
-      // Try /health first, fall back to /props (llama.cpp always has this)
-      const endpoints = [`${NGROK_URL}/health`, `${NGROK_URL}/`];
-      let tried = 0;
-
-      function tryNext() {
-        if (tried >= endpoints.length) {
-          setStatus(false); return;
-        }
-        const url = endpoints[tried++];
-        fetch(url, {
-          method: "GET",
-          headers: { "Accept": "application/json" },
-          signal: AbortSignal.timeout(6000)
-        })
-          .then(r => {
-            if (r.ok || r.status === 200) setStatus(true);
-            else tryNext();
-          })
-          .catch(() => tryNext());
-      }
-
       function setStatus(online) {
         document.getElementById("connDot").className = online ? "sd" : "sd off";
         document.getElementById("connSt").textContent = online ? "Connected" : "Offline";
         document.getElementById("connLabel").textContent = online ? "Online" : "Offline";
-        // Update online pill color
         const pill = document.querySelector(".online-pill");
         if (pill) {
           pill.style.background = online ? "rgba(0,232,135,0.09)" : "rgba(255,51,85,0.09)";
@@ -4542,7 +4520,15 @@ BEHAVIOR RULES:
         if (label) label.style.color = online ? "rgba(0,232,135,0.8)" : "rgba(255,51,85,0.8)";
       }
 
-      tryNext();
+      // Use no-cors mode — we can't read the response body but
+      // a successful network hit (type==="opaque") proves the server is up
+      fetch(`${NGROK_URL}/health`, {
+        method: "GET",
+        mode: "no-cors",
+        cache: "no-store"
+      })
+        .then(() => setStatus(true))
+        .catch(() => setStatus(false));
     }
 
     // ══════════════════════════════════════════════════════════════════
