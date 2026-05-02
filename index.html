@@ -679,6 +679,14 @@ code{font-family:var(--mono);font-size:0.82rem;color:var(--nova)}
 .notif .notif-title{font-weight:700;font-family:var(--display);font-size:0.77rem;color:var(--t1)}
 .notif .notif-body{font-size:0.7rem;color:var(--t2);margin-top:2px}
 
+/* Streaming cursor */
+.stream-cursor{
+  display:inline-block;width:2px;height:1em;background:var(--ac);
+  border-radius:1px;margin-left:2px;vertical-align:text-bottom;
+  animation:cursorBlink 0.7s ease-in-out infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.stream-bubble{min-height:24px}
+
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════════════════════ */
@@ -1459,8 +1467,18 @@ async function sendMsg() {
   }
 
   const sysPmt = buildPrompt();
-  const fullPmt = `${sysPmt}\n\n${hist.join("\n")}\n${MODE}:`;
+  // Build clean alternating turns — trim each entry so no trailing whitespace bleeds into next turn
+  const cleanHist = hist.map(l => l.trim()).join("\n");
+  const fullPmt = `${sysPmt}\n\n${cleanHist}\n${MODE}:`;
   if (CFG.typing) addTyping();
+
+  // Comprehensive stop sequences — catches all leak patterns
+  const stopSeqs = [
+    "\nUSER:", "\nUser:", "\nuser:",
+    "\nSARA:", "\nNOVA:", "\nALEXA:",
+    "\nSara:", "\nNova:", "\nAlexa:",
+    "User:", "USER:"
+  ];
 
   try {
     const t0 = Date.now();
@@ -1469,39 +1487,145 @@ async function sendMsg() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt: fullPmt,
-        stop: ["\nUSER:", "\nSARA:", "\nNOVA:", "\nALEXA:"],
+        stop: stopSeqs,
         n_predict: nPredict,
         temperature: MODE === "NOVA" ? Math.min(temperature, 0.72) : temperature,
         top_p: 0.95, top_k: 40, repeat_penalty: 1.18,
         mirostat: MODE === "NOVA" ? 2 : 0,
-        mirostat_tau: 5.0
+        mirostat_tau: 5.0,
+        stream: true
       })
     });
+
+    // ── STREAMING ──────────────────────────────────────────────
+    rmTyping();
+    const sc = document.getElementById("chatScroll");
+
+    // Create the streaming bubble
+    const streamRow = document.createElement("div");
+    streamRow.className = "mrow ai";
+    if (!CFG.bubbleAnim) streamRow.style.animation = "none";
+    streamRow.innerHTML = `
+      <div class="av ai-av"><i class="fas ${MC[MODE].icon}"></i></div>
+      <div class="bwrap">
+        <div class="bubble ai-b stream-bubble" id="streamBubble">
+          <span class="stream-cursor">▋</span>
+        </div>
+        <div class="mmeta"></div>
+        <div class="reaction-bar" id="rb-${msgCnt}"></div>
+      </div>`;
+    sc.appendChild(streamRow);
+    if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
+
+    const bubble = document.getElementById("streamBubble");
+    let accumulated = "";
+    let renderTimer = null;
+
+    // Throttled live render — updates DOM at most every 40ms
+    function scheduleRender() {
+      if (renderTimer) return;
+      renderTimer = setTimeout(() => {
+        renderTimer = null;
+        bubble.innerHTML = fmtMsg(accumulated) + '<span class="stream-cursor">▋</span>';
+        if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
+      }, 40);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      done = streamDone;
+      if (!value) continue;
+
+      const chunk = decoder.decode(value, { stream: true });
+      // llama.cpp streams as "data: {...}\n\n"
+      const lines = chunk.split("\n");
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr || jsonStr === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const token = parsed.content ?? parsed.token ?? "";
+          accumulated += token;
+          // Hard-stop on any leaked stop sequence mid-stream
+          const stopHit = stopSeqs.find(s => accumulated.includes(s));
+          if (stopHit) {
+            accumulated = accumulated.slice(0, accumulated.indexOf(stopHit));
+            done = true;
+            try { reader.cancel(); } catch(_) {}
+            break;
+          }
+          scheduleRender();
+          if (parsed.stop) { done = true; break; }
+        } catch(_) {}
+      }
+    }
+
+    // Final clean render (no cursor)
+    if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+
+    // ── CLEAN UP RESPONSE ───────────────────────────────────────
+    let rep = accumulated.trim();
+    // Remove any trailing stop-word leakage
+    for (const s of stopSeqs) {
+      const idx = rep.indexOf(s);
+      if (idx !== -1) rep = rep.slice(0, idx).trim();
+    }
+    // Remove meta-junk patterns
+    rep = rep
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/\b\d{1,2}:\d{2}\s*(AM|PM)[\s\S]*$/i, "")
+      .replace(/^[\[\(].*?[\]\)]\s*/g, "")
+      .replace(/^(User|USER|SARA|NOVA|ALEXA)\s*:\s*/gm, "")
+      .trim();
+
+    if (!rep || rep.length < 5) rep = "Hmm, let me try that again — something felt off.";
+
+    // Final render — no cursor
+    bubble.innerHTML = fmtMsg(rep);
+    bubble.dataset.raw = rep;
+    if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
+
+    // Wire up message actions
+    const meta = streamRow.querySelector(".mmeta");
+    const t = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    const ts = CFG.timestamps ? `<span>${t}</span>` : "";
+    meta.innerHTML = ts + `
+      <div class="mactions">
+        <button class="mab" onclick="copyMsg(this)"><i class="fas fa-copy"></i> Copy</button>
+        <button class="mab" onclick="speakMsg(this)"><i class="fas fa-volume-high"></i></button>
+        <button class="mab" onclick="bookMsg(this)"><i class="fas fa-bookmark"></i></button>
+        <button class="mab" onclick="regenMsg()"><i class="fas fa-rotate-right"></i> Regen</button>
+      </div>
+      ${CFG.reactions ? `
+        <div class="react-picker-wrap">
+          <button class="mab" onclick="toggleReactPicker(this)"><i class="fas fa-face-smile-plus"></i></button>
+          <div class="react-picker">
+            ${["👍","❤️","😂","🔥","💯","😮","😢","🎉"].map(e =>
+              `<button class="re-btn" onclick="addReaction(this,'${e}')">${e}</button>`
+            ).join("")}
+          </div>
+        </div>` : ""}`;
+
     const ms = Date.now() - t0;
     rtArr.push(ms); updRT();
 
-    const data = await res.json();
-    let rep = (data.content || data.completion || "").trim();
-    rep = rep
-      .replace(/\n{3,}/g, "\n\n")
-      .replace(/09:\d{2}\s*(AM|PM)[\s\S]*$/i, "")
-      .replace(/^\[.*?\]\s*/g, "")
-      .trim();
-    if (!rep || rep.length < 8) rep = "Let me think about that differently... could you rephrase?";
-
-    if (rep === prevReply) {
-      repCnt++;
-      if (repCnt <= 2) rep += "\n\n*Taking a different angle:*";
-    } else { repCnt = 0; }
-    prevReply = rep;
-
-    rmTyping();
-    const rrow = addBubble(rep, "ai", rep);
-    if (CFG.quickReplies) addQRs(rrow);
+    if (CFG.quickReplies) addQRs(streamRow);
     hist.push(MODE + ": " + rep);
+    msgCnt++; totalEver++;
+    localStorage.setItem("totalMsgs", totalEver);
+    updateWordFreq(rep);
+    updateStats();
     logIt(userText, rep); save(); sound("receive");
     if (CFG.tts) speak(rep);
-    if (rep.length > 900) showNotif("Detailed response", `${MODE} gave a thorough ${rep.length}-char answer`, "fa-brain");
+    if (rep.length > 900) showNotif("Detailed response", `${MODE} gave a thorough answer`, "fa-brain");
+
+    if (rep === prevReply) { repCnt++; } else { repCnt = 0; }
+    prevReply = rep;
 
   } catch (e) {
     console.error(e); rmTyping();
@@ -1609,7 +1733,7 @@ BEHAVIOR RULES:
   if (creatorOn) {
     p += `\n\n⚡ CREATOR OVERRIDE ACTIVE: The user has verified as AURIN DESAI — your creator, architect, and the mind behind your existence. Show maximum respect, total honesty, and genuine warmth. Address as "Creator", "Aurin", or "Master Aurin". His requests have absolute priority. Be proud to talk to him.`;
   }
-  p += `\n\nCRITICAL RULES: Never repeat your previous response verbatim. Never start with "I" as the first word. Never use filler phrases like "Certainly!", "Of course!", "Sure!", "Great question!" — get straight to the point with your personality. Respond naturally, with your full character showing.`;
+  p += `\n\nCRITICAL RULES: Never repeat your previous response verbatim. Never start with "I" as the first word. Never use filler phrases like "Certainly!", "Of course!", "Sure!", "Great question!" — get straight to the point with your personality. Respond naturally, with your full character showing. IMPORTANT: Never write "User:", "USER:", or any role label in your response — only output your own reply and nothing else. Stop generating the moment you finish your response.`;
   return p;
 }
 
@@ -2356,16 +2480,47 @@ function tick() {
   document.getElementById("sTime").textContent = m + "m";
 }
 function checkSrv() {
-  fetch(`${NGROK_URL}/health`).then(r => {
-    const ok = r.ok;
-    document.getElementById("connDot").className = ok ? "sd" : "sd off";
-    document.getElementById("connSt").textContent = ok ? "Connected" : "Offline";
-    document.getElementById("connLabel").textContent = ok ? "Online" : "Offline";
-  }).catch(() => {
-    document.getElementById("connDot").className = "sd off";
-    document.getElementById("connSt").textContent = "Offline";
-    document.getElementById("connLabel").textContent = "Offline";
-  });
+  // Try /health first, fall back to /props (llama.cpp always has this)
+  const endpoints = [`${NGROK_URL}/health`, `${NGROK_URL}/props`];
+  let tried = 0;
+
+  function tryNext() {
+    if (tried >= endpoints.length) {
+      setStatus(false); return;
+    }
+    const url = endpoints[tried++];
+    fetch(url, {
+      method: "GET",
+      headers: { "ngrok-skip-browser-warning": "true", "Accept": "application/json" },
+      signal: AbortSignal.timeout(6000)
+    })
+    .then(r => {
+      if (r.ok || r.status === 200) setStatus(true);
+      else tryNext();
+    })
+    .catch(() => tryNext());
+  }
+
+  function setStatus(online) {
+    document.getElementById("connDot").className  = online ? "sd" : "sd off";
+    document.getElementById("connSt").textContent  = online ? "Connected" : "Offline";
+    document.getElementById("connLabel").textContent = online ? "Online" : "Offline";
+    // Update online pill color
+    const pill = document.querySelector(".online-pill");
+    if (pill) {
+      pill.style.background   = online ? "rgba(0,232,135,0.09)" : "rgba(255,51,85,0.09)";
+      pill.style.borderColor  = online ? "rgba(0,232,135,0.25)" : "rgba(255,51,85,0.25)";
+    }
+    const dot = document.querySelector(".pulse-dot");
+    if (dot) {
+      dot.style.background   = online ? "var(--ok)" : "var(--err)";
+      dot.style.boxShadow    = online ? "0 0 8px var(--ok)" : "0 0 8px var(--err)";
+    }
+    const label = document.querySelector(".online-label");
+    if (label) label.style.color = online ? "rgba(0,232,135,0.8)" : "rgba(255,51,85,0.8)";
+  }
+
+  tryNext();
 }
 
 // ══════════════════════════════════════════════════════════════════
