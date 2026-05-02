@@ -2964,7 +2964,7 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://90ce-103-129-109-94.ngrok-free.app";
+    const NGROK_URL = "https://e60c-103-129-109-94.ngrok-free.app";
     const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -3393,23 +3393,6 @@
       return t;
     }
 
-    function addTyping() {
-      const sc = document.getElementById("chatScroll");
-      const row = document.createElement("div");
-      row.className = "mrow ai"; row.id = "typRow";
-      row.innerHTML = `
-    <div class="av ai-av"><i class="fas ${MC[MODE].icon}"></i></div>
-    <div class="bwrap">
-      <div class="bubble ai-b">
-        <div class="typ-wrap">
-          <div class="typ"><span></span><span></span><span></span></div>
-          <span class="typ-txt">${MODE} is thinking...</span>
-        </div>
-      </div>
-    </div>`;
-      sc.appendChild(row);
-      if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
-    }
     function rmTyping() { const t = document.getElementById("typRow"); if (t) t.remove(); }
 
     // ══════════════════════════════════════════════════════════════════
@@ -4535,11 +4518,13 @@ BEHAVIOR RULES:
     // LOGGING — preserved exactly
     // ══════════════════════════════════════════════════════════════════
     function logIt(u, a) {
-      fetch(LOG_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: MODE, userText: u, aiResponse: a, ts: new Date().toISOString() })
-      });
+      try {
+        fetch(LOG_URL, {
+          method: "POST", mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: MODE, userText: u, aiResponse: a, ts: new Date().toISOString() })
+        }).catch(() => {}); // silently ignore — Google Sheets errors don't affect chat
+      } catch(_) {}
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -4690,25 +4675,30 @@ BEHAVIOR RULES:
       const sc = document.getElementById("chatScroll");
       const row = document.createElement("div");
       row.className = "mrow ai";
+      row.id = "introModeRow";
       if (!CFG.bubbleAnim) row.style.animation = "none";
+      const introBubbleId = "introTypeBubble_" + m + "_" + Date.now();
       row.innerHTML = `
     <div class="av ai-av" style="background:${intro.color}22;border-color:${intro.color};color:${intro.color}">
       <i class="fas ${intro.icon}"></i>
     </div>
     <div class="bwrap">
-      <div class="bubble ai-b" id="introTypeBubble" style="min-width:180px">
-        <div class="typ-wrap">
-          <div class="typ"><span></span><span></span><span></span></div>
-        </div>
+      <div class="bubble ai-b" id="${introBubbleId}" style="min-width:180px;font-size:0.88rem;color:${intro.color};font-family:var(--display);font-weight:600;padding:14px 19px">
+        ...
       </div>
     </div>`;
       sc.appendChild(row);
       if (CFG.autoScroll) sc.scrollTop = sc.scrollHeight;
 
       function typeNext() {
-        const bubble = document.getElementById("introTypeBubble");
-        if (!bubble || lineIdx >= intro.lines.length) return;
-        bubble.innerHTML = `<span style="color:${intro.color};font-weight:600;font-family:var(--display)">${intro.lines[lineIdx]}</span>`;
+        const bubble = document.getElementById(introBubbleId);
+        if (!bubble) return;
+        if (lineIdx >= intro.lines.length) {
+          // Done — leave last line displayed, no more changes
+          return;
+        }
+        bubble.textContent = intro.lines[lineIdx];
+        bubble.style.color = intro.color;
         lineIdx++;
         if (lineIdx < intro.lines.length) setTimeout(typeNext, 920);
       }
