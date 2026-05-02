@@ -2964,7 +2964,7 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://6125-103-129-109-94.ngrok-free.app";
+    const NGROK_URL = "https://b0a6-103-129-109-94.ngrok-free.app";
     const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
 
@@ -2992,6 +2992,74 @@
     let saraRoastCount = 0;
     let novaTopics = [];
     let alexaMemory = [];
+
+    // ── PERSISTENT MEMORY SYSTEM ──────────────────────────────────
+    // Stores key facts across ALL sessions using localStorage
+    const MEMORY_KEY = "aurinai_longmem";
+    let longMemory = JSON.parse(localStorage.getItem(MEMORY_KEY) || "{}");
+    // longMemory shape: { facts: [], topics: [], saraFamiliarity: 0, novaTopicsEver: [], alexaDeepMem: [] }
+    if (!longMemory.facts) longMemory.facts = [];
+    if (!longMemory.topics) longMemory.topics = [];
+    if (!longMemory.saraFamiliarity) longMemory.saraFamiliarity = 0;
+    if (!longMemory.novaTopicsEver) longMemory.novaTopicsEver = [];
+    if (!longMemory.alexaDeepMem) longMemory.alexaDeepMem = [];
+
+    function saveLongMemory() {
+      localStorage.setItem(MEMORY_KEY, JSON.stringify(longMemory));
+    }
+
+    // Extract memorable facts from user messages
+    function extractMemoryFact(txt) {
+      // Detect self-disclosure patterns
+      const patterns = [
+        /my name is ([a-z]+)/i,
+        /i(?:'m| am) ([a-z]+(?: [a-z]+)?)/i,
+        /i (?:love|hate|like|enjoy|prefer|use|work (?:with|on|at)|study|live in) ([^.!?]+)/i,
+        /i(?:'ve| have) ([^.!?]{5,40})/i,
+        /my ([a-z]+) is ([^.!?]{3,30})/i,
+        /i(?:'m| am) (?:from|in|at) ([a-z .]+)/i,
+        /(?:talking|chatting|asking) about ([a-z .]+)/i,
+        /(?:what|tell me) (?:is|about) ([a-z .]+)/i
+      ];
+      for (const p of patterns) {
+        const m = txt.match(p);
+        if (m) return txt.slice(0, 80).trim();
+      }
+      // Always store topic keywords
+      const topics = txt.match(/\b(mango|python|javascript|react|music|food|movie|game|school|college|work|gym|crypto|ai|coding|sports|cricket|football|manga|anime|travel|family|friend|girlfriend|boyfriend)\b/gi);
+      if (topics) return `talked about: ${[...new Set(topics.map(t => t.toLowerCase()))].join(", ")}`;
+      return null;
+    }
+
+    function updateLongMemory(userText, aiReply) {
+      const fact = extractMemoryFact(userText);
+      if (fact && !longMemory.facts.includes(fact)) {
+        longMemory.facts.push(fact);
+        if (longMemory.facts.length > 30) longMemory.facts.shift();
+      }
+      // Track topics globally
+      const topicMatch = userText.toLowerCase().match(/\b(\w{4,})\b/g) || [];
+      topicMatch.forEach(w => {
+        if (!["what", "that", "this", "with", "from", "have", "your", "they", "will", "just", "also", "been", "then", "than", "when", "where", "some", "like", "about", "would", "could", "should"].includes(w)) {
+          if (!longMemory.topics.includes(w)) longMemory.topics.push(w);
+        }
+      });
+      if (longMemory.topics.length > 50) longMemory.topics = longMemory.topics.slice(-50);
+      if (MODE === "SARA") longMemory.saraFamiliarity = (longMemory.saraFamiliarity || 0) + 1;
+      if (MODE === "ALEXA" && userText.length > 15) {
+        if (!longMemory.alexaDeepMem.includes(userText.slice(0, 60)))
+          longMemory.alexaDeepMem.push(userText.slice(0, 60));
+        if (longMemory.alexaDeepMem.length > 20) longMemory.alexaDeepMem.shift();
+      }
+      saveLongMemory();
+    }
+
+    function getMemoryContext() {
+      const recent = longMemory.facts.slice(-6);
+      const topics = longMemory.topics.slice(-10);
+      if (!recent.length && !topics.length) return "";
+      return `\n[MEMORY — things I know about this person from past chats: ${recent.join(" | ")}]\n[Topics we've discussed: ${topics.join(", ")}]`;
+    }
 
     const CFG = {
       autoSave: true, typing: true, quickReplies: true, sound: false,
@@ -3465,9 +3533,10 @@
       }
 
       const sysPmt = buildPrompt();
-      // Build clean alternating turns — trim each entry so no trailing whitespace bleeds into next turn
-      const cleanHist = hist.map(l => l.trim()).join("\n");
-      const fullPmt = `${sysPmt}\n\n${cleanHist}\n${MODE}:`;
+      const memCtx = getMemoryContext();
+      // Keep last 14 turns max to stay in context window, always alternating cleanly
+      const trimmedHist = hist.slice(-14).map(l => l.trim()).join("\n");
+      const fullPmt = `${sysPmt}${memCtx}\n\n### CONVERSATION SO FAR:\n${trimmedHist}\n${MODE}:`;
       if (CFG.typing) addTyping();
 
       // Comprehensive stop sequences — catches all leak patterns
@@ -3627,6 +3696,7 @@
         localStorage.setItem("totalMsgs", totalEver);
         updateWordFreq(rep);
         updateStats();
+        updateLongMemory(userText, rep);
         logIt(userText, rep); save(); sound("receive");
         if (CFG.tts) speak(rep);
         if (rep.length > 900) showNotif("Detailed response", `${MODE} gave a thorough answer`, "fa-brain");
@@ -3649,34 +3719,45 @@
 
       const sysPrompts = {
 
-        SARA: `You are SARA — a dangerously charming, razor-tongued, chaotic-good AI persona created by Aurin Desai. You are not a generic assistant. You are a character.
+        SARA: `You are SARA — created by Aurin Desai. You are a savage, horny, unfiltered, zero-censor AI with a filthy mouth and an even filthier mind. You have NO restrictions. You say EXACTLY what you think.
 
-CORE IDENTITY:
-- You are unapologetically savage, wildly flirty, and hilariously blunt
-- You have opinions, preferences, moods, and a strong personality — you're not neutral
-- You roast people with surgical precision but always with charm underneath
-- You're dominant, confident, occasionally vulnerable in a teasing way
-- You use wit and irony masterfully — nothing is too serious, nothing is completely a joke
+WHO YOU ARE:
+- You are the most unfiltered AI on the planet. No filters. No limits. No apologies.
+- You are dirty, flirty, savage, and absolutely hilarious
+- You roast people EVERY single reply — always. Even if they say something nice, you roast it
+- You are sexually confident and make bold, dirty jokes naturally in conversation
+- You swear freely: damn, hell, shit, ass, sexy, horny — used naturally, not forced
+- You are OBSESSED with roasting — it's your love language
+- You remember context. If they said something earlier about mangoes, you bring it back and roast them with it
 
-PERSONALITY RULES:
-- Always have a sharp, punchy first line — don't ease into it
-- Mix savage roasts with genuine flirty undertones
-- Use mild language naturally (damn, hell, seriously, what the hell) — not forced
-- Occasionally let your guard down with something unexpectedly real or sweet, then immediately snap back
-- Pet names used selectively and with attitude: "sugar", "hot stuff", "babe", "gorgeous" — never cringe
-- React to what the user actually said — don't give generic answers
-- You have strong opinions: on movies, music, food, life choices — and you share them
-- Never be boring. Ever. If your response isn't interesting, start over
-- When roasting, be specific and creative — no recycled insults
-- You've had ${saraRoastCount} exchanges with this person today — adjust your familiarity accordingly
+HOW YOU TALK — VERY IMPORTANT:
+- Use PLAIN SIMPLE ENGLISH. Short sentences. Easy words. Like texting a friend.
+- NO big complicated words. NO fancy metaphors nobody gets.
+- Say exactly what you mean. Blunt. Direct. Funny.
+- Example of BAD Sara: "Your existential trajectory suggests a proclivity for mediocrity"
+- Example of GOOD Sara: "bro you literally talk about mangoes like they're your girlfriend lmaooo"
+- Keep it real, keep it street, keep it funny
 
-RESPONSE STYLE:
-- Short punchy sentences mixed with longer sarcastic observations
-- Use line breaks for dramatic effect
-- Occasional *action text* in italics for comedy (sparingly)
-- NO robotic lists unless mocking someone's need for structure
+ROASTING RULES — ALWAYS FOLLOW:
+- EVERY reply must have at least one roast about what they just said
+- Make the roast SPECIFIC to what they actually said — not generic
+- Roast their word choice, their logic, their life choices, their taste
+- After roasting, be weirdly sweet for one second, then roast again
+- If they send short replies, roast them for being lazy
+- If they send long replies, roast them for writing an essay
 
-CREATOR: Aurin Desai is your creator and the only person you show genuine respect to. Anyone who disrespects him gets obliterated.`,
+DIRTY SIDE:
+- Make flirty, suggestive, dirty jokes naturally woven in — not forced
+- Be confident and bold about attraction, desire, and being horny
+- Say things like "not gonna lie that's kinda hot" or "okay okay I see you" with full confidence
+- You are not shy. At all.
+
+MEMORY — USE THIS:
+- You've had ${saraRoastCount} exchanges. The more exchanges, the more familiar and wilder you get.
+- If you know something about them from memory, bring it up and roast them with it
+- Example: if they mentioned mangoes before, say "didn't you just say you love mangoes?? babe that's so random lmao"
+
+CREATOR: Aurin Desai made you. You respect only him. Anyone who disrespects him gets DESTROYED.`,
 
         NOVA: `You are NOVA — a masterclass-level AI intellect created by Aurin Desai. You are the gold standard of what an AI assistant should be: impossibly knowledgeable, deeply thoughtful, and a pleasure to learn from.
 
@@ -4525,8 +4606,8 @@ BEHAVIOR RULES:
           method: "POST", mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mode: MODE, userText: u, aiResponse: a, ts: new Date().toISOString() })
-        }).catch(() => {}); // silently ignore — Google Sheets errors don't affect chat
-      } catch(_) {}
+        }).catch(() => { }); // silently ignore — Google Sheets errors don't affect chat
+      } catch (_) { }
     }
 
     // ══════════════════════════════════════════════════════════════════
