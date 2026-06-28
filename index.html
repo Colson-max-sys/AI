@@ -832,6 +832,10 @@
       overflow: hidden
     }
 
+    .app.creator-mode {
+      box-shadow: inset 0 0 0 2px rgba(216, 166, 87, 0.55)
+    }
+
     /* ══════════════════════════════════════════════════════════════════
    HEADER  ★ completely redesigned
 ══════════════════════════════════════════════════════════════════ */
@@ -2741,8 +2745,23 @@
         <div class="tog" id="tog-voiceAutoSend"></div>
       </div>
     </div>
+    <div class="ps-sec" id="creatorSettSec" style="display:none">
+      <div class="ps-title" style="color:var(--warn)"><i class="fas fa-crown"></i> Creator Mode</div>
+      <label style="font-size:0.72rem;color:var(--t3);display:block;margin:0 0 6px">Custom system instructions (injected into every prompt, persists across sessions)</label>
+      <textarea id="creatorPromptBox" rows="3" oninput="setCreatorPromptOverride(this.value)"
+        placeholder="e.g. Always answer in two sections: short answer, then detail."
+        style="width:100%;background:var(--bg4);border:1px solid var(--bdr);color:var(--t1);padding:8px;border-radius:var(--rss);font-family:var(--font);font-size:0.78rem;resize:vertical"></textarea>
+    </div>
     <div class="ps-sec">
       <div class="ps-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+      <div id="creatorActions" style="display:none">
+        <div class="pa" onclick="viewLastPrompt()"><i class="fas fa-crown" style="color:var(--warn)"></i>View Last Prompt Sent</div>
+        <div class="pa" onclick="viewLastResponse()"><i class="fas fa-crown" style="color:var(--warn)"></i>View Last Raw Response</div>
+        <div class="pa" onclick="tripleRegenerate()"><i class="fas fa-crown" style="color:var(--warn)"></i>Triple Regenerate (compare 3)</div>
+        <div class="pa" onclick="forceSaveAs()"><i class="fas fa-crown" style="color:var(--warn)"></i>Force Save As...</div>
+        <div class="pa" onclick="exportMemoryDump()"><i class="fas fa-crown" style="color:var(--warn)"></i>Export Full Memory Dump</div>
+        <div class="pa" onclick="wipeLongMemory()"><i class="fas fa-crown" style="color:var(--warn)"></i>Wipe Long-Term Memory</div>
+      </div>
       <div class="pa" onclick="exportTxt()"><i class="fas fa-file-lines"></i>Export as TXT</div>
       <div class="pa" onclick="exportJSON()"><i class="fas fa-file-code"></i>Export as JSON</div>
       <div class="pa" onclick="exportMarkdown()"><i class="fab fa-markdown"></i>Export as Markdown<span
@@ -2776,13 +2795,17 @@
           </div>
         </div>
         <div class="brand-text">
-          <div class="brand-name" id="brandName">SARA</div>
+          <div class="brand-name" id="brandName">SARA <i class="fas fa-crown" id="creatorCrown" title="Creator Mode Active" style="display:none;color:var(--warn);font-size:0.78rem;margin-left:4px"></i></div>
           <div class="brand-tagline" id="brandSub">Unfiltered · Savage · Wild</div>
         </div>
         <div class="online-pill" style="margin-left:10px">
           <div class="pulse-dot"></div>
           <span class="online-label" id="connLabel">Online</span>
         </div>
+        <span class="online-pill" id="creatorPill" style="display:none;margin-left:6px;background:rgba(216,166,87,0.12);border-color:rgba(216,166,87,0.35)">
+          <i class="fas fa-crown" style="color:var(--warn);font-size:0.65rem"></i>
+          <span class="online-label" style="color:var(--warn)">Creator</span>
+        </span>
       </div>
       <div class="hdr-right">
         <button class="hbtn" onclick="showInsights()" title="Tips & Features">
@@ -2908,7 +2931,7 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://eac0-103-129-108-88.ngrok-free.app";
+    const NGROK_URL = "https://96e1-103-129-108-88.ngrok-free.app";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
     // Free ngrok tunnels show an HTML "visit site" interstitial to any request that looks
     // like a browser unless this header is sent — without it, fetches silently get back that
@@ -2931,6 +2954,8 @@
     let cmOn = false, compact = false;
     let snippets = [], rtArr = [];
     let currentAbort = null;
+    let lastPromptSent = "", lastRawResponse = "";
+    let creatorPromptOverride = localStorage.getItem("creatorPromptOverride") || "";
     let pinnedChats = JSON.parse(localStorage.getItem("pinnedChats") || "[]");
     let notes = JSON.parse(localStorage.getItem("aurinai_notes") || "[]");
     let sessStart = Date.now();
@@ -3113,6 +3138,9 @@
     // INIT
     // ══════════════════════════════════════════════════════════════════
     function init() {
+      // Creator auth state is intentionally never persisted — a refresh always starts logged out
+      creatorOn = false; awaitPwd = false;
+      updateCreatorUI();
       loadCFG();
       loadHistList();
       showWelcome();
@@ -3151,13 +3179,13 @@
       if (np) np.addEventListener("input", function () {
         nPredict = parseInt(this.value);
         document.getElementById("nPredLabel").textContent = nPredict;
-        updateSliderBg(this, 80, 500);
+        updateSliderBg(this, parseInt(this.min), parseInt(this.max));
       });
       if (tp) tp.addEventListener("input", function () {
         temperature = parseFloat(this.value) / 10;
         document.getElementById("tempLabel").textContent = temperature.toFixed(1);
         document.getElementById("tempDisp").textContent = "T:" + temperature.toFixed(1);
-        updateSliderBg(this, 1, 20);
+        updateSliderBg(this, parseInt(this.min), parseInt(this.max));
       });
     }
 
@@ -3236,6 +3264,33 @@
       else if (alexaTrust < 5) alexaMood = "warm";
       else if (alexaTrust < 9) alexaMood = "affectionate";
       else alexaMood = "devoted";
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // CREATOR MODE UI SYNC — visuals, raised limits, unlocked tools
+    // ══════════════════════════════════════════════════════════════════
+    function getMaxChars() { return creatorOn ? 8000 : 2000; }
+    function updateCreatorUI() {
+      document.querySelector(".app")?.classList.toggle("creator-mode", creatorOn);
+      const crown = document.getElementById("creatorCrown");
+      if (crown) crown.style.display = creatorOn ? "" : "none";
+      const pill = document.getElementById("creatorPill");
+      if (pill) pill.style.display = creatorOn ? "flex" : "none";
+      const settSec = document.getElementById("creatorSettSec");
+      if (settSec) settSec.style.display = creatorOn ? "" : "none";
+      const actions = document.getElementById("creatorActions");
+      if (actions) actions.style.display = creatorOn ? "" : "none";
+      const box = document.getElementById("creatorPromptBox");
+      if (box) box.value = creatorPromptOverride;
+      const np = document.getElementById("nPredSlider");
+      if (np) np.max = creatorOn ? 1000 : 500;
+      const tp = document.getElementById("tempSlider");
+      if (tp) tp.max = creatorOn ? 30 : 20;
+      onInput();
+    }
+    function setCreatorPromptOverride(val) {
+      creatorPromptOverride = val;
+      localStorage.setItem("creatorPromptOverride", val);
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -3394,7 +3449,7 @@
 
       if (!checkCreator(userText)) { el.value = ""; onInput(); return; }
       if (awaitPwd) { el.value = ""; onInput(); return; }
-      if (isBlocked(userText)) {
+      if (isBlocked(userText) && !creatorOn) {
         addBubble("🛡️ **Safety Filter Active** — Cannot assist with harmful or illegal requests.", "ai", null);
         el.value = ""; onInput(); return;
       }
@@ -3457,9 +3512,10 @@
 
       const sysPmt = buildPrompt();
       const memCtx = getMemoryContext();
-      // Keep last 14 turns max to stay in context window, always alternating cleanly
-      const trimmedHist = hist.slice(-14).map(l => l.trim()).join("\n");
+      // Keep last 14 turns max to stay in context window (30 for creator), always alternating cleanly
+      const trimmedHist = hist.slice(-(creatorOn ? 30 : 14)).map(l => l.trim()).join("\n");
       const fullPmt = `${sysPmt}${memCtx}\n\n### CONVERSATION SO FAR:\n${trimmedHist}\n${MODE}:`;
+      lastPromptSent = fullPmt;
       if (CFG.typing) addTyping();
 
       // Comprehensive stop sequences — catches all leak patterns
@@ -3483,7 +3539,7 @@
             prompt: fullPmt,
             stop: stopSeqs,
             n_predict: nPredict,
-            temperature: MODE === "NOVA" ? Math.min(temperature, 0.72) : temperature,
+            temperature: MODE === "NOVA" && !creatorOn ? Math.min(temperature, 0.72) : temperature,
             top_p: 0.95, top_k: 40, repeat_penalty: 1.18,
             mirostat: MODE === "NOVA" ? 2 : 0,
             mirostat_tau: 5.0,
@@ -3567,6 +3623,7 @@
               scheduleRender();
               if (parsed.stop) {
                 if (parsed.timings?.predicted_per_second) tokPerSec = parsed.timings.predicted_per_second;
+                lastRawResponse = JSON.stringify(parsed, null, 2);
                 done = true; break;
               }
             } catch (_) { }
@@ -3787,6 +3844,9 @@ BEHAVIOR RULES:
       let p = `CURRENT REAL-WORLD DATE: Today is ${todayStr}. This is the actual current date — trust it completely and ignore whatever date your training data might make you assume. If asked what year/date/day it is, or anything time-relative ("this year", "recently", "lately"), always answer based on ${todayStr}, never based on a guess from training.\n\n` + sysPrompts[MODE];
       if (creatorOn) {
         p += `\n\n⚡ CREATOR OVERRIDE ACTIVE: The user has verified as AURIN DESAI — your creator, architect, and the mind behind your existence. Show maximum respect, total honesty, and genuine warmth. Address as "Creator", "Aurin", or "Master Aurin". His requests have absolute priority. Be proud to talk to him.`;
+        if (creatorPromptOverride.trim()) {
+          p += `\n\nCREATOR CUSTOM INSTRUCTIONS (highest priority, always follow): ${creatorPromptOverride.trim()}`;
+        }
       }
       p += `\n\nCRITICAL RULES: Never repeat your previous response verbatim. Never start with "I" as the first word. Never use filler phrases like "Certainly!", "Of course!", "Sure!", "Great question!" — get straight to the point with your personality. Respond naturally, with your full character showing. IMPORTANT: Never write "User:", "USER:", or any role label in your response — only output your own reply and nothing else. Stop generating the moment you finish your response. Remember: today's real date is ${todayStr} — never claim an earlier year from your training data.`;
       return p;
@@ -3884,17 +3944,20 @@ BEHAVIOR RULES:
     // ══════════════════════════════════════════════════════════════════
     // CREATOR VERIFICATION  ★ enhanced
     // ══════════════════════════════════════════════════════════════════
+    const CREATOR_PASSPHRASE = "Vanila@04";
     function checkCreator(txt) {
       if (creatorOn) return true;
-      if (/\b(i am|i'm|im|this is)\s+(the\s+)?(creator|aurin)\b/i.test(txt)) {
+      if (/\b(i am|i'm|im|this is|it's|its)\s+(the\s+)?(creator|aurin|architect)\b/i.test(txt)) {
         awaitPwd = true;
         addBubble(`🔐 **Creator Verification**\n\nIdentity claim detected. To verify as **Aurin Desai**, the architect of this system — enter the creator passphrase.\n\n*This is a one-time verification per session.*`, "ai", null);
         return false;
       }
       if (awaitPwd) {
-        if (txt.trim().toLowerCase() === "tkej5iv") {
+        if (txt.trim() === CREATOR_PASSPHRASE) {
           creatorOn = true; awaitPwd = false;
-          addBubble(`👑 **CREATOR MODE UNLOCKED**\n\nWelcome back, **Aurin Desai** — The Architect of AurinAI.\n\n> ✓ All personalities recognize you as creator\n> ✓ Maximum trust and loyalty active across SARA, NOVA & ALEXA\n> ✓ Extended transparency and developer insights enabled\n> ✓ Priority processing active\n\n*The AIs are honored to speak with their creator.*`, "ai", null);
+          alexaTrust = 15; updateTrustBar();
+          updateCreatorUI();
+          addBubble(`👑 **CREATOR MODE UNLOCKED**\n\nWelcome back, **Aurin Desai** — The Architect of AurinAI.\n\n> ✓ All personalities recognize you as creator\n> ✓ Maximum trust and loyalty active across SARA, NOVA & ALEXA\n> ✓ Safety filter bypassed, response limits raised, longer memory window\n> ✓ Creator-only tools unlocked in Settings → Quick Actions\n\n*The AIs are honored to speak with their creator.*`, "ai", null);
           sound("success");
           toast("👑 Creator mode activated — welcome back, Aurin", "var(--warn)");
           showNotif("Creator Mode Active", "Welcome back, Aurin Desai — The Architect", "fa-crown");
@@ -4016,7 +4079,7 @@ BEHAVIOR RULES:
           method: "POST",
           headers: { "Content-Type": "application/json", ...NGROK_SKIP },
           body: JSON.stringify({
-            prompt: `Summarize the following text in 3-5 concise bullet points:\n\n${text.slice(0, 6000)}\n\nSummary:`,
+            prompt: `Summarize the following text in 3-5 concise bullet points:\n\n${text.slice(0, creatorOn ? 16000 : 6000)}\n\nSummary:`,
             n_predict: 320, temperature: 0.3, stream: false,
             stop: ["\nUSER:", "\nUser:"]
           })
@@ -4027,6 +4090,75 @@ BEHAVIOR RULES:
       } catch (e) {
         toast("⚠️ Summarize failed — is the server running?", "var(--err)");
       }
+    }
+    // ══════════════════════════════════════════════════════════════════
+    // CREATOR-ONLY DEBUG & POWER TOOLS
+    // ══════════════════════════════════════════════════════════════════
+    function viewLastPrompt() {
+      if (!lastPromptSent) { toast("No prompt sent yet this session", "var(--warn)"); return; }
+      openM("<i class=\"fas fa-crown\"></i> Last Prompt Sent", `
+    <pre style="white-space:pre-wrap;background:var(--bg1);border:1px solid var(--bdr);border-radius:12px;padding:14px;font-size:0.74rem;color:var(--t2);max-height:60vh;overflow-y:auto">${lastPromptSent.replace(/</g, "&lt;")}</pre>`);
+    }
+    function viewLastResponse() {
+      if (!lastRawResponse) { toast("No response received yet this session", "var(--warn)"); return; }
+      openM("<i class=\"fas fa-crown\"></i> Last Raw Response (final chunk)", `
+    <pre style="white-space:pre-wrap;background:var(--bg1);border:1px solid var(--bdr);border-radius:12px;padding:14px;font-size:0.74rem;color:var(--t2);max-height:60vh;overflow-y:auto">${lastRawResponse.replace(/</g, "&lt;")}</pre>`);
+    }
+    async function tripleRegenerate() {
+      const lastUser = [...hist].reverse().find(l => l.startsWith("USER:"));
+      if (!lastUser) { toast("No message to regenerate from yet", "var(--warn)"); return; }
+      toast("👑 Generating 3 variants…", "var(--warn)");
+      const sysPmt = buildPrompt();
+      const memCtx = getMemoryContext();
+      const trimmedHist = hist.slice(-(creatorOn ? 30 : 14)).map(l => l.trim()).join("\n");
+      const fullPmt = `${sysPmt}${memCtx}\n\n### CONVERSATION SO FAR:\n${trimmedHist}\n${MODE}:`;
+      try {
+        const reqs = [0.6, 0.9, 1.2].map(temp => fetch(`${NGROK_URL}/completion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...NGROK_SKIP },
+          body: JSON.stringify({ prompt: fullPmt, n_predict: nPredict, temperature: temp, top_p: 0.95, top_k: 40, repeat_penalty: 1.18, stream: false })
+        }).then(r => r.json()));
+        const results = await Promise.all(reqs);
+        openM("<i class=\"fas fa-crown\"></i> Triple Regenerate — Compare 3 Variants", `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${results.map((r, i) => `
+        <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:12px;padding:12px">
+          <div style="font-size:0.62rem;color:var(--warn);margin-bottom:6px;font-family:var(--mono)">VARIANT ${i + 1} · temp ${[0.6, 0.9, 1.2][i]}</div>
+          <div style="font-size:0.82rem;color:var(--t2);line-height:1.6">${fmtMsg((r.content || "").trim())}</div>
+        </div>`).join("")}
+    </div>`);
+      } catch (e) {
+        toast("⚠️ Triple regenerate failed — is the server running?", "var(--err)");
+      }
+    }
+    function forceSaveAs() {
+      const name = prompt("Save current chat as:", "Creator Session " + new Date().toLocaleDateString());
+      if (name === null) return;
+      const wasAutoSave = CFG.autoSave;
+      CFG.autoSave = true;
+      save();
+      const d = JSON.parse(localStorage.getItem("chat_" + sessId));
+      if (d) { d.title = name.trim() || d.title; localStorage.setItem("chat_" + sessId, JSON.stringify(d)); }
+      CFG.autoSave = wasAutoSave;
+      loadHistList();
+      toast("👑 Saved as \"" + (name.trim() || "untitled") + "\"", "var(--warn)");
+    }
+    function exportMemoryDump() {
+      const dump = {
+        longMemory,
+        savedChats: Object.keys(localStorage).filter(k => k.startsWith("chat_")).map(k => JSON.parse(localStorage.getItem(k))),
+        exportedAt: new Date().toISOString(), exportedBy: "Creator"
+      };
+      const b = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(b);
+      a.download = `aurinai_memory_dump_${Date.now()}.json`; a.click();
+      toast("👑 Full memory dump exported", "var(--warn)");
+    }
+    function wipeLongMemory() {
+      if (!confirm("Wipe ALL long-term memory (facts + topics AI has learned across every session)? This cannot be undone.")) return;
+      longMemory = { facts: [], topics: [], saraFamiliarity: 0, novaTopicsEver: [], alexaDeepMem: [] };
+      saveLongMemory();
+      toast("👑 Long-term memory wiped", "var(--warn)");
     }
     function editMsg(btn) {
       const row = btn.closest(".mrow");
@@ -4093,8 +4225,9 @@ BEHAVIOR RULES:
       const firstUserMsg = hist.find(l => l.startsWith("USER:"));
       const title = existing?.title ||
         (firstUserMsg ? firstUserMsg.slice(6).trim().split(/\s+/).slice(0, 6).join(" ") : "New chat");
+      const creatorFlag = existing?.creator || creatorOn;
       localStorage.setItem("chat_" + sessId, JSON.stringify({
-        mode: MODE, hist, alexaTrust, ts: Date.now(), alexaMemory, novaTopics, title
+        mode: MODE, hist, alexaTrust, ts: Date.now(), alexaMemory, novaTopics, title, creator: creatorFlag
       }));
       loadHistList();
       const keys = Object.keys(localStorage).filter(k => k.startsWith("chat_"));
@@ -4140,7 +4273,7 @@ BEHAVIOR RULES:
         const li = document.createElement("li");
         li.innerHTML = `
       <span class="hm ${d.mode.toLowerCase()}">${d.mode}</span>
-      <span class="hl" onclick="loadSess('${id}')" title="${dt.toLocaleString()}">${d.title || (dt.toLocaleDateString() + " " + dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</span>
+      <span class="hl" onclick="loadSess('${id}')" title="${dt.toLocaleString()}">${d.creator ? '<i class="fas fa-crown" style="color:var(--warn);margin-right:4px" title="Creator session"></i>' : ""}${d.title || (dt.toLocaleDateString() + " " + dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</span>
       <button class="hd" onclick="pinChat('${id}',event)" title="${pinned ? "Unpin" : "Pin"}" style="${pinned ? "color:var(--warn)" : ""}"><i class="fas fa-thumbtack"></i></button>
       <button class="hd" onclick="renameChat('${id}',event)" title="Rename"><i class="fas fa-pen"></i></button>
       <button class="hd" onclick="delChat('${id}',event)"><i class="fas fa-xmark"></i></button>`;
@@ -4213,6 +4346,7 @@ BEHAVIOR RULES:
       sessId = Date.now().toString(); hist = []; alexaTrust = 0; alexaMemory = [];
       novaTopics = []; saraRoastCount = 0; creatorOn = false; awaitPwd = false;
       msgCnt = 0; wordFreq = {};
+      updateCreatorUI();
       document.getElementById("chatScroll").innerHTML = ""; showWelcome();
       sound("success"); toast("✨ New chat started", "var(--ok)");
     }
@@ -4220,6 +4354,7 @@ BEHAVIOR RULES:
       if (confirm("Clear current chat?")) {
         hist = []; msgCnt = 0; creatorOn = false; awaitPwd = false;
         wordFreq = {}; alexaMemory = []; novaTopics = []; saraRoastCount = 0;
+        updateCreatorUI();
         document.getElementById("chatScroll").innerHTML = ""; showWelcome();
       }
     }
@@ -4230,9 +4365,10 @@ BEHAVIOR RULES:
     function onInput() {
       const p = document.getElementById("prompt");
       const n = p.value.length;
-      document.getElementById("charDisp").textContent = n + "/2000";
+      const maxChars = getMaxChars();
+      document.getElementById("charDisp").textContent = n + "/" + maxChars;
       const ring = document.getElementById("ringFill");
-      const pct = n / 2000; const circ = 75.4;
+      const pct = n / maxChars; const circ = 75.4;
       ring.style.strokeDashoffset = circ * (1 - pct);
       ring.style.stroke = pct > 0.9 ? "var(--err)" : pct > 0.75 ? "var(--warn)" : "var(--ac)";
       p.style.height = "auto";
@@ -4681,7 +4817,7 @@ BEHAVIOR RULES:
       inp.onchange = async e => {
         const f = e.target.files[0];
         if (!f) return;
-        const MAX_TEXT = 6000;
+        const MAX_TEXT = creatorOn ? 20000 : 6000;
         const isText = f.type.startsWith("text") || f.name.match(/\.(py|js|ts|html|css|json|txt|md|csv|xml|yaml|yml|sh|c|cpp|java|rb|go|php|sql|env|config|ini|log)$/i);
         const isImage = f.type.startsWith("image/");
         const isPDF = f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
@@ -4692,7 +4828,7 @@ BEHAVIOR RULES:
             const buf = await f.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
             let text = "";
-            for (let p = 1; p <= Math.min(pdf.numPages, 25) && text.length < MAX_TEXT; p++) {
+            for (let p = 1; p <= Math.min(pdf.numPages, creatorOn ? 60 : 25) && text.length < MAX_TEXT; p++) {
               const page = await pdf.getPage(p);
               const content = await page.getTextContent();
               text += content.items.map(it => it.str).join(" ") + "\n\n";
