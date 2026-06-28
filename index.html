@@ -12,6 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
     /* ══════════════════════════════════════════════════════════════════
    ROOT & RESET
@@ -85,6 +86,24 @@
       --ease: cubic-bezier(0.4, 0, 0.2, 1);
       --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
       --smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    [data-theme="light"] {
+      --bg0: #f4f4fb;
+      --bg1: #eeeef9;
+      --bg2: #e7e7f4;
+      --bg3: #dedeef;
+      --bg4: #d3d3e8;
+      --bg5: #c4c4dd;
+      --bg6: #b0b0cf;
+      --bg7: #9999bd;
+      --t1: #15152b;
+      --t2: #44446a;
+      --t3: #75759a;
+      --t4: #9999b8;
+      --bdr: rgba(20, 20, 50, 0.08);
+      --bdr2: rgba(20, 20, 50, 0.14);
+      --bdr3: rgba(20, 20, 50, 0.24);
     }
 
     html,
@@ -774,6 +793,55 @@
 
     #emojiPanel.show {
       display: grid
+    }
+
+    #slashPalette {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      background: var(--bg3);
+      border: 1px solid var(--bdr2);
+      border-radius: var(--r);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.65);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    #slashPalette.show {
+      display: flex
+    }
+
+    .slash-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--rs);
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--t2);
+    }
+
+    .slash-item i {
+      color: var(--ac);
+      width: 16px;
+    }
+
+    .slash-item .sl-cmd {
+      font-family: var(--mono);
+      color: var(--t1);
+      font-weight: 600;
+    }
+
+    .slash-item.active,
+    .slash-item:hover {
+      background: var(--ac-d);
+      color: var(--t1);
     }
 
     @keyframes panelUp {
@@ -1722,6 +1790,27 @@
       transition: transform 0.28s, box-shadow 0.28s
     }
 
+    .img-skeleton {
+      width: 260px;
+      height: 260px;
+      max-width: 100%;
+      margin-top: 12px;
+      border-radius: 16px;
+      background: linear-gradient(100deg, var(--bg4) 30%, var(--bg6) 50%, var(--bg4) 70%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
     .gen-img:hover {
       transform: scale(1.015);
       box-shadow: 0 16px 60px rgba(0, 0, 0, 0.75)
@@ -2058,6 +2147,11 @@
     #sendBtn.alexa-sb {
       background: linear-gradient(140deg, #b34dff, #8822dd);
       box-shadow: 0 6px 28px rgba(179, 77, 255, 0.6)
+    }
+
+    #sendBtn.stopping {
+      background: linear-gradient(140deg, #ff3355, #99001a) !important;
+      box-shadow: 0 6px 28px rgba(255, 51, 85, 0.6) !important;
     }
 
     #sendBtn::before {
@@ -2801,6 +2895,32 @@
           Animations</label>
         <div class="tog on" id="tog-bubbleAnim"></div>
       </div>
+      <div class="tog-row" onclick="toggleTheme()"><label><i class="fas fa-sun"></i>Light Theme</label>
+        <div class="tog" id="tog-lightTheme"></div>
+      </div>
+      <div class="ps-slider">
+        <label>Accent Hue Shift <span id="hueLabel">0°</span></label>
+        <input type="range" min="0" max="360" value="0" id="hueSlider"
+          oninput="setAccentHue(this.value); document.getElementById('hueLabel').textContent = this.value + '°'"
+          style="--val:0%">
+      </div>
+      <label style="font-size:0.72rem;color:var(--t3);display:block;margin:12px 0 6px">Image-Gen Style</label>
+      <div class="font-btns" id="imgStyleBtns">
+        <button class="font-btn active" onclick="setImgStyle('none')">None</button>
+        <button class="font-btn" onclick="setImgStyle('photoreal')">Photoreal</button>
+        <button class="font-btn" onclick="setImgStyle('anime')">Anime</button>
+        <button class="font-btn" onclick="setImgStyle('oil')">Oil</button>
+        <button class="font-btn" onclick="setImgStyle('sketch')">Sketch</button>
+      </div>
+      <label style="font-size:0.72rem;color:var(--t3);display:block;margin:12px 0 6px">TTS Voice</label>
+      <select id="ttsVoiceSelect" onchange="setTtsVoice(this.value)"
+        style="width:100%;background:var(--bg4);border:1px solid var(--bdr);color:var(--t1);padding:8px;border-radius:var(--rss);font-family:var(--font)">
+        <option value="">System Default</option>
+      </select>
+      <div class="tog-row" onclick="toggleS('voiceAutoSend')" style="margin-top:10px"><label><i
+            class="fas fa-microphone-lines"></i>Auto-Send After Pause</label>
+        <div class="tog" id="tog-voiceAutoSend"></div>
+      </div>
     </div>
     <div class="ps-sec">
       <div class="ps-title"><i class="fas fa-bolt"></i> Quick Actions</div>
@@ -2813,7 +2933,10 @@
       <div class="pa" onclick="showStats()"><i class="fas fa-chart-bar"></i>Statistics</div>
       <div class="pa" onclick="showShortcuts()"><i class="fas fa-keyboard"></i>Keyboard Shortcuts</div>
       <div class="pa" onclick="doSearch()"><i class="fas fa-magnifying-glass"></i>Search Messages</div>
+      <div class="pa" onclick="searchAllChats()"><i class="fas fa-folder-open"></i>Search All Chats<span class="pa-badge">NEW</span></div>
       <div class="pa" onclick="summarize()"><i class="fas fa-align-left"></i>Summarize Chat</div>
+      <div class="pa" onclick="summarizeText()"><i class="fas fa-file-lines"></i>Summarize Pasted Text<span class="pa-badge">NEW</span></div>
+      <div class="pa" onclick="showNotes()"><i class="fas fa-thumbtack"></i>Pinned Notes<span class="pa-badge">NEW</span></div>
       <div class="pa" onclick="extractCode()"><i class="fas fa-code"></i>Extract All Code</div>
       <div class="pa" onclick="showWordCloud()"><i class="fas fa-tags"></i>Word Frequency<span
           class="pa-badge">NEW</span></div>
@@ -2920,7 +3043,8 @@
       </div>
       <div class="inprow">
         <div id="emojiPanel"></div>
-        <textarea id="prompt" placeholder="Message SARA..." rows="1" onkeydown="handleKey(event)"
+        <div id="slashPalette"></div>
+        <textarea id="prompt" placeholder="Message SARA... (try /summarize, /explain, /fix, /translate)" rows="1" onkeydown="handleKey(event)"
           oninput="onInput()"></textarea>
         <button id="sendBtn" class="sara-sb" onclick="sendMsg()">
           <i class="fas fa-paper-plane"></i><span>Send</span>
@@ -2933,7 +3057,7 @@
         <div class="si">
           <div class="sd" id="connDot"></div><span id="connSt">Connected</span>
         </div>
-        <div class="si"><i class="fas fa-microchip" style="color:var(--nova)"></i><span>GPU Active</span></div>
+        <div class="si"><i class="fas fa-microchip" style="color:var(--nova)"></i><span id="gpuDisp">GPU Active</span></div>
         <div class="si"><i class="fas fa-brain" style="color:var(--ac)"></i><span>AurinMk02</span></div>
         <div class="si"><i class="fas fa-thermometer-half" style="color:var(--warn)"></i><span
             id="tempDisp">T:0.9</span></div>
@@ -2942,6 +3066,7 @@
         <div class="si"><i class="fas fa-clock"></i><span id="timerDisp">0:00</span></div>
         <div class="si"><i class="fas fa-message"></i><span id="msgBar">0 msgs</span></div>
         <div class="si"><i class="fas fa-gauge-high"></i><span id="rtDisp">— ms</span></div>
+        <div class="si"><i class="fas fa-tachometer-alt"></i><span id="tokSpeedDisp">— tok/s</span></div>
         <div class="si"><i class="fas fa-fire" style="color:var(--warn)"></i><span id="streakDisp">Day 1</span></div>
       </div>
     </div>
@@ -2964,9 +3089,9 @@
     // ══════════════════════════════════════════════════════════════════
     // CONFIG — preserved exactly as original
     // ══════════════════════════════════════════════════════════════════
-    const NGROK_URL = "https://743a-103-176-241-106.ngrok-free.app";
-    const WEATHER_API = "63df290d9e9dd7af7c4cbaadafc732cc";
+    const NGROK_URL = "https://b9f5-103-129-108-88.ngrok-free.app";
     const LOG_URL = "https://script.google.com/macros/s/AKfycbx7k8RlmHQ7YbdfcJt8sdJK-yjksTkTVEB757Xe1D2OIvZpn4ogfgcTPABxdemGODH4aA/exec";
+    if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
     // ══════════════════════════════════════════════════════════════════
     // STATE
@@ -2978,9 +3103,13 @@
     let sessId = Date.now().toString();
     let creatorOn = false, awaitPwd = false;
     let voiceOn = false, voiceRec = null;
+    let micStream = null, audioCtx = null, analyser = null, vizRAF = null, voiceSilenceTimer = null;
     let msgCnt = 0, totalSaved = 0;
     let cmOn = false, compact = false;
     let snippets = [], rtArr = [];
+    let currentAbort = null;
+    let pinnedChats = JSON.parse(localStorage.getItem("pinnedChats") || "[]");
+    let notes = JSON.parse(localStorage.getItem("aurinai_notes") || "[]");
     let sessStart = Date.now();
     let emojiOpen = false;
     let histFilter = "all";
@@ -3064,7 +3193,14 @@
     const CFG = {
       autoSave: true, typing: true, quickReplies: true, sound: false,
       tts: false, autoScroll: true, codeMode: false, reactions: true,
-      timestamps: true, markdown: true, bubbleAnim: true, compact: false
+      timestamps: true, markdown: true, bubbleAnim: true, compact: false,
+      lightTheme: false, accentHue: 0, ttsVoice: "", imgStyle: "none", voiceAutoSend: false
+    };
+    const IMG_STYLES = {
+      none: "", photoreal: "photorealistic, highly detailed, 8k, professional photography, ",
+      anime: "anime style, vibrant colors, detailed line art, ",
+      oil: "oil painting, textured brush strokes, classical art style, ",
+      sketch: "pencil sketch, hand-drawn, monochrome shading, "
     };
 
     const MC = {
@@ -3213,6 +3349,9 @@
       setInterval(tick, 1000);
       setInterval(checkSrv, 14000);
       checkSrv();
+      setInterval(pollGpuStatus, 5000);
+      pollGpuStatus();
+      if (window.speechSynthesis) speechSynthesis.onvoiceschanged = populateTtsVoices;
       updateStreak();
 
       document.getElementById("prompt").focus();
@@ -3386,6 +3525,7 @@
         <button class="mab" onclick="copyMsg(this)" title="Copy"><i class="fas fa-copy"></i> Copy</button>
         <button class="mab" onclick="speakMsg(this)" title="Read aloud"><i class="fas fa-volume-high"></i></button>
         <button class="mab" onclick="bookMsg(this)" title="Bookmark"><i class="fas fa-bookmark"></i></button>
+        <button class="mab" onclick="pinNote(this)" title="Pin as note"><i class="fas fa-thumbtack"></i></button>
         <button class="mab" onclick="regenMsg()" title="Regenerate"><i class="fas fa-rotate-right"></i> Regen</button>
       </div>
       ${CFG.reactions ? `
@@ -3397,7 +3537,11 @@
         ).join("")}
           </div>
         </div>` : ""}
-    ` : "";
+    ` : `
+      <div class="mactions">
+        <button class="mab" onclick="editMsg(this)" title="Edit & resend"><i class="fas fa-pen"></i> Edit</button>
+      </div>
+    `;
 
         row.innerHTML = `
       <div class="av ${acls}"><i class="fas ${ico}"></i></div>
@@ -3440,7 +3584,11 @@
         return `<div class="cblk">
       <div class="chdr">
         <span class="chdr-left"><i class="fas ${icoClass}"></i><span class="lang-tag">${l}</span></span>
-        <button class="ccopy" onclick="cpCode(this)"><i class="fas fa-copy"></i> Copy</button>
+        <span style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="ccopy" onclick="cpCode(this)"><i class="fas fa-copy"></i> Copy</button>
+          <button class="ccopy" onclick="codeAction(this,'explain')" title="Ask AI to explain this code"><i class="fas fa-circle-question"></i> Explain</button>
+          <button class="ccopy" onclick="codeAction(this,'fix')" title="Ask AI to find/fix bugs"><i class="fas fa-wrench"></i> Fix</button>
+        </span>
       </div>
       <pre><code>${safe}</code></pre>
     </div>`;
@@ -3489,7 +3637,7 @@
       if (/^(generate|make|create|draw|render)\s+/i.test(userText) ||
         /\b(make|create|draw|generate|render)\b.*\b(image|photo|art|picture|wallpaper|illustration)\b/i.test(userText)) {
         const p = userText.replace(/^(generate|make|create|draw|render)\s+(an?\s+)?(image\s+(of\s+)?)?/i, "").trim();
-        await genImage(p); return;
+        await genImage((IMG_STYLES[CFG.imgStyle] || "") + p); return;
       }
 
       hist.push("USER: " + userText);
@@ -3518,11 +3666,13 @@
       // SARA roast counter
       if (MODE === "SARA") saraRoastCount++;
 
-      // Weather shortcut
-      if (/\b\.weather\b/i.test(userText)) {
+      // Weather shortcut — routed through the local proxy so no API key ships to the browser
+      const weatherMatch = userText.match(/\.weather\b\s*(.*)/i);
+      if (weatherMatch) {
+        const city = weatherMatch[1].trim() || "London";
         if (CFG.typing) addTyping();
         try {
-          const r = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${WEATHER_API}&units=metric`);
+          const r = await fetch(`${NGROK_URL}/weather?city=${encodeURIComponent(city)}`);
           const d = await r.json(); rmTyping();
           const rep = `🌤️ **${d.main.temp}°C** in **${d.name}**\n${d.weather[0].description} · Feels like **${d.main.feels_like}°C** · Humidity **${d.main.humidity}%** · Wind **${d.wind.speed} m/s**`;
           const rrow = addBubble(rep, "ai", rep);
@@ -3547,11 +3697,15 @@
         "User:", "USER:"
       ];
 
+      currentAbort = new AbortController();
+      setSendBtnState("stop");
+      let tokPerSec = null;
       try {
         const t0 = Date.now();
         const res = await fetch(`${NGROK_URL}/completion`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: currentAbort.signal,
           body: JSON.stringify({
             prompt: fullPmt,
             stop: stopSeqs,
@@ -3607,7 +3761,14 @@
         let done = false;
 
         while (!done) {
-          const { value, done: streamDone } = await reader.read();
+          let value, streamDone;
+          try {
+            const r = await reader.read();
+            value = r.value; streamDone = r.done;
+          } catch (err) {
+            if (err.name === "AbortError") break; // user hit Stop — finalize with what we have
+            throw err;
+          }
           done = streamDone;
           if (!value) continue;
 
@@ -3631,7 +3792,10 @@
                 break;
               }
               scheduleRender();
-              if (parsed.stop) { done = true; break; }
+              if (parsed.stop) {
+                if (parsed.timings?.predicted_per_second) tokPerSec = parsed.timings.predicted_per_second;
+                done = true; break;
+              }
             } catch (_) { }
           }
         }
@@ -3675,6 +3839,7 @@
         <button class="mab" onclick="copyMsg(this)"><i class="fas fa-copy"></i> Copy</button>
         <button class="mab" onclick="speakMsg(this)"><i class="fas fa-volume-high"></i></button>
         <button class="mab" onclick="bookMsg(this)"><i class="fas fa-bookmark"></i></button>
+        <button class="mab" onclick="pinNote(this)" title="Pin as note"><i class="fas fa-thumbtack"></i></button>
         <button class="mab" onclick="regenMsg()"><i class="fas fa-rotate-right"></i> Regen</button>
       </div>
       ${CFG.reactions ? `
@@ -3689,6 +3854,8 @@
 
         const ms = Date.now() - t0;
         rtArr.push(ms); updRT();
+        const tokDisp = document.getElementById("tokSpeedDisp");
+        if (tokDisp) tokDisp.textContent = tokPerSec ? `${tokPerSec.toFixed(1)} tok/s` : "— tok/s";
 
         if (CFG.quickReplies) addQRs(streamRow);
         hist.push(MODE + ": " + rep);
@@ -3705,8 +3872,35 @@
         prevReply = rep;
 
       } catch (e) {
-        console.error(e); rmTyping();
-        addBubble("⚠️ **Server unreachable.** Make sure `llama-server.exe` is running and ngrok is active.\n\n> Run `python run_ai_full.py` to start everything.", "ai", null);
+        if (e.name !== "AbortError") {
+          console.error(e); rmTyping();
+          addBubble("⚠️ **Server unreachable.** Make sure `llama-server.exe` is running and ngrok is active.\n\n> Run `python run_ai_full.py` to start everything.", "ai", null);
+        }
+      } finally {
+        currentAbort = null;
+        setSendBtnState("send");
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // STOP GENERATION — aborts the in-flight stream, server-side connection
+    // closes via the existing req.on("close") handler in server.js
+    // ══════════════════════════════════════════════════════════════════
+    function stopGeneration() {
+      if (currentAbort) currentAbort.abort();
+    }
+    function setSendBtnState(state) {
+      const btn = document.getElementById("sendBtn");
+      if (!btn) return;
+      if (state === "stop") {
+        btn.dataset.prevOnclick = "1";
+        btn.onclick = stopGeneration;
+        btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop</span>';
+        btn.classList.add("stopping");
+      } else {
+        btn.onclick = sendMsg;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Send</span>';
+        btn.classList.remove("stopping");
       }
     }
 
@@ -3832,6 +4026,9 @@ BEHAVIOR RULES:
       if (CFG.typing) addTyping();
       const pRow = addBubble(`<i class="fas fa-wand-magic-sparkles" style="color:var(--ac)"></i> Generating: <em>${imgPrompt}</em>\n\n**0%** — please wait`, "ai", null);
       const pb = pRow.querySelector(".bubble");
+      const skeleton = document.createElement("div");
+      skeleton.className = "img-skeleton";
+      pb.appendChild(skeleton);
       let done = false;
 
       const iv = setInterval(async () => {
@@ -3843,6 +4040,7 @@ BEHAVIOR RULES:
           const pct = Math.floor((d.progress || 0) * 100);
           const bar = "█".repeat(Math.floor(pct / 5)) + "░".repeat(20 - Math.floor(pct / 5));
           pb.innerHTML = fmtMsg(`<i class="fas fa-spinner fa-spin"></i> Generating...\n\n\`${bar}\` **${pct}%**`);
+          pb.appendChild(skeleton);
         } catch (_) { }
       }, 1200);
 
@@ -3857,6 +4055,7 @@ BEHAVIOR RULES:
         const data = await res.json();
         if (!data.images?.length) throw new Error("No image");
         rmTyping();
+        skeleton.remove();
         pb.innerHTML = "<i class=\"fas fa-check-circle\" style=\"color:var(--ok)\"></i> <strong>Generated!</strong> Click to enlarge:";
         const img = document.createElement("img");
         img.src = "data:image/png;base64," + data.images[0];
@@ -3866,6 +4065,7 @@ BEHAVIOR RULES:
         showNotif("Image Ready", "AI image generated successfully", "fa-image");
       } catch (e) {
         done = true; clearInterval(iv); rmTyping();
+        skeleton.remove();
         pb.innerHTML = fmtMsg("⚠️ Image generation failed.\n\nEnsure `server.js` and WebUI are running alongside llama-server.");
       }
     }
@@ -3973,6 +4173,15 @@ BEHAVIOR RULES:
         setTimeout(() => btn.innerHTML = "<i class=\"fas fa-copy\"></i> Copy", 1900);
       });
     }
+    function codeAction(btn, action) {
+      const code = btn.closest(".cblk").querySelector("code").innerText;
+      const lang = btn.closest(".cblk").querySelector(".lang-tag")?.innerText || "code";
+      const ask = action === "fix"
+        ? `Find and fix any bugs in this ${lang} code. Explain what was wrong, then give the corrected code:\n\n\`\`\`${lang}\n${code}\n\`\`\``
+        : `Explain what this ${lang} code does, step by step:\n\n\`\`\`${lang}\n${code}\n\`\`\``;
+      document.getElementById("prompt").value = ask;
+      onInput(); sendMsg();
+    }
     function speakMsg(btn) { speak(btn.closest(".bwrap").querySelector(".bubble").innerText); }
     function speak(t) {
       if (!speechSynthesis) return;
@@ -3980,6 +4189,10 @@ BEHAVIOR RULES:
       const u = new SpeechSynthesisUtterance(t.replace(/<[^>]*>/g, "").replace(/\*+/g, "").replace(/`/g, ""));
       u.rate = 1.06;
       u.pitch = MODE === "SARA" ? 1.18 : MODE === "ALEXA" ? 1.12 : 0.93;
+      if (CFG.ttsVoice) {
+        const v = speechSynthesis.getVoices().find(v => v.name === CFG.ttsVoice);
+        if (v) u.voice = v;
+      }
       speechSynthesis.speak(u);
     }
     function bookMsg(btn) {
@@ -3987,6 +4200,77 @@ BEHAVIOR RULES:
       const txt = btn.closest(".bwrap").querySelector(".bubble").innerText;
       bookmarks.push({ text: txt, ts: Date.now(), mode: MODE });
       toast("⭐ Bookmarked!", "var(--warn)");
+    }
+    // ══════════════════════════════════════════════════════════════════
+    // PINNED NOTES — standalone from bookmarks, survive chat deletion
+    // ══════════════════════════════════════════════════════════════════
+    function pinNote(btn) {
+      const txt = btn.closest(".bwrap").querySelector(".bubble").dataset.raw ||
+        btn.closest(".bwrap").querySelector(".bubble").innerText;
+      notes.push({ text: txt, ts: Date.now(), mode: MODE });
+      localStorage.setItem("aurinai_notes", JSON.stringify(notes));
+      toast("📌 Pinned to Notes", "var(--ac)");
+    }
+    function showNotes() {
+      if (!notes.length) {
+        openM("<i class=\"fas fa-thumbtack\"></i> Pinned Notes",
+          `<div style="color:var(--t3);text-align:center;padding:30px">No pinned notes yet — use the 📌 icon on any AI reply.</div>`);
+        return;
+      }
+      openM("<i class=\"fas fa-thumbtack\"></i> Pinned Notes", `
+    <div class="shortcut-table">
+      ${notes.map((n, i) => `
+        <div class="sc-row">
+          <span class="sc-desc">${fmtMsg(n.text.slice(0, 220))}</span>
+          <button class="mab" onclick="removeNote(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+        </div>`).join("")}
+    </div>`);
+    }
+    function removeNote(i) {
+      notes.splice(i, 1);
+      localStorage.setItem("aurinai_notes", JSON.stringify(notes));
+      showNotes();
+    }
+    // ══════════════════════════════════════════════════════════════════
+    // AI-POWERED SUMMARIZE — works on arbitrary pasted/uploaded text
+    // ══════════════════════════════════════════════════════════════════
+    async function summarizeText(presetText) {
+      const text = presetText || prompt("Paste the text you want summarized:");
+      if (!text || !text.trim()) return;
+      toast("📝 Summarizing…", "var(--info)");
+      try {
+        const r = await fetch(`${NGROK_URL}/completion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: `Summarize the following text in 3-5 concise bullet points:\n\n${text.slice(0, 6000)}\n\nSummary:`,
+            n_predict: 320, temperature: 0.3, stream: false,
+            stop: ["\nUSER:", "\nUser:"]
+          })
+        });
+        const d = await r.json();
+        openM("<i class=\"fas fa-align-left\"></i> Summary",
+          `<div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:13px;padding:15px;font-size:0.85rem;color:var(--t2);line-height:1.8">${fmtMsg((d.content || "").trim())}</div>`);
+      } catch (e) {
+        toast("⚠️ Summarize failed — is the server running?", "var(--err)");
+      }
+    }
+    function editMsg(btn) {
+      const row = btn.closest(".mrow");
+      const bubble = row.querySelector(".bubble");
+      const txt = bubble.dataset.raw || bubble.innerText;
+
+      // Drop this message and everything after it from both the DOM and hist
+      const rows = Array.from(document.querySelectorAll("#chatScroll .mrow"));
+      const idx = rows.indexOf(row);
+      rows.slice(idx).forEach(r => r.remove());
+      const histIdx = hist.indexOf("USER: " + txt);
+      if (histIdx !== -1) hist = hist.slice(0, histIdx);
+      msgCnt = Math.max(0, msgCnt - (rows.length - idx));
+
+      const el = document.getElementById("prompt");
+      el.value = txt; onInput(); el.focus();
+      toast("✏️ Edit your message and hit send", "var(--nova)");
     }
     function regenMsg() {
       while (hist.length && !hist.at(-1).startsWith("USER:")) hist.pop();
@@ -4032,8 +4316,12 @@ BEHAVIOR RULES:
     // ══════════════════════════════════════════════════════════════════
     function save() {
       if (!CFG.autoSave) return;
+      const existing = JSON.parse(localStorage.getItem("chat_" + sessId) || "null");
+      const firstUserMsg = hist.find(l => l.startsWith("USER:"));
+      const title = existing?.title ||
+        (firstUserMsg ? firstUserMsg.slice(6).trim().split(/\s+/).slice(0, 6).join(" ") : "New chat");
       localStorage.setItem("chat_" + sessId, JSON.stringify({
-        mode: MODE, hist, alexaTrust, ts: Date.now(), alexaMemory, novaTopics
+        mode: MODE, hist, alexaTrust, ts: Date.now(), alexaMemory, novaTopics, title
       }));
       loadHistList();
       const keys = Object.keys(localStorage).filter(k => k.startsWith("chat_"));
@@ -4063,6 +4351,9 @@ BEHAVIOR RULES:
       keys.sort((a, b) => {
         const da = JSON.parse(localStorage.getItem(a));
         const db = JSON.parse(localStorage.getItem(b));
+        const pa = pinnedChats.includes(a.slice(5)) ? 1 : 0;
+        const pb = pinnedChats.includes(b.slice(5)) ? 1 : 0;
+        if (pa !== pb) return pb - pa;
         return (db.ts || 0) - (da.ts || 0);
       }).filter(k => {
         if (histFilter === "all") return true;
@@ -4072,14 +4363,53 @@ BEHAVIOR RULES:
         const id = k.slice(5);
         const d = JSON.parse(localStorage.getItem(k));
         const dt = new Date(d.ts || +id);
+        const pinned = pinnedChats.includes(id);
         const li = document.createElement("li");
         li.innerHTML = `
       <span class="hm ${d.mode.toLowerCase()}">${d.mode}</span>
-      <span class="hl" onclick="loadSess('${id}')">${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+      <span class="hl" onclick="loadSess('${id}')" title="${dt.toLocaleString()}">${d.title || (dt.toLocaleDateString() + " " + dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</span>
+      <button class="hd" onclick="pinChat('${id}',event)" title="${pinned ? "Unpin" : "Pin"}" style="${pinned ? "color:var(--warn)" : ""}"><i class="fas fa-thumbtack"></i></button>
+      <button class="hd" onclick="renameChat('${id}',event)" title="Rename"><i class="fas fa-pen"></i></button>
       <button class="hd" onclick="delChat('${id}',event)"><i class="fas fa-xmark"></i></button>`;
         list.appendChild(li);
       });
       updateStats();
+    }
+    function pinChat(id, e) {
+      e.stopPropagation();
+      pinnedChats = pinnedChats.includes(id) ? pinnedChats.filter(x => x !== id) : [...pinnedChats, id];
+      localStorage.setItem("pinnedChats", JSON.stringify(pinnedChats));
+      loadHistList();
+    }
+    function searchAllChats() {
+      const q = prompt("🔍 Search across all saved chats:"); if (!q) return;
+      const lower = q.toLowerCase();
+      const keys = Object.keys(localStorage).filter(k => k.startsWith("chat_"));
+      const matches = [];
+      keys.forEach(k => {
+        const d = JSON.parse(localStorage.getItem(k));
+        const hit = (d.hist || []).find(l => l.toLowerCase().includes(lower));
+        if (hit) matches.push({ id: k.slice(5), title: d.title || k.slice(5), mode: d.mode, snippet: hit.slice(0, 90) });
+      });
+      if (!matches.length) { toast("No matches found", "var(--warn)"); return; }
+      openM(`<i class="fas fa-magnifying-glass"></i> Found in ${matches.length} chat${matches.length > 1 ? "s" : ""}`, `
+    <div class="shortcut-table">
+      ${matches.map(m => `
+        <div class="sc-row" style="cursor:pointer" onclick="closeM();loadSess('${m.id}')">
+          <span class="sc-desc"><strong style="color:var(--ac)">${m.title}</strong><br><span style="color:var(--t3);font-size:0.78rem">${m.snippet}…</span></span>
+          <kbd class="sc-key">${m.mode}</kbd>
+        </div>`).join("")}
+    </div>`);
+    }
+    function renameChat(id, e) {
+      e.stopPropagation();
+      const key = "chat_" + id;
+      const d = JSON.parse(localStorage.getItem(key)); if (!d) return;
+      const name = prompt("Rename chat:", d.title || "");
+      if (name === null) return;
+      d.title = name.trim() || d.title;
+      localStorage.setItem(key, JSON.stringify(d));
+      loadHistList();
     }
     function filterHist(f) {
       histFilter = f;
@@ -4090,7 +4420,14 @@ BEHAVIOR RULES:
     }
     function delChat(id, e) {
       e.stopPropagation();
-      if (confirm("Delete this chat?")) { localStorage.removeItem("chat_" + id); loadHistList(); toast("🗑️ Deleted"); }
+      if (confirm("Delete this chat?")) {
+        localStorage.removeItem("chat_" + id);
+        if (pinnedChats.includes(id)) {
+          pinnedChats = pinnedChats.filter(x => x !== id);
+          localStorage.setItem("pinnedChats", JSON.stringify(pinnedChats));
+        }
+        loadHistList(); toast("🗑️ Deleted");
+      }
     }
     function clearAll() {
       if (confirm("Delete ALL chat history? This cannot be undone.")) {
@@ -4127,8 +4464,57 @@ BEHAVIOR RULES:
       ring.style.stroke = pct > 0.9 ? "var(--err)" : pct > 0.75 ? "var(--warn)" : "var(--ac)";
       p.style.height = "auto";
       p.style.height = Math.min(p.scrollHeight, 165) + "px";
+      updateSlashPalette(p.value);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // SLASH-COMMAND PALETTE
+    // ══════════════════════════════════════════════════════════════════
+    const SLASH_COMMANDS = [
+      { cmd: "/summarize", icon: "fa-align-left", desc: "Summarize the current chat", run: () => { document.getElementById("prompt").value = ""; onInput(); summarize(); } },
+      { cmd: "/summarize-text", icon: "fa-file-lines", desc: "Summarize pasted text via AI", run: () => { document.getElementById("prompt").value = ""; onInput(); summarizeText(); } },
+      { cmd: "/explain", icon: "fa-circle-question", desc: "Explain — paste code/text after this", template: "Explain the following, step by step:\n\n" },
+      { cmd: "/fix", icon: "fa-wrench", desc: "Find & fix bugs — paste code after this", template: "Find and fix any bugs in the following code. Explain what was wrong:\n\n" },
+      { cmd: "/translate", icon: "fa-language", desc: "Translate text to another language", template: "Translate the following to English (or specify a language):\n\n" },
+    ];
+    let slashIdx = 0;
+    function updateSlashPalette(val) {
+      const pal = document.getElementById("slashPalette");
+      const m = val.match(/^\/(\S*)$/);
+      if (!m) { pal.classList.remove("show"); pal.innerHTML = ""; return; }
+      const q = m[1].toLowerCase();
+      const matches = SLASH_COMMANDS.filter(c => c.cmd.slice(1).startsWith(q));
+      if (!matches.length) { pal.classList.remove("show"); pal.innerHTML = ""; return; }
+      slashIdx = 0;
+      pal.innerHTML = matches.map((c, i) => `
+        <div class="slash-item ${i === 0 ? "active" : ""}" data-i="${i}" onclick="runSlashCommand(${i})">
+          <i class="fas ${c.icon}"></i><span class="sl-cmd">${c.cmd}</span><span>${c.desc}</span>
+        </div>`).join("");
+      pal._matches = matches;
+      pal.classList.add("show");
+    }
+    function runSlashCommand(i) {
+      const pal = document.getElementById("slashPalette");
+      const c = pal._matches?.[i]; if (!c) return;
+      pal.classList.remove("show"); pal.innerHTML = "";
+      const p = document.getElementById("prompt");
+      if (c.run) { c.run(); }
+      else { p.value = c.template; onInput(); p.focus(); }
     }
     function handleKey(e) {
+      const pal = document.getElementById("slashPalette");
+      if (pal.classList.contains("show")) {
+        const items = pal.querySelectorAll(".slash-item");
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          items[slashIdx]?.classList.remove("active");
+          slashIdx = e.key === "ArrowDown" ? (slashIdx + 1) % items.length : (slashIdx - 1 + items.length) % items.length;
+          items[slashIdx]?.classList.add("active");
+          return;
+        }
+        if (e.key === "Enter") { e.preventDefault(); runSlashCommand(slashIdx); return; }
+        if (e.key === "Escape") { pal.classList.remove("show"); pal.innerHTML = ""; return; }
+      }
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); return; }
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
@@ -4176,17 +4562,67 @@ BEHAVIOR RULES:
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) { toast("Voice not supported in this browser"); voiceOn = false; return; }
       voiceRec = new SR(); voiceRec.continuous = false; voiceRec.lang = "en-US";
-      voiceRec.onresult = e => { document.getElementById("prompt").value = e.results[0][0].transcript; onInput(); };
+      voiceRec.onresult = e => {
+        document.getElementById("prompt").value = e.results[0][0].transcript; onInput();
+        if (CFG.voiceAutoSend) {
+          clearTimeout(voiceSilenceTimer);
+          voiceSilenceTimer = setTimeout(() => {
+            if (document.getElementById("prompt").value.trim()) sendMsg();
+          }, 900);
+        }
+      };
       voiceRec.onerror = () => {
         voiceOn = false;
         document.getElementById("voiceIco").className = "fas fa-microphone";
         document.getElementById("voiceViz").classList.remove("show");
         document.getElementById("voiceBtn").classList.remove("active");
+        stopVoiceViz();
       };
       voiceRec.onend = () => { if (voiceOn) voiceRec.start(); };
       voiceRec.start();
+      startVoiceViz();
     }
-    function stopVoice() { if (voiceRec) { voiceRec.stop(); voiceRec = null; } }
+    function stopVoice() {
+      clearTimeout(voiceSilenceTimer);
+      if (voiceRec) { voiceRec.stop(); voiceRec = null; }
+      stopVoiceViz();
+    }
+    // ══════════════════════════════════════════════════════════════════
+    // AMPLITUDE-DRIVEN VOICE VISUALIZER — drives the existing 9-bar UI
+    // ══════════════════════════════════════════════════════════════════
+    async function startVoiceViz() {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaStreamSource(micStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        src.connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        const bars = document.querySelectorAll("#voiceViz .vb");
+        bars.forEach(b => b.style.animation = "none"); // override the canned CSS animation with real amplitude
+        const step = () => {
+          if (!analyser) return;
+          analyser.getByteFrequencyData(data);
+          bars.forEach((b, i) => {
+            const v = data[i % data.length] / 255;
+            b.style.height = `${8 + v * 32}px`;
+          });
+          vizRAF = requestAnimationFrame(step);
+        };
+        step();
+      } catch (e) {
+        // Mic permission denied — visualizer just stays static, voice input still works via SpeechRecognition
+      }
+    }
+    function stopVoiceViz() {
+      if (vizRAF) cancelAnimationFrame(vizRAF);
+      vizRAF = null;
+      if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      analyser = null;
+      document.querySelectorAll("#voiceViz .vb").forEach(b => { b.style.height = ""; b.style.animation = ""; });
+    }
 
     // ══════════════════════════════════════════════════════════════════
     // SETTINGS
@@ -4202,6 +4638,48 @@ BEHAVIOR RULES:
       const s = localStorage.getItem("cfg");
       if (s) Object.assign(CFG, JSON.parse(s));
       Object.keys(CFG).forEach(k => document.getElementById("tog-" + k)?.classList.toggle("on", CFG[k]));
+      document.documentElement.setAttribute("data-theme", CFG.lightTheme ? "light" : "dark");
+      const app = document.querySelector(".app");
+      if (app && CFG.accentHue) app.style.filter = `hue-rotate(${CFG.accentHue}deg)`;
+      const hueSlider = document.getElementById("hueSlider");
+      if (hueSlider) hueSlider.value = CFG.accentHue;
+      const hueLabel = document.getElementById("hueLabel");
+      if (hueLabel) hueLabel.textContent = CFG.accentHue + "°";
+      document.querySelectorAll("#imgStyleBtns .font-btn").forEach((b, i) => {
+        const styles = ["none", "photoreal", "anime", "oil", "sketch"];
+        b.classList.toggle("active", styles[i] === CFG.imgStyle);
+      });
+      populateTtsVoices();
+    }
+    function toggleTheme() {
+      CFG.lightTheme = !CFG.lightTheme;
+      document.documentElement.setAttribute("data-theme", CFG.lightTheme ? "light" : "dark");
+      document.getElementById("tog-lightTheme")?.classList.toggle("on", CFG.lightTheme);
+      saveCFG();
+      toast(CFG.lightTheme ? "☀️ Light theme on" : "🌙 Dark theme on", "var(--ac)");
+    }
+    function setAccentHue(val) {
+      CFG.accentHue = parseInt(val);
+      const app = document.querySelector(".app");
+      if (app) app.style.filter = CFG.accentHue ? `hue-rotate(${CFG.accentHue}deg)` : "";
+      saveCFG();
+    }
+    function setImgStyle(style) {
+      CFG.imgStyle = style;
+      document.querySelectorAll("#imgStyleBtns .font-btn").forEach(b => b.classList.remove("active"));
+      event.currentTarget.classList.add("active");
+      saveCFG();
+      toast(`🎨 Image style: ${style === "none" ? "None" : style}`, "var(--ac)");
+    }
+    function setTtsVoice(name) { CFG.ttsVoice = name; saveCFG(); }
+    function populateTtsVoices() {
+      if (!window.speechSynthesis) return;
+      const sel = document.getElementById("ttsVoiceSelect");
+      if (!sel) return;
+      const voices = speechSynthesis.getVoices();
+      if (!voices.length) return;
+      sel.innerHTML = '<option value="">System Default</option>' +
+        voices.map(v => `<option value="${v.name}" ${v.name === CFG.ttsVoice ? "selected" : ""}>${v.name} (${v.lang})</option>`).join("");
     }
     function setFont(sz) {
       const map = { sm: "0.79rem", md: "0.88rem", lg: "1rem" };
@@ -4326,40 +4804,6 @@ BEHAVIOR RULES:
     </div>`);
     }
 
-    function showShortcuts() {
-      const shortcuts = [
-        ["Enter", "Send message"], ["Shift+Enter", "New line in input"],
-        ["Ctrl+K", "Clear chat"], ["Ctrl+N", "New chat"],
-        ["Ctrl+H", "Toggle history"], ["Ctrl+B", "View bookmarks"],
-        ["Ctrl+S", "Export chat"], ["Ctrl+/", "Show shortcuts"],
-        ["Ctrl+Shift+M", "Switch mode"], ["Esc", "Close panels / modals"]
-      ];
-      openM("<i class=\"fas fa-keyboard\"></i> Keyboard Shortcuts", `
-    <div class="shortcut-table">
-      ${shortcuts.map(([k, v]) => `
-        <div class="sc-row">
-          <span class="sc-desc">${v}</span>
-          <kbd class="sc-key">${k}</kbd>
-        </div>`).join("")}
-    </div>`);
-    }
-
-    function doSearch() {
-      const q = prompt("🔍 Search messages:"); if (!q) return;
-      const rows = document.querySelectorAll(".mrow");
-      let found = 0;
-      rows.forEach(r => {
-        const match = r.textContent.toLowerCase().includes(q.toLowerCase());
-        r.style.opacity = match ? "1" : "0.15";
-        if (match) found++;
-      });
-      toast(`🔍 Found ${found} match${found !== 1 ? "es" : ""} — click chat to clear`, "var(--nova)");
-      document.getElementById("chatScroll").onclick = () => {
-        rows.forEach(r => r.style.opacity = "1");
-        document.getElementById("chatScroll").onclick = null;
-      };
-    }
-
     function summarize() {
       const userMsgs = hist.filter(l => l.startsWith("USER:"));
       const aiMsgs = hist.filter(l => l.startsWith(MODE + ":"));
@@ -4467,9 +4911,28 @@ BEHAVIOR RULES:
         const MAX_TEXT = 6000;
         const isText = f.type.startsWith("text") || f.name.match(/\.(py|js|ts|html|css|json|txt|md|csv|xml|yaml|yml|sh|c|cpp|java|rb|go|php|sql|env|config|ini|log)$/i);
         const isImage = f.type.startsWith("image/");
+        const isPDF = f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
         toast(`📎 Reading ${f.name}...`, "var(--info)");
 
-        if (isText) {
+        if (isPDF) {
+          try {
+            const buf = await f.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+            let text = "";
+            for (let p = 1; p <= Math.min(pdf.numPages, 25) && text.length < MAX_TEXT; p++) {
+              const page = await pdf.getPage(p);
+              const content = await page.getTextContent();
+              text += content.items.map(it => it.str).join(" ") + "\n\n";
+            }
+            const truncated = text.length > MAX_TEXT;
+            const preview = text.slice(0, MAX_TEXT);
+            document.getElementById("prompt").value =
+              `📎 **File: \`${f.name}\`** (PDF, ${pdf.numPages} page${pdf.numPages > 1 ? "s" : ""}, ${(f.size / 1024).toFixed(1)} KB)\n\n${preview}${truncated ? "\n\n...[truncated]" : ""}\n\nPlease read and help me with this document.`;
+            onInput(); sendMsg();
+          } catch (err) {
+            toast("⚠️ Couldn't extract text from this PDF", "var(--err)");
+          }
+        } else if (isText) {
           const reader = new FileReader();
           reader.onload = ev => {
             const raw = ev.target.result;
@@ -4595,6 +5058,22 @@ BEHAVIOR RULES:
       })
         .then(() => setStatus(true))
         .catch(() => setStatus(false));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LIVE GPU GAUGE — polls the /gpu-status proxy route
+    // ══════════════════════════════════════════════════════════════════
+    function pollGpuStatus() {
+      fetch(`${NGROK_URL}/gpu-status`, { cache: "no-store" })
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById("gpuDisp");
+          if (!el || d.error) return;
+          const pct = Math.round((d.vramUsed / d.vramTotal) * 100);
+          el.textContent = `GPU ${Math.round(d.util)}% · VRAM ${pct}%`;
+          el.style.color = pct > 90 ? "var(--err)" : pct > 75 ? "var(--warn)" : "";
+        })
+        .catch(() => { });
     }
 
     // ══════════════════════════════════════════════════════════════════
